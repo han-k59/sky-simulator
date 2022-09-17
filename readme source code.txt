@@ -1,0 +1,3 @@
+-  The sky simulator GUI program is written in Object Pascal using Lazarus IDE and FPC as compiler and creates artifical deepsky images or download them from the web.
+
+- The  "ASCOM Camera sky simulator" called "Sky simulator" in the ASCOM camera selection menu  is a slightly modified version of the "Camera v2 simulator" as provided by ASCOM. The image input file "image.png" isn't locked and read again for each ASCOM image request. Secondly the image dimensions are taken from the input file so are controlled by the GUI application. It is written in C# code. Volunteers (C#  code) who could improve it please contact me. 

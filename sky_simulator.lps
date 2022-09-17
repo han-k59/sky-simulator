@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="11"/>
+    <BuildModes Active="Default"/>
+    <Units Count="26">
+      <Unit0>
+        <Filename Value="sky_simulator.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="7"/>
+        <CursorPos X="20" Y="22"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="sky_simulator_main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="1572"/>
+        <CursorPos X="44" Y="1605"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="sky_simulator_unit_download.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="62" Y="17"/>
+        <UsageCount Value="384521"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="sky_annotation.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="50"/>
+        <CursorPos X="116" Y="62"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\hns_Uast.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1180"/>
+        <CursorPos Y="1180"/>
+        <UsageCount Value="192246"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="C:\Users\h\AppData\Local\Temp\Rar$DI00.021\sky_simulator_main.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1080"/>
+        <CursorPos X="20" Y="1119"/>
+        <UsageCount Value="5"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="C:\Users\h\AppData\Local\Temp\Rar$DI00.730\sky_simulator_main.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="20"/>
+        <UsageCount Value="5"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="C:\Users\h\AppData\Local\Temp\Rar$DI00.746\sky_simulator_main.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1071"/>
+        <CursorPos Y="1072"/>
+        <UsageCount Value="5"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="C:\Users\h\AppData\Local\Temp\Rar$DI00.783\sky_simulator_main.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1146"/>
+        <CursorPos Y="1166"/>
+        <UsageCount Value="8"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="D:\ccdciel_program\ccdciel-master\src\backup\pu_polaralign2.pas"/>
+        <ComponentName Value="f_polaralign2"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="412"/>
+        <CursorPos Y="388"/>
+        <UsageCount Value="9"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="backup\sky_simulator_main.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1082"/>
+        <CursorPos Y="1083"/>
+        <UsageCount Value="6"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="alpaca_mount_protocol.pas"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="120"/>
+        <CursorPos X="16" Y="90"/>
+        <UsageCount Value="19"/>
+        <Loaded Value="True"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="cu_alpacatelescope.pas"/>
+        <EditorIndex Value="10"/>
+        <TopLine Value="103"/>
+        <CursorPos X="16" Y="140"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="alpaca_camera_protocol.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="355"/>
+        <CursorPos X="18" Y="381"/>
+        <UsageCount Value="30"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="cu_alpacadevice.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="392"/>
+        <CursorPos Y="422"/>
+        <UsageCount Value="14"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="cu_alpacacamera.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="230"/>
+        <CursorPos X="8" Y="237"/>
+        <UsageCount Value="30"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="cu_alpacaserver.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="213"/>
+        <CursorPos X="82" Y="227"/>
+        <UsageCount Value="28"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="cu_tcpserver.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="84"/>
+        <CursorPos X="6" Y="110"/>
+        <UsageCount Value="28"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="C:\astap.fpc\unit_hjd.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="229"/>
+        <CursorPos X="7" Y="246"/>
+        <UsageCount Value="8"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="D:\lazarus\lcl\include\statusbar.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="5"/>
+        <UsageCount Value="12"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="alpaca_rotator_protocol.pas"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="70"/>
+        <CursorPos Y="95"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="alpaca_focuser_protocol.pas"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="186"/>
+        <CursorPos Y="217"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="cu_alpacarotator.pas"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="27"/>
+        <CursorPos X="27" Y="49"/>
+        <UsageCount Value="19"/>
+        <Loaded Value="True"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="alpacaserver.pas"/>
+        <EditorIndex Value="3"/>
+        <CursorPos X="96" Y="11"/>
+        <UsageCount Value="19"/>
+        <Loaded Value="True"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="sky_simulator_main test precession test.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="824"/>
+        <CursorPos X="25" Y="848"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="cu_alpacafocuser.pas"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="23"/>
+        <CursorPos X="9" Y="32"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit25>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1454" Column="55" TopLine="1418"/>
+      </Position1>
+      <Position2>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1535" Column="50" TopLine="1499"/>
+      </Position2>
+      <Position3>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1541" Column="57" TopLine="1505"/>
+      </Position3>
+      <Position4>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1544" Column="39" TopLine="1508"/>
+      </Position4>
+      <Position5>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1556" Column="58" TopLine="1520"/>
+      </Position5>
+      <Position6>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1594" Column="42" TopLine="1558"/>
+      </Position6>
+      <Position7>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1605" Column="19" TopLine="1569"/>
+      </Position7>
+      <Position8>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1747" Column="17" TopLine="1711"/>
+      </Position8>
+      <Position9>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1921" Column="33" TopLine="1884"/>
+      </Position9>
+      <Position10>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1981" Column="45" TopLine="1945"/>
+      </Position10>
+      <Position11>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="2047" Column="17" TopLine="2011"/>
+      </Position11>
+      <Position12>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="2105" Column="32" TopLine="2068"/>
+      </Position12>
+      <Position13>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="244" Column="23" TopLine="222"/>
+      </Position13>
+      <Position14>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="277" Column="21" TopLine="241"/>
+      </Position14>
+      <Position15>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="280" Column="26" TopLine="243"/>
+      </Position15>
+      <Position16>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1241" Column="180" TopLine="1205"/>
+      </Position16>
+      <Position17>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1245" Column="217" TopLine="1209"/>
+      </Position17>
+      <Position18>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1366" Column="32" TopLine="1330"/>
+      </Position18>
+      <Position19>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1503" Column="36" TopLine="1467"/>
+      </Position19>
+      <Position20>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1604" Column="8" TopLine="1580"/>
+      </Position20>
+      <Position21>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="889" Column="22" TopLine="868"/>
+      </Position21>
+      <Position22>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="893" Column="22" TopLine="868"/>
+      </Position22>
+      <Position23>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1440" Column="32" TopLine="1404"/>
+      </Position23>
+      <Position24>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1446" Column="30" TopLine="1410"/>
+      </Position24>
+      <Position25>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1603" TopLine="1568"/>
+      </Position25>
+      <Position26>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1608" Column="25" TopLine="1572"/>
+      </Position26>
+      <Position27>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="889" Column="22" TopLine="868"/>
+      </Position27>
+      <Position28>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="893" Column="22" TopLine="868"/>
+      </Position28>
+      <Position29>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1440" Column="32" TopLine="1404"/>
+      </Position29>
+      <Position30>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1446" Column="30" TopLine="1410"/>
+      </Position30>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="1" ActiveMode="default">
+        <Mode0 Name="default"/>
+      </Modes>
+    </RunParams>
+  </ProjectSession>
+  <Debugging>
+    <Watches Count="2">
+      <Item1>
+        <Expression Value="ra2-ra1-pi_"/>
+      </Item1>
+      <Item2>
+        <Expression Value="update_required"/>
+      </Item2>
+    </Watches>
+  </Debugging>
+</CONFIG>
