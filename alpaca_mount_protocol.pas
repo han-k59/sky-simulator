@@ -41,30 +41,41 @@ uses  cu_alpacamount, cu_alpacadevice, Classes, SysUtils, math,
 function alpaca_ra : double;{RA position mount}
 function alpaca_dec : double;{DEC position mount}
 procedure mount_simulation;{called by the timer every second}
-
+function crosses_meridian(meridian :double) : boolean;
 var
-  ra_encoder: double=180;{RA encoder position, degrees}
+  ra_encoder: double=3.5*15;{RA encoder position, degrees}
   ra_corr: double=0;{mount sync correction}
   dec_encoder: double=50;{DEC encoder position}
   dec_corr: double=0;{mount sync correction}
 
-  alpaca_ra_target: double=12;{hours}
+  alpaca_ra_target: double=3.5;{hours}
   alpaca_dec_target: double=50;{degree}
 
-  alpaca_ra_target2: double=12;{hours. For slew to target}
+  alpaca_ra_target2: double=3.5;{hours. For slew to target}
   alpaca_dec_target2: double=50;{degree}
 
   alpaca_tracking: boolean=true;
   alpaca_mount_slewing: boolean=false;
   slew_settletime: integer=1;
+  sideofpier_alpaca:integer=99;  //0 = pierEast, 1 = pierWest, -1= pierUnknown. Start with 99 to initialise a setting. Else it is done when slewing
+  DecPulseReverses :boolean=true;//normal situation. Mount N/S pulsing is swapped after meridian flip, same with camera
+  NSswapped: integer=1;//for pulse guiding
 
   pulseNorth : integer=0;
   pulseSouth : integer=0;
   pulseEast  : integer=0;
   pulseWest  : integer=0;
 
+  backslash  : integer=0;
+  pulsedirection:  integer=0;
+
+  meridian          : double=2; //hours
+  equatorial_mount  : boolean=true;
+
   guiderateRa: double=0.5*360/(24*60*60);// 0.5x and 1.5x rate
   guiderateDec: double=0.5*360/(24*60*60);// 0.5x and 1.5x rate
+
+  theaxisrates : array[0..2]  of double=(0,0,0);
 
 type
 
@@ -216,18 +227,54 @@ begin
 end;
 
 
+function angular_distance(r1,r2 :double) : double;//in hours
+begin
+  result:=(r2-r1);
+  if result>12 then result:=result-24
+  else
+  if result<-12 then result:=result+24;
+end;
+
+
+function crosses_meridian(meridian :double) : boolean;
+var
+  angular_distance_mount, angular_distance_target : double;
+begin
+  angular_distance_mount:=angular_distance(meridian,alpaca_ra);//from meridian
+  angular_distance_target:=angular_distance(meridian,alpaca_ra_target);//meridian
+
+  result:=( (angular_distance_mount>0) <> (angular_distance_target>0) );//both positive or both negative. So at same side
+
+  if angular_distance_mount>=0 then sideofpier_alpaca:=1 else sideofpier_alpaca:=0; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
+
+  if abs(abs(angular_distance_mount)-12)<=0.00001 then result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
+end;
+
+
 procedure mount_simulation;{called every second by the timer}
 var
-  deltaRa,deltaDec,stepRa,stepDec : double;
+  deltaRa,deltaDec,stepRa,stepDec,ra_target_north : double;
+  reverseDecPulse: integer;
 begin
   if alpaca_mount_slewing then
   begin
-    deltaRa:=inc_angle((alpaca_ra_target-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees}
+
+    if equatorial_mount=false then sideofpier_alpaca:=-1; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
+    if ((equatorial_mount) and (crosses_meridian(meridian) )) then
+    begin //go first to north to avoid crossing meridian
+      ra_target_north:=inc_angle((meridian)*15,180)/15;
+    end
+    else
+    begin //no meridian crossing
+      ra_target_north:=alpaca_ra_target;
+    end;
+
+    deltaRa:=inc_angle((ra_target_north-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees}
     stepRA:=min(abs(deltaRA),10); {degrees, slew speed ten degree per second}
     if deltaRA<0 then
-      ra_encoder:=inc_angle(ra_encoder,-stepRa)
+      ra_encoder:=inc_angle(ra_encoder,-stepRa)    //decrement
     else
-      ra_encoder:=inc_angle(ra_encoder,+stepRa);
+      ra_encoder:=inc_angle(ra_encoder,+stepRa);   //increment
 
     deltaDec:=alpaca_dec_target-alpaca_Dec;{calculate dec distance}
     stepDec:=min(abs(deltaDec),10); {slew speed ten degree per second}
@@ -236,7 +283,11 @@ begin
     else
       dec_encoder:=inc_angle(dec_encoder,+stepDec);
 
-    alpaca_mount_slewing:=((stepRa>0.00001) or (stepDec>0.00001)); {reached target?}
+    if ra_target_north=alpaca_ra_target then //do not stop at first stop north
+      alpaca_mount_slewing:=((stepRa>0.00001) or (stepDec>0.00001)) {reached target?}
+    else
+      alpaca_mount_slewing:=true;
+
   end
   else
   begin
@@ -246,17 +297,40 @@ begin
     end
     else
     begin //Normal tracking. Processed every second
-      ra_encoder:=inc_angle(ra_encoder, (pulseEast-pulseWest){ms}*guiderateRa/1000); //pulse duration is in milliseconds
-      dec_encoder:=inc_angle(dec_encoder,(pulseNorth-pulseSouth) {ms}*guiderateDec/1000);
+      //pulse guiding preperation
+      if ((equatorial_mount) and (DecPulseReverses)) then //normal situation. Mount N/S pulsing is swapped after meridian flip, same with camera
+      begin
+        if Sideofpier_alpaca=1 then  reverseDecPulse:=-1 //If east then N/S buttons are reversed,  0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
+        else
+        if Sideofpier_alpaca=0 then reverseDecPulse:=+1 // If west then N/S buttons normal,  0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown, equatorial meridian flipped mount ,the declination motor has turned upside down.
+        else
+        reverseDecPulse:=+1;
+      end
+      else
+        reverseDecPulse:=+1;//mount software prevents reversing
 
-      pulseNorth:=0;//processed
+      if backslash<>0 then
+      begin
+        if ((pulsedirection=+1){north} and (pulseSouth<>0))  then begin pulseSouth:=max(pulseSouth-100,0);pulsedirection:=-1;{south} end;//100 ms backslash
+        if ((pulsedirection=-1){south} and (pulseNorth<>0))  then begin pulseNorth:=max(pulseNorth-100,0);pulsedirection:=1;{North} end;//100 ms backslash
+      end;
+      ra_encoder:=inc_angle(ra_encoder, (pulseEast-pulseWest){ms}*guiderateRa/1000); //pulse duration is in milliseconds
+      dec_encoder:=inc_angle(dec_encoder,NSswapped*reverseDecPulse*(pulseNorth-pulseSouth) {ms}*guiderateDec/1000);
+
+      pulseNorth:=0;//processed, zero it.
       pulseSouth:=0;
       pulseEast:=0;
       pulseWest:=0;
-    end;
 
+      ra_encoder:=ra_encoder+theaxisrates[0];//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
+      dec_encoder:=dec_encoder+ NSswapped*reverseDecPulse*theaxisrates[1];
+
+      //if alpaca_mount_slewing then memo2_message('reverse dec pulse '+inttostr(reverseDecPulse)+'  Side of pier '+ inttostr(Sideofpier_alpaca)+ ' slewing' )
+      //else memo2_message('reverse dec pulse '+inttostr(reverseDecPulse)+'  Side of pier '+ inttostr(Sideofpier_alpaca)+ ' not slewing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' )
+    end
   end;
 end;
+
 
 // Replace the following by the driver UniqueID
 // On Linux this can be generated by the command uuidgen
@@ -422,7 +496,7 @@ end;
 
 function  T_Alpaca_Mount.cansetdeclinationrate: boolean;
 begin
-  result:=false;
+  result:=true;
 end;
 
 function  T_Alpaca_Mount.cansetguiderates: boolean;
@@ -442,7 +516,7 @@ end;
 
 function  T_Alpaca_Mount.cansetrightascensionrate: boolean;
 begin
-  result:=false;
+  result:=true;
 end;
 
 function  T_Alpaca_Mount.cansettracking: boolean;
@@ -492,13 +566,12 @@ end;
 
 function  T_Alpaca_Mount.declinationrate: double;
 begin
-  result:=0;
+  result:= theaxisrates[1]*3600;//from [deg/sec] to ["/sec]
 end;
 
 procedure T_Alpaca_Mount.setdeclinationrate(value: double);
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  theaxisrates[1]:=value/3600;//from ["/sec] to [deg/sec]
 end;
 
 function  T_Alpaca_Mount.doesrefraction: boolean;
@@ -562,7 +635,14 @@ end;
 
 function  T_Alpaca_Mount.rightascensionrate: double;
 begin
-  result:=0;
+  result:= theaxisrates[0]*(24/(360*0.9972695677))*3600;//from [deg/sec] to [ra_sec/sec]
+  //To convert a given rate in (the more common) units of sidereal seconds per UTC (clock) second, multiply the value by 0.9972695677 (the number of UTC seconds in a sidereal second) then set the property. Please note that these units were chosen for the Telescope V1 standard, and in retrospect, this was an unfortunate choice. However, to maintain backwards compatibility, the units cannot be changed. A simple multiplication is all that's needed, as noted.
+end;
+
+procedure T_Alpaca_Mount.setrightascensionrate(value: double);
+begin
+  theaxisrates[0]:=value*(360/24)*0.9972695677/(3600);//from [ra_/sec] to [deg/sec]
+  //To convert a given rate in (the more common) units of sidereal seconds per UTC (clock) second, multiply the value by 0.9972695677 (the number of UTC seconds in a sidereal second) then set the property. Please note that these units were chosen for the Telescope V1 standard, and in retrospect, this was an unfortunate choice. However, to maintain backwards compatibility, the units cannot be changed. A simple multiplication is all that's needed, as noted.
 end;
 
 function  T_Alpaca_Mount.SiderealTime: double;
@@ -571,17 +651,10 @@ begin
   result:=sidereal_time*12/pi
 end;
 
-procedure T_Alpaca_Mount.setrightascensionrate(value: double);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
 
 function  T_Alpaca_Mount.sideofpier: integer;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=0;
+begin //0 = pierEast, 1 = pierWest, -1= pierUnknown
+  result:=sideofpier_alpaca;
 end;
 
 procedure T_Alpaca_Mount.setsideofpier(value: integer);
@@ -746,8 +819,9 @@ end;
 
 function  T_Alpaca_Mount.canmoveaxis(axis:integer): boolean;
 begin
-  result:=false; //(axis<=axis);  // 0 = axisPrimary, 1 = axisSecondary, 2 = axisTertiary.
+  result:=axis<2; //(axis<=axis);  // 0 = axisPrimary, 1 = axisSecondary, 2 = axisTertiary.
 end;
+
 
 function  T_Alpaca_Mount.destinationsideofpier(ra,dec: double):integer;
 begin
@@ -764,8 +838,10 @@ end;
 
 procedure T_Alpaca_Mount.moveaxis(axis:integer;rate:double);
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  if axis=0 then
+    theaxisrates[axis]:=0.004178075-rate //[deg/sec] absolute so subtract sidereal rate. Positive rate goes east
+  else
+    theaxisrates[axis]:=rate;//[deg/sec] declination
 end;
 
 procedure T_Alpaca_Mount.park;

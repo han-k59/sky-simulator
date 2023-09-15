@@ -32,9 +32,9 @@ procedure plot_stars(realposition, perfectposition,a,b : double);{plot stars on 
 procedure image_array_to_bitmap(var  Bitmap  : TBitmap);
 procedure image_array_to_screen;
 procedure read_deepsky(searchmode:char; telescope_ra,telescope_dec, cos_telescope_dec {cos(telescope_dec},fov : double; out ra2,dec2,length2,width2,pa : double);{deepsky database search}
-procedure prepare_plotting(ra1,dec1 :double); {prepare image1 and set the parameters normally contained in fits header required for plotting}
+procedure prepare_plotting(ra1,dec1,rota :double; fh,fv :boolean); {prepare image1 and set the parameters normally contained in fits header required for plotting}
 function hfd_calc(position,perfectfocusposition,a,b:double) :double; {calculate HFD from position and perfectfocusposition using hyperbola parameters}
-procedure annotation_to_array(thestring : ansistring;transparant:boolean;colour,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
+procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
 
 var
   img_array        : image_array;
@@ -55,10 +55,11 @@ const
 
 implementation
 
-uses sky_simulator_main, sky_simulator_unit_290;
+uses sky_simulator_main, sky_simulator_unit_290, alpaca_camera_protocol;
 
 var
   cd1_1,cd1_2,cd2_1, cd2_2,crpix1,crpix2,cdelt1,cdelt2,dec0,ra0,crota2  : double;
+  flip_horizontal, flip_vertical : boolean;
 
 
   const font_5x9 : packed array[33..126,0..8,0..4] of byte=  {ASTAP native font for part of code page 437}
@@ -1006,7 +1007,7 @@ var
   (0,0,0,0,0)){~}
   );
 
-procedure annotation_to_array(thestring : ansistring;transparant:boolean;colour,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
+procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
 var                                                                                       {Screen coordinates are used to have the font with the correct orientation}
  w,h,i,j,k,value,flipH,flipV,len,x2,y2: integer;
  ch : pansichar;
@@ -1030,15 +1031,13 @@ begin
         x2:=x+(i+(k-1)*7*size)*flipH;
         y2:=y-(j*flipV);
         if ((x2>=0) and (x2<w) and (y2>=0) and (y2<h)) then {within image}
-        if (((transparant=false)) or (font_5x9[value,j div size ,i div size]<>0)) then img[x2,y2]:=font_5x9[value,j div size,i div size]*colour;{write the font to the array}
+        if (((transparant=false)) or (font_5x9[value,j div size ,i div size]<>0)) then img[x2,y2]:=font_5x9[value,j div size,i div size]*graylevel;{write the font to the array}
       end;
   end;
 end;
 
 
-
-
-procedure prepare_plotting(ra1,dec1 :double); {prepare image1 and set the parameters normally contained in fits header required for plotting}
+procedure prepare_plotting(ra1,dec1,rota :double; fh,fv :boolean); {prepare image1 and set the parameters normally contained in fits header required for plotting}
 var
    sign        : integer;
 begin
@@ -1053,10 +1052,6 @@ begin
   width_arcmin:=height_arcmin*width2/height2;
 
   form1.width1.caption:=inttostr(round(width_arcmin));
-
-
-//  form1.image1.width:=width2;
-//  form1.image1.height:=height2;
   form1.image1.picture.Bitmap.Width:=width2;
   form1.image1.picture.Bitmap.Height:=height2;
 
@@ -1065,20 +1060,25 @@ begin
 
   form1.image1.Canvas.fillrect(rect(0,0,width2,height2){.clientrect}); {wis canvas using current brush}
 
+
+  crota2:=rota;
   crpix1:=width2/2;
   crpix2:=height2/2;
   cdelt1:=-(width_arcmin/60)/width2;//X pixel size (deg)
   cdelt2:=cdelt1;// Y pixel size (deg)
 
-  crota2:=form1.updown1.position;     // Image twist of Y axis        (deg)
   {CD matrix to convert (x,y) to (Ra, Dec)}
-  cd1_1:=cdelt1*cos(crota2*pi/180); {note 2013 should be crota1 if skewed}
+  cd1_1:=cdelt1*cos(crota2); {note 2013 should be crota1 if skewed}
   if cdelt1>=0 then sign:=+1 else sign:=-1;
-  cd1_2:=abs(cdelt2)*sign*sin(crota2*pi/180);{note 2013 should be crota1 if skewed}
+  cd1_2:=abs(cdelt2)*sign*sin(crota2);{note 2013 should be crota1 if skewed}
   if cdelt2>=0 then sign:=+1 else sign:=-1;
-  cd2_1:=-abs(cdelt1)*sign*sin(crota2*pi/180);
-  cd2_2:= cdelt2*cos(crota2*pi/180);
+  cd2_1:=-abs(cdelt1)*sign*sin(crota2);
+  cd2_2:= cdelt2*cos(crota2);
+
+  flip_vertical:=fv;//form1.flipV1.checked;
+  flip_horizontal:=fh;//form1.flipH1.checked;
 end;
+
 
 procedure load_deep;{load the deepsky database once. If loaded no action}
 begin
@@ -1427,17 +1427,11 @@ var
   fitsX,fitsY,dra,ddec,delta,gamma, telescope_ra,telescope_dec,cos_telescope_dec,fov,ra2,dec2,length1,width1,pa,len,flipped,
   gx_orientation, delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh : double;
   name: string;
-  flip_horizontal, flip_vertical : boolean;
   x,y,labels                     : integer;
-
-
 begin
   if cd1_1<>0 then
   begin
-
-    flip_vertical:=form1.flipV1.checked;
-    flip_horizontal:=form1.flipH1.checked;
-    labels:=form1.plotted_info1.itemindex;{0 None, 1 HFD, 2 Info, 3 Objects, 4 All, 5 no deepsky, 6 no star saturation}
+    labels:=form1.plotted_info1.itemindex;{0 None, 1 HFD, 2 Info, 3 Objects, 4 All, 5 no deepsky, 6 no star saturation, 7 north-east indicator}
 
     {6. Passage (x,y) -> (RA,DEC) to find RA0,DEC0 for middle of the image. See http://alain.klotz.free.fr/audela/libtt/astm1-fr.htm}
     dRa :=(cd1_1*((width2/2)-crpix1)+cd1_2*((height2/2)-crpix2))*pi/180; {also valid for case crpix1,crpix2 is not in the middle}
@@ -1482,7 +1476,7 @@ begin
 
       if ((x>-0.25*width2) and (x<=1.25*width2) and (y>-0.25*height2) and (y<=1.25*height2)) then {within image1 with some overlap}
       begin
-        gx_orientation:=pa*flipped+crota2;
+        gx_orientation:=pa*flipped+crota2*180/pi;
         if flip_horizontal then begin x:=(width2-1)-x; gx_orientation:=-gx_orientation; end;
         if flip_vertical then y:=(height2-1)-y else gx_orientation:=-gx_orientation;
         if ((labels>=3) and (labels<=4) and (x>=0) and (x<=width2-1) and (y>=0) and (y<=height2-1) ) then {plot only text if center object is visible}
@@ -1493,7 +1487,7 @@ begin
           else
           name:=naam2+'/'+naam3+'/'+naam4;
 
-          annotation_to_array(name,true{transparant},$040404{colour},1, x,y {screen coord},img_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
+          annotation_to_array(name,true{transparant},3*graylevel,1, x,y {screen coord},img_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
        end;{centre object visible}
 
 
@@ -1505,10 +1499,10 @@ begin
        begin
          if ( (x>=2) and (x<=width2-1-2) and (y>=2) and (y<=height2-1-2) ) then {plot only if visible}
          begin
-           img_array[x-2,y+2]:=$040404;
-           img_array[x+2,y+2]:=$040404;
-           img_array[x-2,y-2]:=$040404;
-           img_array[x+2,y-2]:=$040404;
+           img_array[x-2,y+2]:=3000;
+           img_array[x+2,y+2]:=3000;
+           img_array[x-2,y-2]:=3000;
+           img_array[x+2,y-2]:=3000;
          end;
        end
        else
@@ -1542,15 +1536,107 @@ begin
   result:=a*cosh(t);{convert t-position to y/hfd value}
 end;
 
+procedure colourshift(pattern,offsetX,offsetY : integer; var img: image_array);//colour shift OSC image
+var
+  w,h,x,y : integer;
+begin
+  w:=Length(img); {width}
+  h:=Length(img[0]); {height}
+
+  if pattern=1 then // make image reddish
+  begin
+    for y := 0 to h -1 do
+    begin
+      for x := 0 to w -1 do
+      begin
+        if ((odd(x+offsetX)=false) and (odd(y+offsetY)=false)) then //red  sensitive pixels
+          img_array[x,y]:=img_array[x,y]*4;
+      end;
+    end;
+  end
+  else
+  if pattern=2 then // make image greenish
+  begin
+    for y := 0 to h -1 do
+    begin
+      for x := 0 to w -1 do
+        begin
+          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=false)) then //green sensitive pixels
+            img_array[x,y]:=img_array[x,y]*4;
+          if ((odd(x+offsetX)=false) and (odd(y+offsetY)=true)) then//green sensitive pixels
+            img_array[x,y]:=img_array[x,y]*4;
+        end;
+    end;
+  end
+  else
+  if pattern=3 then // make image blueish
+  begin
+    for y := 0 to h -1 do
+    begin
+      for x := 0 to w -1 do
+        begin
+          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=true)) then //blue  sensitive pixels
+            img_array[x,y]:=img_array[x,y]*4;
+        end;
+    end;
+  end
+  else
+  if pattern=11 then // make FLAT
+  begin
+    for y := 0 to h -1 do
+    begin
+      for x := 0 to w -1 do
+        begin
+          img_array[x,y]:=40000; //in one second
+        end;
+    end;
+  end
+  else
+  if pattern=12 then // make a green OSC FLAT
+  begin
+    for y := 0 to h -1 do
+    begin
+      for x := 0 to w -1 do
+        begin
+          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=false)) then //green sensitive pixels
+            img_array[x,y]:=40000
+          else
+          if ((odd(x+offsetX)=false) and (odd(y+offsetY)=true)) then//green sensitive pixels
+            img_array[x,y]:=40000
+          else
+          img_array[x,y]:=0
+        end;
+    end;
+  end
+
+
+end;
+
+procedure coloured_lines(x2,y2,bayeroffset_X,bayeroffset_Y:integer; var img: image_array);//mark with colour lines for raw OSC
+var
+  x,y : integer;
+begin
+  annotation_to_array('R=',true{transparant},graylevel,2,x2,y2 {screen coord},img_array);
+  annotation_to_array('G=',true{transparant},graylevel,2,x2,y2+20 {screen coord},img_array);
+  annotation_to_array('B=',true{transparant},graylevel,2,x2,y2+40 {screen coord},img_array);
+
+  for x:=x2+30   to x2+100 do
+    for y:=y2+2 to y2+16 do
+    begin
+      if ((odd(x+bayeroffset_X)=false) and (odd(y+bayeroffset_Y)=false))  then img_array[x,y]:=65000 else  img_array[x,y]:=0;//red
+      if ( ((odd(x+bayeroffset_X)=true) and (odd(y+bayeroffset_Y)=false)) or ((odd(x+bayeroffset_X)=false) and (odd(y+bayeroffset_Y)=true)) ) then img_array[x,y+20]:=65000 else  img_array[x,y+20]:=0;//green
+      if  ((odd(x+bayeroffset_X)=true) and (odd(y+bayeroffset_Y)=true)) then img_array[x,y+40]:=65000 else  img_array[x,y+40]:=0;//blue
+    end;
+
+end;
 
 procedure plot_stars(realposition, perfectposition,a,b : double);{plot stars}
 var
   hfd,fitsX,fitsY, fitsX_middle, fitsY_middle,x2,y2,x1,y1,
   dra,ddec,delta,gamma, telescope_ra,telescope_dec,fov,ra2,dec2, mag2,Bp_Rp, peakvalue,
-  delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,sigma,max_magn,angle,distance,curvature,pedestal : double;
+  delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,sigma,max_magn,angle,distance,curvature,pedestal,cosdec : double;
 
   star_total_counter, stepsize,i  : integer;
-  flip_horizontal, flip_vertical : boolean;
   frac1,frac2,frac3,frac4,val        : double;
   area1,area2,area3,area4,w,h,x,y,hotpixels,tilt_index,half_width,half_height  : integer;
 
@@ -1630,22 +1716,20 @@ var
    end;
 
 begin
+//  memo2_message('stars '+floattostr(crota2)+'  '+ floattostr(cd1_1)+'  '+ floattostr(cd1_2)+'  '+ floattostr(cd2_1)+'  '+ floattostr(cd2_2));
   flux_magn_offset:=0;
 
   if cd1_1<>0 then
   begin
-    flip_vertical:=form1.flipV1.checked;
-    flip_horizontal:=form1.flipH1.checked;
-
     hfd:=hfd_calc(realposition, perfectposition,a,b); {a=2.35, b=2.35*1000/10, so hfd is 10 when focus position is 1000 position off}
 
-    tilt_index:=form1.tilt1.itemindex;
+    tilt_index:=form1.manipulations1.itemindex;
     half_width:= width2 div 2;
     half_height:=height2 div 2;
 
     counter_flux_measured:=0;
 
-    labels:=form1.plotted_info1.itemindex; {0 None, 1 HFD, 2 Info, 3 Objects labels, 4 All labels, 5 No deepsky, 6 No star saturation}
+    labels:=form1.plotted_info1.itemindex; {0 None, 1 HFD, 2 Info, 3 Objects labels, 4 All labels, 5 No deepsky, 6 No star saturation, 7 NE indicator}
 
     bp_rp:=999;{not defined in mono versions}
 
@@ -1735,15 +1819,177 @@ begin
 
       if ((labels=2) or (labels=4)) then
       begin
-        annotation_to_array('ra_2000: '+prepare_ra(ra0),true{transparant},$040404{colour},1, 10,10 {screen coord},img_array);
-        annotation_to_array('de_2000:'+ prepare_dec(dec0),true{transparant},$040404{colour},1, 10,10+1*20 {screen coord}, img_array);
-        annotation_to_array('Focuser: '+inttostr(focuser_position),true{transparant},$040404{colour},1, 10,10+2*20 {screen coord}, img_array);
+        annotation_to_array('ra_2000: '+prepare_ra(ra0),true{transparant},graylevel,1, 10,20 {screen coord},img_array);
+        annotation_to_array('de_2000:'+ prepare_dec(dec0),true{transparant},graylevel,1, 10,20+1*20 {screen coord}, img_array);
+        annotation_to_array('Focuser: '+inttostr(focuser_position),true{transparant},graylevel,1, 10,20+2*20 {screen coord}, img_array);
       end;
       if ((labels=1) or (labels=2) or (labels=4)) then  {0 None, 1 HFD, 2 Info, 3 Objects, 4 All}
-         annotation_to_array('HFD: '+floattostrF(HFD,ffFixed,0,1),true{transparant},$040404{colour},1, 10,10+3*20 {screen coord}, img_array);
-
-
+         annotation_to_array('HFD: '+floattostrF(HFD,ffFixed,0,1),true{transparant},graylevel,1, 10,20+3*20 {screen coord}, img_array);
     end;{not a dark}
+
+
+    if labels=7 then //north-east indicator
+    begin
+      cosdec:=cos(dec0);
+      if abs(cosdec)<0.00001 then exit;
+      mag2:=9999;//not a star
+      ra2:=ra0;
+      dec2:=dec0+fov*0.1;
+      plot_star;//find x,y position
+      annotation_to_array('N',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      dec2:=dec0-fov*0.1;;
+      plot_star;
+      annotation_to_array('S',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      ra2:=ra0+fov*0.1/cosdec;
+      dec2:=dec0;
+      plot_star;
+      annotation_to_array('E',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      ra2:=ra0-fov*0.1/cosdec;;
+      dec2:=dec0;
+      plot_star;
+      annotation_to_array('W',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+    end;
+
+    //colour shift for OSC
+    case tilt_index of
+                      5:begin //rggb reddish
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
+                           annotation_to_array('RGGB, OffsetX=0, OffsetY=0. Reddish',true{transparant},1000 {graylevel},2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      6:begin //rggb greenish
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
+                           annotation_to_array('RGGB, OffsetX=0, OffsetY=0. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                         end;
+                      7:begin //rggb bluish
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
+                           annotation_to_array('RGGB, OffsetX=0, OffsetY=0. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+
+
+                      8:begin //grgb reddish
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
+                           annotation_to_array('RGGB, OffsetX=1, OffsetY=0 ==> GRGB. Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      9:begin //grgb greenish
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
+                           annotation_to_array('RGGB, OffsetX=1, OffsetY=0 ==> GRGB. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      10:begin //grgb blueish
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
+                           annotation_to_array('RGGB, OffsetX=1, OffsetY=0 ==> GRGB. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+
+
+                      11:begin //gbrg reddish
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=1;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
+                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1 ==> GBRG. Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      12:begin //gbrg greenish
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=1;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
+                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1 ==> GBRG. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      13:begin //gbrg blueish
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=1;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
+                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1 ==> GBRG. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+
+
+                      14:begin //bggr reddish
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=1;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
+                           annotation_to_array('RGGB, OffsetX=1, OffsetY=1 ==> BGGR. Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      15:begin //bggr greenish
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=1;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
+                           annotation_to_array('RGGB, OffsetX=1, OffsetY=1 ==> BGGR. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      16:begin //bggr blueish
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=1;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
+                           annotation_to_array('RGGB, OffsetX=1, OffsetY=1 ==> BGGR. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
+                        end;
+                      17:begin //Mono flat
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=0;
+                           sensor_type:=0;//mono camera
+                           colourshift(11,bayeroffset_X,bayeroffset_Y,img_array);//flat
+                        end;
+                      18:begin //RGGB flat
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(11,bayeroffset_X,bayeroffset_Y,img_array);//flat
+                        end;
+                      19:begin //RGGB flat green only
+                           bayeroffset_X:=0;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(12,bayeroffset_X,bayeroffset_Y,img_array);//flat green only
+                        end;
+                      20:begin //GRBG flat green only
+                           bayeroffset_X:=1;
+                           bayeroffset_Y:=0;
+                           sensor_type:=2;//OSC RGGB
+                           colourshift(12,bayeroffset_X,bayeroffset_Y,img_array);//flat green only
+                        end;
+
+
+
+
+            else
+            begin
+              sensor_type:=0;//mono
+              bayeroffset_X:=0;
+              bayeroffset_Y:=0;
+            end;
+     end;
+
   end;
 end;{plot stars}
 
@@ -1880,7 +2126,7 @@ begin
     Brush.Style := bsClear;
     font.size:=20;
     Font.Color := clgreen;
-    TextOut(200,10,'Database data without noise.');
+    TextOut(10,h-15,'Database data without noise.');
   end;
 
 end;

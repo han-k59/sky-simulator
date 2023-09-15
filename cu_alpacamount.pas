@@ -94,10 +94,6 @@ type
       function  targetrightascension: double; virtual; abstract;
       procedure settargetrightascension(value: double; out ok:boolean); virtual; abstract;
 
-//      function  guideraterightascension: double; virtual; abstract;
-//      function  guideratedeclination: double; virtual; abstract;
-
-
       function  tracking: boolean; virtual; abstract;
       procedure settracking(value: boolean); virtual; abstract;
       function  trackingrate: integer; virtual; abstract;
@@ -529,6 +525,11 @@ begin
       setrightascensionrate(x);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else if method='setsiteofpier' then begin
+    if GetParamInt(params,'SiteOfPier',i) then
+      setsideofpier(i);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
   else if method='siteelevation' then begin
     if GetParamFloat(params,'SiteElevation',x) then
       setsiteelevation(x);
@@ -568,7 +569,7 @@ begin
   end
   else if method='sideofpier' then begin
     if GetParamInt(params,'SideOfPier',i) then
-      setsideofpier(i);
+      SetSideofpier(i);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='slewsettletime' then begin

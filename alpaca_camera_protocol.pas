@@ -56,6 +56,16 @@ var
   bin_Y      : integer=1;
   last_exposureduration:double=-1;
   Percent_Completed: integer=0; {%}
+  sensor_type: integer=0;
+  { 0 = Monochrome,
+    1 = Colour not requiring Bayer decoding
+    2 = RGGB Bayer encoding
+    3 = CMYG Bayer encoding
+    4 = CMYG2 Bayer encoding
+    5 = LRGB TRUESENSE Bayer encoding.}
+   bayeroffset_X : integer=0;
+   bayeroffset_Y : integer=0;
+
 
   the_img    : Timg;
   camera_state : integer=0;
@@ -106,6 +116,8 @@ type
       function  sensorname : string; override;
 
       function  maxadu : integer; override;
+      function  bayeroffsetX : integer; override;
+      function  bayeroffsetY : integer; override;
       function  camerastate : integer; override;
       function  startx : integer; override;
       function  starty : integer; override;
@@ -186,8 +198,10 @@ begin
   begin
     camera_state:=0;
     exposure_remaining:=0;
-  end;
-  Percent_Completed:=round(100*(last_exposureduration-exposure_remaining)/last_exposureduration);
+    Percent_Completed:=100;
+  end
+  else
+    Percent_Completed:=round(100*(last_exposureduration-exposure_remaining)/last_exposureduration);
 
   {0 CameraIdle At idle state, available to start exposure
    1 CameraWaiting Exposure started but waiting (for shutter, trigger, filter wheel, etc.)
@@ -343,13 +357,24 @@ end;
 
 function  T_Alpaca_cam.sensorname: string;
 begin
-  result:='mono sensor';
+  result:='artificial sensor';
 end;
 
 function  T_Alpaca_cam.maxadu: integer;
 begin
   result:=65535;
 end;
+
+function  T_Alpaca_cam.bayeroffsetX: integer;
+begin
+  result:=bayeroffset_X;
+end;
+
+function  T_Alpaca_cam.bayeroffsetY: integer;
+begin
+  result:=bayeroffset_Y;
+end;
+
 
 function  T_Alpaca_cam.camerastate: integer;
 begin
@@ -455,8 +480,9 @@ end;
 
 function  T_Alpaca_cam.sensortype: integer;
 begin
-  result:=0;{mono}
+  result:=sensor_type;{mono}
 end;
+
 function  T_Alpaca_cam.ispulseguiding: boolean;
 begin
   result:=false;

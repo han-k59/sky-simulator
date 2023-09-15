@@ -48,6 +48,8 @@ type
       function  pixelsizey: integer; virtual; abstract;
       function  sensorname: string; virtual; abstract;
       function  maxadu: integer; virtual; abstract;
+      function  bayeroffsetX: integer; virtual; abstract;
+      function  bayeroffsetY: integer; virtual; abstract;
       function  camerastate: integer; virtual; abstract;
       function  startx: integer; virtual; abstract;
       function  starty: integer; virtual; abstract;
@@ -117,8 +119,8 @@ end;
 function  T_AlpacaCamera.ProcessGetRequest(req: string; ServerTransactionID:LongWord; out status: integer):string;
 var method,value: string;
     ok: boolean;
-    lst:TStringList;
-    x,ra,dec: double;
+    lst: TStringList;
+    x  : double;
     params: TStringlist;
     i: integer;
     img: timg;
@@ -242,11 +244,13 @@ begin
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='bayeroffsetx' then begin
-    set_not_implemented;
+//    set_not_implemented;
+    i:=bayeroffsetX;
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='bayeroffsety' then begin
-    set_not_implemented;
+    //set_not_implemented;
+    i:=bayeroffsetY;
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='maxadu' then begin
@@ -430,7 +434,7 @@ end;
 function  T_AlpacaCamera.ProcessPutRequest(req,arg: string; ServerTransactionID:LongWord; out status: integer):string;
 var method,p1,p2,value: string;
     ok,bvalue: boolean;
-    x,y: double;
+    x        : double;
     params: TStringlist;
     i,error: integer;
     error_float : double;
