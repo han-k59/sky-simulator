@@ -1982,19 +1982,9 @@ begin
   if form1.start_button1.font.style=[fsbold] then begin esc_pressed:=true;exit;end;
   form1.start_button1.font.style:=[fsbold];
 
-  if mount_alpaca1.checked=false then
-  begin
-    if ascom_mount_connected=false then form1.connect_mount1Click(nil);
-  end;
-
-  if focuser_alpaca1.checked=false then
-  begin
-    if ascom_focuser_connected=false then form1.connect_focuser1Click(nil);
-  end;
-  if rotator_alpaca1.checked=false then
-  begin
-    if ascom_rotator_connected=false then form1.connect_rotator1Click(nil);
-  end;
+  if ((mount_alpaca1.checked=false) and (ascom_mount_connected=false)) then form1.connect_mount1Click(nil);
+  if ((focuser_alpaca1.checked=false) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);
+  if ((rotator_alpaca1.checked=false) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);
 
   start_alpaca(form1.camera_alpaca1.checked,form1.focuser_alpaca1.checked,form1.mount_alpaca1.checked,rotator_alpaca1.checked);
 
@@ -2229,6 +2219,7 @@ end;
 procedure TForm1.focuser_alpaca1Change(Sender: TObject);
 begin
    connect_focuser1.visible:=focuser_alpaca1.checked=false;
+   if ((focuser_alpaca1.checked=false) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);
    update_required:=true;
 end;
 
@@ -2519,6 +2510,12 @@ var
   alpacaMode :boolean;
 begin
   alpacaMode:=mount_alpaca1.checked;
+
+  if alpacaMode=false then
+  begin
+    if ascom_mount_connected=false then form1.connect_mount1Click(nil);
+  end;
+
   connect_mount1.visible:=alpacaMode=false;
   mount_type1.visible:=alpacaMode;
   DecPulseReverses1.visible:=alpacaMode;
@@ -2571,6 +2568,7 @@ end;
 procedure TForm1.rotator_alpaca1Change(Sender: TObject);
 begin
   connect_rotator1.visible:=rotator_alpaca1.checked=false;
+  if ((rotator_alpaca1.checked=false) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);
   update_required:=true;
 end;
 
