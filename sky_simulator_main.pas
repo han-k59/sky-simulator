@@ -56,94 +56,76 @@ type
     alpaca_groupBox1: TGroupBox;
     alpaca_port1: TEdit;
     alpaca_port_number1: TLabel;
+    Alpaca_tab1: TTabSheet;
     Angle2: TEdit;
     arrowleft1: TLabel;
-    Alpaca_tab1: TTabSheet;
     ascom_image1: TGroupBox;
     azimuth_error1: TEdit;
     azimuth_updown1: TUpDown;
     backlash1: TEdit;
     Button1: TButton;
-    buttonNorth1: TButton;
     buttonEast1: TButton;
+    buttonNorth1: TButton;
     buttonSouth1: TButton;
     buttonWest1: TButton;
     calculator1: TButton;
-    NSswapped1: TCheckBox;
-    pointing1: TLabel;
-    mount_type1: TComboBox;
-    DecPulseReverses1: TCheckBox;
-    fliptext1: TCheckBox;
-    fast_simulation1: TCheckBox;
-    filter1: TEdit;
-    focuser_position7: TLabel;
-    Label12: TLabel;
-    Label17: TLabel;
-    Memo2: TMemo;
-    menucopy1: TMenuItem;
-    Menufind1: TMenuItem;
-    menufindnext1: TMenuItem;
-    MenuItem23: TMenuItem;
-    PopupMenu_memo1: TPopupMenu;
-    select_all1: TMenuItem;
-    manipulations1: TComboBox;
-    rotator_setpoint1: TLabel;
-    rotator_reverse1: TCheckBox;
-    clear_log_button1: TButton;
     camera_alpaca1: TRadioButton;
     camera_ascom1: TRadioButton;
-    activate_log1: TCheckBox;
     connect_focuser1: TBitBtn;
-    connect_rotator1: TBitBtn;
     connect_mount1: TBitBtn;
+    connect_rotator1: TBitBtn;
     database_selected1: TRadioButton;
     dec1: TLabel;
-    Discovery_Info: TLabel;
-    elevation: TEdit;
+    DecPulseReverses1: TCheckBox;
     elevation_error1: TEdit;
     elevation_updown1: TUpDown;
     esobutton1: TButton;
     eso_selected1: TRadioButton;
     exit1: TButton;
+    fast_simulation1: TCheckBox;
     flipH1: TCheckBox;
+    fliptext1: TCheckBox;
     flipV1: TCheckBox;
+    focal_ratio1: TComboBox;
     focuser_alpaca1: TRadioButton;
-    rotator_position1: TLabel;
-    rotator_alpaca1: TRadioButton;
     focuser_ascom1: TRadioButton;
-    rotator_ascom1: TRadioButton;
     focuser_position1: TLabel;
     focuser_position2: TLabel;
     focuser_position3: TLabel;
     focuser_position4: TLabel;
     focuser_position5: TLabel;
     focuser_position6: TLabel;
+    focuser_position7: TLabel;
     focusfactor1: TLabel;
     focus_at1: TEdit;
     focus_range1: TEdit;
-    go_default1: TButton;
     GroupBox1: TGroupBox;
-    GroupBox2: TGroupBox;
-    GroupBox3: TGroupBox;
-    GroupBox4: TGroupBox;
-    GroupBox5: TGroupBox;
-    GroupBox6: TGroupBox;
     height1: TEdit;
     height_pixels1: TEdit;
-    Image1: TImage;
+    hotpixels1: TComboBox;
     imagecounter1: TLabel;
+    ImageList_colors: TImageList;
     info5: TLabel;
+    instruction2: TLabel;
     internetESO1: TEdit;
     internetskyview1: TEdit;
     Label1: TLabel;
     Label10: TLabel;
     Label11: TLabel;
-    instruction2: TLabel;
+    Label12: TLabel;
     Label13: TLabel;
     Label14: TLabel;
     Label15: TLabel;
-    Label16: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
     Label2: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
+    Label22: TLabel;
+    Label23: TLabel;
+    Label24: TLabel;
+    Label25: TLabel;
+    message_artificial_sky1: TLabel;
     Label3: TLabel;
     Label4: TLabel;
     Label5: TLabel;
@@ -157,34 +139,62 @@ type
     Label_longitude1: TLabel;
     latitude1: TEdit;
     longitude1: TEdit;
-    maxmagn1: TEdit;
-    Memo1: TMemo;
+    manipulations1: TComboBox;
     mount1: TLabel;
     mount_alpaca1: TRadioButton;
     mount_ascom1: TRadioButton;
     mount_error1: TComboBox;
     mount_indication1: TLabel;
-    PageControl1: TPageControl;
+    mount_type1: TComboBox;
+    NSswapped1: TCheckBox;
+    Panel1: TPanel;
+    filter1: TEdit;
+    Label17: TLabel;
+    Memo2: TMemo;
+    menucopy1: TMenuItem;
+    Menufind1: TMenuItem;
+    menufindnext1: TMenuItem;
+    MenuItem23: TMenuItem;
     path_to_image1: TEdit;
     plotted_info1: TComboBox;
+    pointing1: TLabel;
     polar_alignment_error1: TCheckBox;
+    PopupMenu_memo1: TPopupMenu;
     ra1: TLabel;
     real_position1: TLabel;
+    rotator_alpaca1: TRadioButton;
+    rotator_ascom1: TRadioButton;
+    rotator_position1: TLabel;
+    rotator_reverse1: TCheckBox;
+    rotator_setpoint1: TLabel;
     savesettings1: TButton;
     scale1: TLabel;
-    SelectDirectoryDialog1: TSelectDirectoryDialog;
     selectpath1: TBitBtn;
+    select_all1: TMenuItem;
+    clear_log_button1: TButton;
+    activate_log1: TCheckBox;
+    Discovery_Info: TLabel;
+    elevation: TEdit;
+    go_default1: TButton;
+    Image1: TImage;
+    Label16: TLabel;
+    Memo1: TMemo;
+    PageControl1: TPageControl;
+    SelectDirectoryDialog1: TSelectDirectoryDialog;
     Server_Info: TLabel;
     skyviewbutton1: TButton;
     skyview_selected1: TRadioButton;
     start_button1: TButton;
     star_database1: TComboBox;
-    hotpixels1: TComboBox;
     StatusBar1: TStatusBar;
-    stopbutton1: TButton;
     Control_TabSheet1: TTabSheet;
     Image_TabSheet2: TTabSheet;
     Log: TTabSheet;
+    stopbutton1: TButton;
+    tab_camera1: TTabSheet;
+    tab_rotator1: TTabSheet;
+    tab_mount1: TTabSheet;
+    tab_focuser1: TTabSheet;
     telescope_position2000_dec1: TLabel;
     telescope_position2000_ra1: TLabel;
     Timer1: TTimer;
@@ -236,7 +246,7 @@ type
     procedure internetskyview1Exit(Sender: TObject);
     procedure latitude1Exit(Sender: TObject);
     procedure longitude1Exit(Sender: TObject);
-    procedure maxmagn1Change(Sender: TObject);
+    procedure focal_ratio1Change(Sender: TObject);
     procedure menucopy1Click(Sender: TObject);
     procedure Menufind1Click(Sender: TObject);
     procedure menufindnext1Click(Sender: TObject);
@@ -253,7 +263,6 @@ type
     procedure skyviewbutton1Click(Sender: TObject);
     procedure start_button1Click(Sender: TObject);
     procedure star_database1Change(Sender: TObject);
-    procedure star_database1CloseUp(Sender: TObject);
     procedure star_database1DropDown(Sender: TObject);
     procedure stopbutton1Click(Sender: TObject);
     procedure connect_focuser1Click(Sender: TObject);
@@ -261,6 +270,8 @@ type
     procedure FormKeyPress(Sender: TObject; var Key: char);
     procedure skyview_selected1Change(Sender: TObject);
     procedure manipulations1Change(Sender: TObject);
+    procedure tab_mount1ContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure Timer1Timer(Sender: TObject);
     procedure width_pixels1Exit(Sender: TObject);
 
@@ -452,6 +463,11 @@ begin
     begin
        MyMount:=T_Alpaca_Mount.Create(nil);
        AlpacaServer.AddDevice(telescope,MyMount);
+       {$ifdef mswindows}
+       tab_mount1.imageindex:=2 //blue
+      {$else}
+       tab_mount1.imageindex:=4 //play gray icon
+      {$endif}
     end;
     if cam then
     begin
@@ -459,16 +475,31 @@ begin
       AlpacaServer.AddDevice(camera,MyCam);
       MyGuideCam:=T_Alpaca_GuideCam.Create(nil);
       AlpacaServer.AddDevice(camera,MyGuideCam);
+      {$ifdef mswindows}
+      tab_camera1.imageindex:=2 //blue
+     {$else}
+      tab_camera1.imageindex:=4 //play gray icon
+     {$endif}
     end;
     if foc then
     begin
       MyFocuser:=T_Alpaca_focuser.Create(nil);
       AlpacaServer.AddDevice(focuser,MyFocuser);
+      {$ifdef mswindows}
+      tab_focuser1.imageindex:=2 //blue
+     {$else}
+      tab_focuser1.imageindex:=4 //play gray icon
+     {$endif}
     end;
     if rot then
     begin
       MyRotator:=T_Alpaca_rotator.Create(nil);
       AlpacaServer.AddDevice(rotator,MyRotator);
+      {$ifdef mswindows}
+      tab_rotator1.imageindex:=2 //blue
+     {$else}
+      tab_rotator1.imageindex:=4 //play gray icon
+     {$endif}
     end;
 
 
@@ -568,6 +599,13 @@ var
            else result:=true;
         end;
       end;
+      procedure doreset;
+      begin
+        initstring.Free;
+        form1.path_to_image1.text:=documents_path;{set default path}
+        form1.top:=0;{for case the form was not set at the main screen}
+        form1.left:=0;
+      end;
 
 begin
   result:=false;{assume failure}
@@ -579,17 +617,22 @@ begin
      try
       loadfromFile(lpath); { load from file}
      except
-       initstring.Free;
-       form1.path_to_image1.text:=documents_path;{set default path}
-       form1.top:=0;{for case the form was not set at the main screen}
-       form1.left:=0;
+       doreset;
        exit; {no cfg file}
      end;
    end;
-  result:=true;
   with form1 do
   begin
-    i:=form1.left;get_int(i,'window_left2'); form1.left:=i;
+    i:=987654321; get_int(i,'window_left2');
+    if i<>987654321 then
+    begin
+      form1.left:=i;
+    end
+    else
+    begin //bad file
+      doreset;
+      exit;
+    end;
     i:=form1.top;get_int(i,'window_top2'); form1.top:=i;
     i:=form1.height;get_int(i,'window_height'); form1.height:=i;
     i:=form1.width;get_int(i,'window_width'); form1.width:=i;
@@ -620,7 +663,7 @@ begin
     dum:=initstring.Values['width_pixels']; if dum<>'' then form1.width_pixels1.text:=dum;
     dum:=initstring.Values['height_pixels']; if dum<>'' then form1.height_pixels1.text:=dum;
     dum:=initstring.Values['star_database']; if dum<>'' then form1.star_database1.text:=dum;
-    dum:=initstring.Values['max_magn']; if dum<>'' then form1.maxmagn1.text:=dum;
+    dum:=initstring.Values['f-ratio']; if dum<>'' then form1.focal_ratio1.text:=dum;
 
     dum:=initstring.Values['path_image']; if dum<>'' then path_to_image1.text:=dum;
 
@@ -647,6 +690,7 @@ begin
   end;
 
   initstring.free;
+  result:=true;
 end;
 
 
@@ -694,7 +738,7 @@ begin
     initstring.Values['width_pixels']:=form1.width_pixels1.text;
     initstring.Values['height_pixels']:=form1.height_pixels1.text;
     initstring.Values['star_database']:=form1.star_database1.text;
-    initstring.Values['max_magn']:=form1.maxmagn1.text;
+    initstring.Values['f-ratio']:=form1.focal_ratio1.text;
 
     initstring.Values['path_image']:=form1.path_to_image1.text;
 
@@ -1374,7 +1418,7 @@ var
     eqs, blur_factor,itemindex,old,backlash,focus_backlash         : integer;
     filen                          : string;
     hfd,seperation,mount_error,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,drift,orient : double;
-    mount_slewing            : boolean;
+    mount_slewing,force_artifical        : boolean;
     Save_Cursor:TCursor;
 
 begin
@@ -1571,6 +1615,7 @@ begin
         seeing_errorRA:=0;
         seeing_errorDEC:=0;
 
+        force_artifical:=false;
         itemindex:=form1.mount_error1.itemindex;
         //0) 0   no slew error
         //1) ++  RA error based on slew distance
@@ -1593,7 +1638,7 @@ begin
         if itemindex=8 then {--} begin mount_error:= slewtime*-0.0002  ;{introduce error depending on slew time}  end else
         if itemindex=9 then //9) No tracking error (for guider calibration)
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           wait(1000);{slow down loop}
           update_required:=true; //force an update even for the smallest error or noise
@@ -1601,7 +1646,7 @@ begin
         else
         if itemindex=10 then //10) No tracking error | noise 0.4" (for guider calibration)
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           seeing_errorRA:=randg(0,0.4)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec.}
           seeing_errorDEC:=randg(0,0.4)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec}
@@ -1611,7 +1656,7 @@ begin
         else
         if itemindex=11 then //11) No tracking error | noise 1.0" (for guider calibration)
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           seeing_errorRA:=randg(0,1.0)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec.}
           seeing_errorDEC:=randg(0,1.0)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec}
@@ -1627,7 +1672,7 @@ begin
           //15) Tracking error  δ, 10" square wave 1 min period
           //16) Tracking error  δ, 10" square wave 2 min period
           //17) Tracking error  δ, 10" square wave 5 min period
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           if itemindex=12 then cycletime:=1 else
           if itemindex=13 then cycletime:=2 else
@@ -1668,7 +1713,7 @@ begin
         else
         if itemindex=18 then //18) Tracking error α, 10" sinus wave 5 min period
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           seeing_errorRA:=get_tracking_error(5 {min})*(5/3600)*pi/180  ;{introduce 20 arc seconds cyclic error}
           seeing_errorDEC:=0;
@@ -1678,7 +1723,7 @@ begin
         else
         if itemindex=19 then  //19) Tracking error δ , 10" sinus wave 5 min period
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           seeing_errorRA:=0;
           seeing_errorDEC:=get_tracking_error(5 {min})*(5/3600)*pi/180  ;{introduce 20 arc seconds cyclic error}
@@ -1688,7 +1733,7 @@ begin
         else
         if itemindex=20 then //20) Mount steady
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           seeing_errorRA:=0;
           seeing_errorDEC:=0;
@@ -1702,7 +1747,7 @@ begin
         else
         if itemindex=21 then //21) Tracking error α, 20" in 10 min| δ drift
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=get_tracking_error(10 {min})*(20/3600)*pi/180  ;{introduce 20 arc seconds cyclic error}
           seeing_errorRA:=0;
           seeing_errorDEC:=0;
@@ -1714,7 +1759,7 @@ begin
         else
         if itemindex=22 then //22) Tracking error α, 20" in 10 min| δ drift  | noise 1"
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=get_tracking_error(10 {min})*(20/3600)*pi/180  ;{introduce 20 arc seconds cyclic error}
           seeing_errorRA:=randg(0,1)*((1/3600)*pi/180);{Random seeing error 1 arc sec.}
           seeing_errorDEC:=randg(0,1)*((1/3600)*pi/180);{Random seeing error 1 arc sec}
@@ -1725,7 +1770,7 @@ begin
         end;
         if itemindex=23 then //Mount backslash
         begin
-          form1.database_selected1.checked:=true;{force database simulation}
+          force_artifical:=true;{force database simulation}
           mount_error:=0;
           seeing_errorRA:=0;
           seeing_errorDEC:=0;
@@ -1738,6 +1783,10 @@ begin
         else
         backlash:=0;
 
+        if force_artifical then
+        begin
+          form1.database_selected1.checked:=true;//force artifical sky setting
+        end;
 
         mount_error:= min(3*pi/180,mount_error);{maximum 3 degrees}
 
@@ -1978,7 +2027,6 @@ end;
 
 procedure TForm1.start_button1Click(Sender: TObject);
 begin
-
   if form1.start_button1.font.style=[fsbold] then begin esc_pressed:=true;exit;end;
   form1.start_button1.font.style:=[fsbold];
 
@@ -1989,20 +2037,25 @@ begin
   start_alpaca(form1.camera_alpaca1.checked,form1.focuser_alpaca1.checked,form1.mount_alpaca1.checked,rotator_alpaca1.checked);
 
   form1.start_button1.caption:='Simulation running. (Hit ESC to stop)';
-  simulate;
+  if camera_alpaca1.checked then
+//    {$ifdef mswindows}
+//    tab_camera1.imageindex:=2 //blue
+//   {$else}
+//    tab_camera1.imageindex:=4 //play gray icon
+//   {$endif}
+  else
+    tab_camera1.imageindex:=1;//green
+
+  simulate;//run simulation
   form1.start_button1.font.style:=[];
   form1.start_button1.caption:='Start simulation';
+  tab_camera1.imageindex:=3;//gray;
 end;
+
 
 procedure TForm1.star_database1Change(Sender: TObject);
 begin
   update_required:=true;
-end;
-
-
-procedure TForm1.star_database1CloseUp(Sender: TObject);
-begin
-  maxmagn1.text:=copy(star_database1.text,2,2);
 end;
 
 
@@ -2076,7 +2129,7 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  showmessage('Sky simulator for ASCOM and Alpaca. © 2018-2023 by Han Kleijn, www.hnsky.org. ');
+  showmessage('Sky simulator for ASCOM and Alpaca. © 2018-2024 by Han Kleijn, www.hnsky.org. ');
 end;
 
 procedure TForm1.buttonEast1Click(Sender: TObject);
@@ -2152,6 +2205,7 @@ begin
     connect_rotator1.font.color:=cldefault;
     connect_rotator1.caption:='Connect rotator';
     connect_rotator1.font.style:=[];
+    tab_rotator1.imageindex:=3;//gray
   end
   else
   begin
@@ -2177,6 +2231,7 @@ begin
       ascom_rotator.connected:=true;
       connect_rotator1.caption:=ascom_rotator_driver;
       connect_rotator1.font.style:=[fsbold,fsunderline];
+      tab_rotator1.imageindex:=1;//green
       ascom_rotator_connected:=true;
       memo2_message('Rotator connected.');
 
@@ -2187,6 +2242,7 @@ begin
         connect_rotator1.font.color:=cldefault;
         connect_rotator1.caption:='Error rotator';
         connect_rotator1.font.style:=[];
+        tab_rotator1.imageindex:=0;//red
         Showmessage('Error ASCOM driver "'+ascom_rotator_driver+'" not found!');
       end;
     end; {end setup ASCOM}
@@ -2468,7 +2524,7 @@ begin
   update_required:=true;
 end;
 
-procedure TForm1.maxmagn1Change(Sender: TObject);
+procedure TForm1.focal_ratio1Change(Sender: TObject);
 begin
   update_required:=true;
 end;
@@ -2532,6 +2588,9 @@ begin
   form1.buttonSouth1.enabled:=button_use;
   form1.buttonEast1.enabled:=button_use;
   form1.buttonWest1.enabled:=button_use;
+  form1.message_artificial_sky1.visible:=button_use;
+  eso_selected1.enabled:=(button_use=false);
+  skyview_selected1.enabled:=(button_use=false);
 end;
 
 procedure TForm1.mount_type1Change(Sender: TObject);
@@ -2542,6 +2601,7 @@ begin
   enable_controls(polar_alignment_error1.checked, mount_type1.itemindex=1);{polar alingment error or equatorial mount}
   update_required:=true;
 end;
+
 
 
 procedure TForm1.plotted_info1Change(Sender: TObject);
@@ -2617,6 +2677,7 @@ begin
       connect_focuser1.font.color:=cldefault;
       connect_focuser1.caption:='Connect focuser';
       connect_focuser1.font.style:=[];
+      tab_focuser1.imageindex:=0;//red
     end
     else
     begin
@@ -2641,6 +2702,7 @@ begin
         ascom_focuser.link:=true;
         connect_focuser1.caption:=ascom_focuser_driver;
         connect_focuser1.font.style:=[fsbold,fsunderline];
+        tab_focuser1.imageindex:=1;//green
         ascom_focuser_connected:=true;
         memo2_message('Focuser connected.');
 
@@ -2651,6 +2713,7 @@ begin
           connect_focuser1.font.color:=cldefault;
           connect_focuser1.caption:='Error focuser';
           connect_focuser1.font.style:=[];
+          tab_focuser1.imageindex:=0;//red
           Showmessage('Error ASCOM driver "'+ascom_focuser_driver+'" not found!');
         end;
       end; {end setup ASCOM}
@@ -2676,11 +2739,11 @@ begin
   if not VarIsEmpty(ascom_mount) then  {Ascom alive?}
   begin
     ascom_mount_connected:=false;
-    ascom_mount.connected:=false;
     ascom_mount := Unassigned;
     connect_mount1.font.color:=cldefault;
     connect_mount1.caption:='Connect mount';
     connect_mount1.font.style:=[];
+    tab_mount1.imageindex:=0;//red
     {canslew and canslewasync will be asked later. Here to early}
   end
   else
@@ -2707,6 +2770,9 @@ begin
       ascom_mount.Tracking:=true;{set tracking on}
       connect_mount1.caption:=ascom_mount_driver;
       connect_mount1.font.style:=[fsbold,fsunderline];
+      tab_mount1.imageindex:=1;//green
+
+
       ascom_mount_connected:=true;
       memo2_message('Mount connected.');
     except
@@ -2716,6 +2782,7 @@ begin
         connect_mount1.font.color:=cldefault;
         connect_mount1.caption:='Connect mount';
         connect_mount1.font.style:=[];
+        tab_mount1.imageindex:=0;//red
         Showmessage('Error ASCOM driver "'+ascom_mount_driver+'" not found!');
       end;
     end; {end setup Ascom}
@@ -2753,6 +2820,12 @@ end;
 procedure TForm1.manipulations1Change(Sender: TObject);
 begin
  update_required:=true;
+end;
+
+procedure TForm1.tab_mount1ContextPopup(Sender: TObject; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+
 end;
 
 

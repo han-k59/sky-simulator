@@ -1634,11 +1634,11 @@ procedure plot_stars(realposition, perfectposition,a,b : double);{plot stars}
 var
   hfd,fitsX,fitsY, fitsX_middle, fitsY_middle,x2,y2,x1,y1,
   dra,ddec,delta,gamma, telescope_ra,telescope_dec,fov,ra2,dec2, mag2,Bp_Rp, peakvalue,
-  delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,sigma,max_magn,angle,distance,curvature,pedestal,cosdec : double;
-
-  star_total_counter, stepsize,i  : integer;
-  frac1,frac2,frac3,frac4,val        : double;
-  area1,area2,area3,area4,w,h,x,y,hotpixels,tilt_index,half_width,half_height  : integer;
+  delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,sigma,max_magn,
+  focal_ratio,angle,distance,sqr_distance,pedestal,cosdec,  frac1,frac2,frac3,frac4,val,
+  distance3,distance1,distanceX, distanceY,sqr_distance_norm,xc,yc,angle_starpos              : double;
+  star_total_counter, stepsize,i, area1,area2,area3,area4,w,h,x,y,hotpixels,
+  tilt_index,half_width,half_height,k,www                                                     : integer;
 
 
     PROCEDURE plot_star;
@@ -1675,9 +1675,20 @@ var
                                 hfd2:=hfd_calc(realposition+  {tilt in focus pos} b*5*(distance/half_height), perfectposition,a,b); {tilt around horizontal axis}
                               end;
                             3: hfd2:=hfd_calc(realposition+  {tilt in focus pos} b*5*((half_height-y1)/half_height), perfectposition,a,b); {tilt around horizontal axis}
-                            4: begin {curvature}
-                                 curvature:=(sqr(x1-half_width)+sqr(y1-half_height))/sqr(height2);{curvature=1-cos(angle), curvature increases with sqr distance}
-                                 hfd2:=hfd_calc(realposition+  {tilt in focus pos} b*5* curvature, perfectposition,a,b); {tilt around vertical axis}
+                            4: begin {sqr_distance}
+                                 xc:=x1-half_width;
+                                 yc:=y1-half_height;
+                                 sqr_distance:=(sqr(xc)+sqr(yc));
+                                 sqr_distance_norm:=sqr_distance/(sqr(half_width)+sqr(half_height));{normalise distance in about 0..1}
+                                 hfd2:=hfd_calc(realposition+  {tilt in focus pos} b*2* sqr_distance_norm, perfectposition,a,b); {curvature, hfd increases with the sqr distance}
+                                 distance1:=sqrt(sqr_distance_norm);
+                                 distance3:=distance1*distance1*distance1;//3th order distance
+                                 angle_starpos:=arctan2(yc,xc);
+                                 distanceX:=distance3*cos(angle_starpos);
+                                 distanceY:=distance3*sin(angle_starpos);
+
+                                 x1:=x1+15*distanceX;//about 15 pixel pincushion distortion max
+                                 y1:=y1+15*distanceY;//about 15 pixel pincushion distortion max
                                end;
                           else  hfd2:=hfd;
                           end; {case}
@@ -1685,7 +1696,7 @@ var
          Stepsize:=round(HFD2*2.5);
          sigma:=HFD2/2.35;  {Define star size, HFD=FWHM=2*sqrt(2*ln(2*sigma))=2.35 sigma}
 
-         if hfd2<=3 then subsampling:=5 {sampling within the pixel}
+         if hfd2<=3 then subsampling:=5 //5 {sampling within the pixel}
                    else subsampling:=1;{out of focus stars, position less important}
 
          if flip_horizontal then x2:=(width2-1)-x1 else x2:=x1;
@@ -1693,30 +1704,32 @@ var
 
          inc(star_total_counter);
 
-         peakvalue:=$FFFFFF*power(2.5,-1-(mag2/10));  {Sensitivity of the telescope. Magnitude 14 gives a peak pixel value 18}
+         peakvalue:=$FFFFFF*power(2.5,(max_magn-mag2-140)/10);  {Sensitivity of the telescope. Limiting magnitude give gives a peak pixel value 45}
 
          peakvalue:=peakvalue*(2.35*2.35)/(hfd2*hfd2);{reduce peak value sqr of the hfd}
 
-         stepsize:=stepsize*subsampling;{subsample within a pixel}
-         for m:=-stepsize to stepsize do
-         for n:=-stepsize to stepsize do
+         if peakvalue>5 then //above noise
          begin
-           sqrdistance:=sqr(m/subsampling)+sqr(n/subsampling);
-           val:=peakvalue*(1/sqr(subsampling))*EXP(-0.5*(sqrdistance)/(sigma*sigma)); {gaussian shaped stars sampled subsampling x subsampling within a pixel}
-           if val>0 then
+           stepsize:=stepsize*subsampling;{subsample within a pixel}
+           for m:=-stepsize to stepsize do
+           for n:=-stepsize to stepsize do
            begin
-             xx:=round(x2+m/subsampling);
-             yy:=round(y2+n/subsampling);
-             if ((xx>=0) and (xx<width2) and (yy>=0) and (yy<height2)) then {within image}
-               img_array[xx,yy]:=min(img_array[xx,yy]+val,$FFFFFF);{integrate supsamples in case subsampling is larger then one. Integration is required for close overlapping double like Sirus. Prevent values above 24 bit equals $FFFFFF}
+             sqrdistance:=sqr(m/subsampling)+sqr(n/subsampling);
+             val:=peakvalue*(1/sqr(subsampling))*EXP(-0.5*(sqrdistance)/(sigma*sigma)); {gaussian shaped stars sampled subsampling x subsampling within a pixel}
+             if val>0 then
+             begin
+               xx:=round(x2+m/subsampling);
+               yy:=round(y2+n/subsampling);
+               if ((xx>=0) and (xx<width2) and (yy>=0) and (yy<height2)) then {within image}
+                 img_array[xx,yy]:=min(img_array[xx,yy]+val,$FFFFFF);{integrate supsamples in case subsampling is larger then one. Integration is required for close overlapping double like Sirus. Prevent values above 24 bit equals $FFFFFF}
+             end;
            end;
-         end
+         end;//above noise
         end;
      end;
    end;
 
 begin
-//  memo2_message('stars '+floattostr(crota2)+'  '+ floattostr(cd1_1)+'  '+ floattostr(cd1_2)+'  '+ floattostr(cd2_1)+'  '+ floattostr(cd2_2));
   flux_magn_offset:=0;
 
   if cd1_1<>0 then
@@ -1747,7 +1760,9 @@ begin
     fov:=min(fov,9.53*pi/180);{warning FOV should be less the database tiles dimensions, so <=9.53 degrees. Otherwise a tile beyond next tile could be selected}
 
     star_total_counter:=0;{total counter}
-    max_magn:=strtofloat(form1.maxmagn1.text)*10;
+    focal_ratio:=max(2,strtofloat(copy(form1.focal_ratio1.text,3,2)));
+    max_magn:=(14 + ln(sqr(7/focal_ratio))/ln(2.5))*10;
+
 
     if select_star_database(form1.star_database1.text)=false then
     begin
@@ -1791,7 +1806,7 @@ begin
       {read 1th area}
       if area1<>0 then {read 1th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area1,{var} ra2,dec2, mag2,Bp_Rp)) and (mag2<=max_magn)) do
+        while ((readdatabase290(telescope_ra,telescope_dec, fov,area1,{var} ra2,dec2, mag2,Bp_Rp)) ) do
                plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
@@ -1799,7 +1814,7 @@ begin
       {read 2th area}
       if area2<>0 then {read 2th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area2,{var} ra2,dec2, mag2,Bp_Rp)) and (mag2<=max_magn)) do
+        while ((readdatabase290(telescope_ra,telescope_dec, fov,area2,{var} ra2,dec2, mag2,Bp_Rp))) do
                plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
@@ -1807,13 +1822,13 @@ begin
       {read 3th area}
       if area3<>0 then {read 3th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area3,{var} ra2,dec2, mag2,Bp_Rp)) and (mag2<=max_magn)) do plot_star;{add star}
+        while ((readdatabase290(telescope_ra,telescope_dec, fov,area3,{var} ra2,dec2, mag2,Bp_Rp)) ) do plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
       {read 4th area}
       if area4<>0 then {read 4th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area4,{var} ra2,dec2, mag2,Bp_Rp)) and (mag2<=max_magn)) do plot_star;{add star}
+        while ((readdatabase290(telescope_ra,telescope_dec, fov,area4,{var} ra2,dec2, mag2,Bp_Rp)) ) do plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
 
@@ -2033,6 +2048,8 @@ begin
       else
         val:=round(189000*ln(1+img_array[x,y]));{transport grey level logarithmic in 24 bit range [0..$FFFFFF]  Range [0 .. 3.4E38].  No negative values}
                                                 {note decoding:  value:=(-1 + Math.Exp(  ((red * 256 * 256) + (green * 256) + (blue)) / 189000);}
+
+
       valR:=hi(val);
       valword:=lo(val);
       valG:=hi(valword);
