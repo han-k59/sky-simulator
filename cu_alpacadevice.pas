@@ -418,6 +418,7 @@ begin
          +'"ErrorMessage":"'+ErrorMessage+'"}'
 end;
 
+
 function  T_AlpacaDevice.FormatImageBytesResp(value:Timg; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string; var s:TMemoryStream):string;
 var metadata: TImageBytesInfo;
     data: TArrayUInt16;
@@ -432,8 +433,8 @@ begin
   metadata.ImageElementType:=2;
   metadata.TransmissionElementType:=8;  {Alpaca standard 2021-12-7:  Int16 = 1, Int32 = 2, Double = 3, Single = 4, Decimal = 5, Byte = 6, Int64 = 7, UInt16 = 8, UInt32 = 9  }
   metadata.Rank:=2;
-  metadata.Dimension1:=length(value);
-  metadata.Dimension2:=length(value[0]);
+  metadata.Dimension1:=length(value);  //width !!!
+  metadata.Dimension2:=length(value[0]); //height !!!
   metadata.Dimension3:=0;
   // write metadata to stream
   s.Position:=0;
@@ -441,8 +442,8 @@ begin
   SetLength(data,metadata.Dimension1*metadata.Dimension2);
   // write image to sequential array
   n:=0;
-  for i:=0 to metadata.Dimension1-1 do
-    for j:=0 to metadata.Dimension2-1 do
+  for i:=0 to metadata.Dimension1-1 do //cycle in width.
+    for j:=0 to metadata.Dimension2-1 do  //cycle in heighth Swapped :(
     begin
       data[n]:=value[i,j];
       inc(n);

@@ -308,14 +308,14 @@ end;
 
 function  T_Alpaca_GuideCam.cameraXsize: integer;
 begin
-  img_width:=length(img_array);
+  img_width:=length(img_array[0]);
   result:=img_width;
   if num_X>=9999 then num_X:=img_width; {initialise}
 end;
 
 function  T_Alpaca_GuideCam.cameraYsize: integer;
 begin
-  img_height:=length(img_array[0]);
+  img_height:=length(img_array);
   result:=img_height;
   if num_Y>=9999 then num_Y:=img_height; {initialise}
 end;
@@ -615,8 +615,8 @@ begin
 
   relative_gain:=camera_gain/100; { gain of 1 is normal}
   noise:=(5/relative_gain {read noise} +15*sqrt(camera_exposure/5) {sky noise});{assume Sky Noise Dominated case. Gain reduces read-noise (5/gain)}
-  img_width:=length(img_array);
-  img_height:=length(img_array[0]);
+  img_width:=length(img_array[0]);
+  img_height:=length(img_array);
 
   annotation_to_array('Guide cam',true{transparant},1000{gralevel},2, 10,img_height-25 {screen coord}, img_array);{string to image array as annotation}
 
@@ -629,11 +629,11 @@ begin
   w:=Xstop-Xstart; {could be subsection}
   h:=Ystop-Ystart; {could be subsection}
 
-  setlength(the_img,w,h);
+  setlength(the_img,w,h);//width and height are swapped here !! Less efficient
 
    for x:=Xstart to Xstop-1 do
      for y:=Ystart to  Ystop-1 do
-        the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[x,y] + randg(4*noise {mean},noise {sd}) )) ;
+        the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + randg(4*noise {mean},noise {sd}) )) ;
 
   ok:=last_exposureduration>=0; {startexposure was given}
 

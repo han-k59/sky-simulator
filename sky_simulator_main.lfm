@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 424
+  Left = 300
   Height = 558
-  Top = 142
+  Top = 196
   Width = 978
   Caption = 'Sky Simulator for ASCOM and ALPACA. Camera simulator with "Deep Sky Survey" images or artificial images based on mount and focuser position.'
   ClientHeight = 558
@@ -12,7 +12,7 @@ object Form1: TForm1
   OnKeyPress = FormKeyPress
   OnResize = FormResize
   OnShow = FormShow
-  LCLVersion = '2.2.4.0'
+  LCLVersion = '2.2.6.0'
   object StatusBar1: TStatusBar
     Left = 0
     Height = 23
@@ -51,7 +51,7 @@ object Form1: TForm1
         Height = 25
         Top = 88
         Width = 116
-        Caption = 'About v2.1.0a'
+        Caption = 'About v2.1.1'
         OnClick = Button1Click
         TabOrder = 1
       end
@@ -799,7 +799,7 @@ object Form1: TForm1
       object connect_mount1: TBitBtn
         Left = 16
         Height = 30
-        Top = 352
+        Top = 368
         Width = 184
         Caption = 'Connect Ascom mount'
         OnClick = connect_mount1Click
@@ -875,6 +875,7 @@ object Form1: TForm1
           '+    RA error based on slew time'
           '-     RA error based on slew time'
           '--   RA error based on slew time'
+          'Mount steady'
           'No tracking error (for guider calibration) '
           'No tracking error | noise 0.4" (for guider calibration) '
           'No tracking error | noise 1.0" (for guider calibration) '
@@ -886,7 +887,6 @@ object Form1: TForm1
           'Tracking error δ, 10" square wave 5 min period'
           'Tracking error α, 10" sinus wave 5 min period'
           'Tracking error δ , 10" sinus wave 5 min period'
-          'Mount steady'
           'Tracking error α, 20" in 10 min| δ drift '
           'Tracking error α, 20" in 10 min| δ drift  | noise 1" '
           'Backlash 100 milliseconds and no tracking error'
@@ -956,7 +956,7 @@ object Form1: TForm1
         Left = 216
         Height = 19
         Hint = 'Mount North/South (δ) pulse guiding is swapped after meridian flip. Normal situtation. Same applies for camera'
-        Top = 280
+        Top = 304
         Width = 194
         Caption = 'δ pulse guiding reverses after flip'
         Checked = True
@@ -970,7 +970,7 @@ object Form1: TForm1
         Left = 216
         Height = 19
         Hint = 'North South  (δ) pulse guiding swapped'
-        Top = 304
+        Top = 328
         Width = 163
         Caption = 'δ  pulse guiding swapped ↕'
         ParentShowHint = False
@@ -982,7 +982,7 @@ object Form1: TForm1
         Left = 16
         Height = 23
         Hint = 'Labels in the artificial image'
-        Top = 280
+        Top = 304
         Width = 184
         ItemHeight = 15
         ItemIndex = 1
@@ -999,65 +999,77 @@ object Form1: TForm1
         Text = 'Equatorial mount'
         Visible = False
       end
-      object buttonEast1: TButton
-        Left = 312
-        Height = 25
-        Hint = 'Add tracking error five arcseconds.'
-        Top = 166
-        Width = 19
-        Caption = 'E'
-        OnClick = buttonEast1Click
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 7
-      end
-      object buttonNorth1: TButton
-        Left = 336
-        Height = 25
-        Hint = 'Add tracking error five arcseconds.'
-        Top = 150
-        Width = 19
-        Caption = 'N'
-        OnClick = buttonNorth1Click
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 8
-      end
-      object buttonWest1: TButton
-        Left = 360
-        Height = 25
-        Hint = 'Add tracking error five arcseconds.'
-        Top = 166
-        Width = 19
-        Caption = 'W'
-        OnClick = buttonWest1Click
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 9
-      end
-      object buttonSouth1: TButton
-        Left = 336
-        Height = 25
-        Hint = 'Add tracking error five arcseconds.'
-        Top = 182
-        Width = 19
-        Caption = 'S'
-        OnClick = buttonSouth1Click
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 10
-      end
       object message_artificial_sky1: TLabel
         Left = 536
         Height = 15
         Hint = 'For this mount error mode only fast artifical image creation will work fast enough.'
         Top = 80
-        Width = 339
-        Caption = '(This mount error setting will force an artifical sky image setting)'
+        Width = 300
+        Caption = '(This mount error setting will force an artifical sky image)'
         ParentColor = False
         ParentShowHint = False
         ShowHint = True
         Visible = False
+      end
+      object GroupBox2: TGroupBox
+        Left = 296
+        Height = 87
+        Top = 208
+        Width = 98
+        AutoSize = True
+        BorderSpacing.InnerBorder = 5
+        Caption = 'Mount offset'
+        ClientHeight = 67
+        ClientWidth = 94
+        TabOrder = 7
+        object buttonEast1: TButton
+          Left = 0
+          Height = 25
+          Hint = 'Add tracking error five arcseconds.'
+          Top = 16
+          Width = 19
+          Caption = 'E'
+          OnClick = buttonEast1Click
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+        end
+        object buttonNorth1: TButton
+          Left = 24
+          Height = 25
+          Hint = 'Add tracking error five arcseconds.'
+          Top = 0
+          Width = 19
+          Caption = 'N'
+          OnClick = buttonNorth1Click
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+        end
+        object buttonWest1: TButton
+          Left = 48
+          Height = 25
+          Hint = 'Add tracking error five arcseconds.'
+          Top = 16
+          Width = 19
+          Caption = 'W'
+          OnClick = buttonWest1Click
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+        end
+        object buttonSouth1: TButton
+          Left = 24
+          Height = 25
+          Hint = 'Add tracking error five arcseconds.'
+          Top = 32
+          Width = 19
+          Caption = 'S'
+          OnClick = buttonSouth1Click
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 3
+        end
       end
     end
     object tab_focuser1: TTabSheet
@@ -1318,9 +1330,8 @@ object Form1: TForm1
       Caption = 'Image'
       ClientHeight = 467
       ClientWidth = 970
-      OnShow = Image_TabSheet2Show
       object Image1: TImage
-        Left = 0
+        Left = -4
         Height = 352
         Top = 0
         Width = 706
@@ -1331,8 +1342,17 @@ object Form1: TForm1
         OnMouseUp = Image1MouseUp
         OnMouseWheelDown = Image1MouseWheelDown
         OnMouseWheelUp = Image1MouseWheelUp
+        PopupMenu = PopupMenu1
         Proportional = True
         Stretch = True
+      end
+      object Label26: TLabel
+        Left = 560
+        Height = 15
+        Top = 0
+        Width = 240
+        Caption = 'See popup menu to manually save this image'
+        ParentColor = False
       end
     end
     object Alpaca_tab1: TTabSheet
@@ -1599,5 +1619,46 @@ object Form1: TForm1
       75B93B80A2E27299596465B39FD6B2FD6F67ACF4EF66ACCCE96BFFBCF764FE8D
       F967EEFFEF6F7F54074EE865C2
     }
+  end
+  object PopupMenu1: TPopupMenu
+    OnPopup = PopupMenu1Popup
+    Left = 469
+    Top = 232
+    object mount_goto1: TMenuItem
+      Caption = 'Slew to α, δ (Alpaca interface only)'
+      OnClick = mount_goto1Click
+    end
+    object Separator1: TMenuItem
+      Caption = '-'
+    end
+    object image_to_clipboard1: TMenuItem
+      Caption = 'Image to clipboard'
+      OnClick = image_to_clipboard1Click
+    end
+    object Separator2: TMenuItem
+      Caption = '-'
+    end
+    object save_imaga_as1: TMenuItem
+      Caption = 'Save image as stretched 8bit PNG'
+      OnClick = save_imaga_as1Click
+    end
+    object Separator3: TMenuItem
+      Caption = '-'
+    end
+    object save_as_tiff1: TMenuItem
+      Caption = 'Save as 16 bit AstroTIFF'
+      Hint = 'Save current image as 16 bit AstroTIFF including astrometric solution'
+      OnClick = save_as_tiff1Click
+    end
+    object save_as_fits1: TMenuItem
+      Caption = 'Save ast 16 bit FITS'
+      Hint = 'Save current image as 16 bit FITS including astrometric solution'
+      OnClick = save_as_fits1Click
+    end
+  end
+  object SaveDialog1: TSaveDialog
+    FileName = 'sky_image'
+    Left = 800
+    Top = 131
   end
 end

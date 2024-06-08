@@ -43,6 +43,7 @@ uses
   math,{for sincos}
   lcltype, {Trgbtriple}
   Variants, clipbrd, sky_annotation,
+  sky_simulator_unit_save_image,
   cu_alpacaserver, cu_alpacadevice, alpaca_mount_protocol, alpaca_camera_protocol,alpaca_guidecamera_protocol,alpaca_focuser_protocol,alpaca_rotator_protocol, Types;
 
 
@@ -100,6 +101,7 @@ type
     focus_at1: TEdit;
     focus_range1: TEdit;
     GroupBox1: TGroupBox;
+    GroupBox2: TGroupBox;
     height1: TEdit;
     height_pixels1: TEdit;
     hotpixels1: TComboBox;
@@ -125,6 +127,12 @@ type
     Label23: TLabel;
     Label24: TLabel;
     Label25: TLabel;
+    Label26: TLabel;
+    save_as_fits1: TMenuItem;
+    save_as_tiff1: TMenuItem;
+    mount_goto1: TMenuItem;
+    save_imaga_as1: TMenuItem;
+    image_to_clipboard1: TMenuItem;
     message_artificial_sky1: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -159,6 +167,7 @@ type
     plotted_info1: TComboBox;
     pointing1: TLabel;
     polar_alignment_error1: TCheckBox;
+    PopupMenu1: TPopupMenu;
     PopupMenu_memo1: TPopupMenu;
     ra1: TLabel;
     real_position1: TLabel;
@@ -167,6 +176,7 @@ type
     rotator_position1: TLabel;
     rotator_reverse1: TCheckBox;
     rotator_setpoint1: TLabel;
+    SaveDialog1: TSaveDialog;
     savesettings1: TButton;
     scale1: TLabel;
     selectpath1: TBitBtn;
@@ -181,6 +191,9 @@ type
     Memo1: TMemo;
     PageControl1: TPageControl;
     SelectDirectoryDialog1: TSelectDirectoryDialog;
+    Separator1: TMenuItem;
+    Separator2: TMenuItem;
+    Separator3: TMenuItem;
     Server_Info: TLabel;
     skyviewbutton1: TButton;
     skyview_selected1: TRadioButton;
@@ -241,7 +254,6 @@ type
       MousePos: TPoint; var Handled: Boolean);
     procedure Image1MouseWheelUp(Sender: TObject; Shift: TShiftState;
       MousePos: TPoint; var Handled: Boolean);
-    procedure Image_TabSheet2Show(Sender: TObject);
     procedure internetESO1Exit(Sender: TObject);
     procedure internetskyview1Exit(Sender: TObject);
     procedure latitude1Exit(Sender: TObject);
@@ -250,12 +262,18 @@ type
     procedure menucopy1Click(Sender: TObject);
     procedure Menufind1Click(Sender: TObject);
     procedure menufindnext1Click(Sender: TObject);
+    procedure save_as_fits1Click(Sender: TObject);
+    procedure save_as_tiff1Click(Sender: TObject);
+    procedure save_imaga_as1Click(Sender: TObject);
+    procedure image_to_clipboard1Click(Sender: TObject);
+    procedure mount_goto1Click(Sender: TObject);
     procedure mount_alpaca1Change(Sender: TObject);
     procedure mount_error1Change(Sender: TObject);
     procedure mount_type1Change(Sender: TObject);
     procedure plotted_info1Change(Sender: TObject);
     procedure polar_alignment_error1Change(Sender: TObject);
     procedure camera_alpaca1Change(Sender: TObject);
+    procedure PopupMenu1Popup(Sender: TObject);
     procedure rotator_alpaca1Change(Sender: TObject);
     procedure savesettings1Click(Sender: TObject);
     procedure selectpath1Click(Sender: TObject);
@@ -334,6 +352,7 @@ const
   old_unix_time : longint=0;
 
   down_xy_valid: boolean=false;{required for Linux GTK.}
+  gotopos: string=''; //for got0 mount in popup menu image
 
 var
   ascom_mount           : variant; {for Ascom, telescope}
@@ -1160,7 +1179,7 @@ var
 begin
   w:=form1.image1.Picture.Width;
   h:=form1.image1.Picture.Height;
-  setlength(img_array,w,h);
+  setlength(img_array,h,w);
 
   siz:=form1.image1.Picture.Bitmap.RawImage.Description.BitsPerPixel div 8; {Bitmap.PixelFormat=pf24bit is not reliable in Linux}
   for y := 0 to h -1 do
@@ -1169,9 +1188,9 @@ begin
     for x := 0 to w-1 do
     begin
       if siz=3 then
-        img_array[x,y]:=10*xLine^[x*3+2] {do only red, increase level to 255*10=2550 [0..65535]}
+        img_array[y,x]:=10*xLine^[x*3+2] {do only red, increase level to 255*10=2550 [0..65535]}
       else {size=4}
-        img_array[x,y]:=10*xLine^[x*4+2];{do only red}
+        img_array[y,x]:=10*xLine^[x*4+2];{do only red}
     end;
   end;
 end;
@@ -1195,15 +1214,15 @@ begin
     img_bitmap.width:=w;
     img_bitmap.PixelFormat := pf24bit;
 
-    setlength(img_array1,w,h);
-    setlength(img_array2,w,h);
+    setlength(img_array1,h,w);
+    setlength(img_array2,h,w);
 
     for y := 0 to h -1 do
     begin
       xLine := dss_bitmap.ScanLine[y];
       for x := 0 to w -1 do
       begin
-        img_array1[x,y]:=round((xLine^[x*4+1]+xLine^[x*4+2])/2);{THE ESO IMAGES DO NOT CONTAINS BLUE, ONLY RED AND GREEN}
+        img_array1[y,x]:=round((xLine^[x*4+1]+xLine^[x*4+2])/2);{THE ESO IMAGES DO NOT CONTAINS BLUE, ONLY RED AND GREEN}
       end;
     end;
 
@@ -1213,13 +1232,13 @@ begin
       begin
         for y := 1 to h -1-1 do {box blur}
           for x := 1 to w -1-1 do
-            img_array2[x,y]:=(img_array1[x-1,y+1]+img_array1[x,y+1]+img_array1[x+1,y+1]+
-                              img_array1[x-1,y  ]+img_array1[x,y  ]+img_array1[x+1,y  ]+
-                              img_array1[x-1,y-1]+img_array1[x,y-1]+img_array1[x+1,y-1]) div 9;
+            img_array2[y,x]:=(img_array1[y+1,x-1]+img_array1[y+1,x]+img_array1[y+1,x+1]+
+                              img_array1[y  ,x-1]+img_array1[y  ,x]+img_array1[y  ,x+1 ]+
+                              img_array1[y-1,x-1]+img_array1[y-1,x]+img_array1[y-1,x+1]) div 9;
 
         for y := 1 to h -1-1 do {put back}
           for x := 1 to w -1-1 do
-             img_array1[x,y]:=img_array2[x,y];
+             img_array1[y,x]:=img_array2[y,x];
       end;
     end;
 
@@ -1230,12 +1249,11 @@ begin
 
       for x := 0 to w -1 do
       begin
-        //img_array1[x,y]:=round(65535*y/h);
-        if img_array1[x,y]=0 then
+        if img_array1[y,x]=0 then
           val:=0  {ln(1) is zero. No need to take calculate ln()}
         else
-          val:=round(189000*ln(1+img_array1[x,y]));{transport grey level logarithmic in 24 bit range [0..$FFFFFF]  Range [0 .. 3.4E38].  No negative values}
-                                                  {note decoding:  value:=(-1 + Math.Exp(  ((red * 256 * 256) + (green * 256) + (blue)) / 189000);}
+          val:=round(189000*ln(1+img_array1[y,x]));{transport grey level logarithmic in 24 bit range [0..$FFFFFF]  Range [0 .. 3.4E38].  No negative values}
+                                                   {note decoding:  value:=(-1 + Math.Exp(  ((red * 256 * 256) + (green * 256) + (blue)) / 189000);}
 
 
         valR:=hi(val); {use 3x 8 bytes to transport, range $0..$FFFFFF}
@@ -1285,15 +1303,15 @@ begin
     w:=dss_bitmap.width;
     h:=dss_bitmap.height;
 
-    setlength(img_array,w,h);
-    setlength(img_array2,w,h);
+    setlength(img_array,h,w);
+    setlength(img_array2,h,w);
 
     for y := 0 to h -1 do
     begin
       xLine := dss_bitmap.ScanLine[y];
       for x := 0 to w -1 do
       begin
-        img_array[x,y]:=((xLine^[x*4+1]+xLine^[x*4+2])/2);{THE ESO IMAGES DO NOT CONTAINS BLUE, ONLY RED AND GREEN}
+        img_array[y,x]:=((xLine^[x*4+1]+xLine^[x*4+2])/2);{THE ESO IMAGES DO NOT CONTAINS BLUE, ONLY RED AND GREEN}
       end;
     end;
 
@@ -1303,13 +1321,13 @@ begin
       begin
         for y := 1 to h -1-1 do {box blur}
           for x := 1 to w -1-1 do
-            img_array2[x,y]:=(img_array[x-1,y+1]+img_array[x,y+1]+img_array[x+1,y+1]+
-                              img_array[x-1,y  ]+img_array[x,y  ]+img_array[x+1,y  ]+
-                              img_array[x-1,y-1]+img_array[x,y-1]+img_array[x+1,y-1]) / 9;
+            img_array2[y,x]:=(img_array[y+1,x-1]+img_array[y+1,x]+img_array[y+1,x+1]+
+                              img_array[y  ,x-1]+img_array[y  ,x]+img_array[y  ,x+1]+
+                              img_array[y-1,x-1]+img_array[y-1,x]+img_array[y-1,x+1]) / 9;
 
         for y := 1 to h -1-1 do {put back}
           for x := 1 to w -1-1 do
-             img_array[x,y]:=img_array2[x,y];
+             img_array[y,x]:=img_array2[y,x];
       end;
     end;
 
@@ -1445,9 +1463,7 @@ begin
         equatorial_mount:=(form1.mount_type1.itemindex=1);
         DecPulseReverses:=form1.DecPulseReverses1.checked;
         if form1.NSswapped1.checked then NSswapped:=-1 else NSswapped:=1;
-
-        if  equatorial_mount=false then sideofpier_alpaca:=-1;
-        side_of_pier:=sideofpier_alpaca; // is set while slewing in alpaca_mount_protocol.pas
+        //Alpaca side_of_pier is done later after processing time, location and so on
       end
       else
       begin  //ascom
@@ -1506,12 +1522,6 @@ begin
       form1.dec1.Caption:=prepare_dec(dec_mount_indication_2000);
       filen:=form1.path_to_image1.text+'\image.tmp';{png file}
 
-      case side_of_pier of
-         0: form1.pointing1.caption:='Pointing West';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
-         1: form1.pointing1.caption:='Pointing East';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
-        else
-          form1.pointing1.caption:='-';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
-      end;
 
       try
       if ((ascom_rotator_connected) or (form1.rotator_alpaca1.Checked)) then  {allow import rotator}
@@ -1626,6 +1636,23 @@ begin
         //6) +    RA error based on slew time
         //7) -     RA error based on slew time
         //8) --   RA error based on slew time
+        //9  Mount steady
+        //10 No tracking error (for guider calibration)
+        //11 No tracking error | noise 0.4" (for guider calibration)
+        //12 No tracking error | noise 1.0" (for guider calibration)
+        //13 Tracking error α, 10" square wave 1 min period
+        //14 Tracking error α, 10" square wave 2 min period
+        //15 Tracking error α, 10" square wave 5 min period
+        //16 Tracking error δ, 10" square wave 1 min period
+        //17 Tracking error δ, 10" square wave 2 min period
+        //18 Tracking error δ, 10" square wave 5 min period
+        //19 Tracking error α, 10" sinus wave 5 min period
+        //21 Tracking error δ , 10" sinus wave 5 min period
+        //22 Tracking error α, 20" in 10 min| δ drift
+        //23 Tracking error α, 20" in 10 min| δ drift  | noise 1"
+        //24 Backlash 100 milliseconds and no tracking error
+
+
         if ((itemindex>0) and (itemindex<=4)) then ang_sep(oldRA_telescope,oldDEC_telescope,ra_mount_indication_2000,dec_mount_indication_2000, seperation);{find offset}
         if itemindex<=0 then { 0} begin mount_error:=0;end else
         if itemindex=1 then {++} begin mount_error:= seperation*+0.02  ;{introduce error depending on slew distance}  end else
@@ -1636,7 +1663,23 @@ begin
         if itemindex=6 then { +} begin mount_error:= slewtime*+0.00004 ;{introduce error depending on slew time}  end else
         if itemindex=7 then { -} begin mount_error:= slewtime*-0.00004 ;{introduce error depending on slew time}  end else
         if itemindex=8 then {--} begin mount_error:= slewtime*-0.0002  ;{introduce error depending on slew time}  end else
-        if itemindex=9 then //9) No tracking error (for guider calibration)
+        if itemindex=9 then //9) Mount steady
+        begin
+          force_artifical:=true;{force database simulation}
+          mount_error:=0;
+          seeing_errorRA:=0;
+          seeing_errorDEC:=0;
+          drift:=0;
+          wait(1000);{slow down loop}
+          allowederror:=99;
+          ra_telescope_2000:=oldRA_telescope;
+          dec_telescope_2000:=oldDec_telescope;
+          update_required:=false;
+        end
+        else
+
+
+        if itemindex=10 then //10) No tracking error (for guider calibration)
         begin
           force_artifical:=true;{force database simulation}
           mount_error:=0;
@@ -1644,7 +1687,7 @@ begin
           update_required:=true; //force an update even for the smallest error or noise
         end
         else
-        if itemindex=10 then //10) No tracking error | noise 0.4" (for guider calibration)
+        if itemindex=11 then //11) No tracking error | noise 0.4" (for guider calibration)
         begin
           force_artifical:=true;{force database simulation}
           mount_error:=0;
@@ -1654,7 +1697,7 @@ begin
           update_required:=true; //force an update even for the smallest error or noise
         end
         else
-        if itemindex=11 then //11) No tracking error | noise 1.0" (for guider calibration)
+        if itemindex=12 then //12) No tracking error | noise 1.0" (for guider calibration)
         begin
           force_artifical:=true;{force database simulation}
           mount_error:=0;
@@ -1664,39 +1707,40 @@ begin
           update_required:=true; //force an update even for the smallest error or noise
         end
         else
-        if ((itemindex>=12) and (itemindex<=17)) then {RA or DEC square wave tracking error}
+        if ((itemindex>=13) and (itemindex<=17)) then {RA or DEC square wave tracking error}
         begin
-          //12) Tracking error  α, 10" square wave 1 min period
-          //13) Tracking error  α, 10" square wave 2 min period
-          //14) Tracking error  α, 10" square wave 5 min period
-          //15) Tracking error  δ, 10" square wave 1 min period
-          //16) Tracking error  δ, 10" square wave 2 min period
-          //17) Tracking error  δ, 10" square wave 5 min period
-          force_artifical:=true;{force database simulation}
+          //13 Tracking error α, 10" square wave 1 min period
+          //14 Tracking error α, 10" square wave 2 min period
+          //15 Tracking error α, 10" square wave 5 min period
+          //16 Tracking error δ, 10" square wave 1 min period
+          //17 Tracking error δ, 10" square wave 2 min period
+          //18 Tracking error δ, 10" square wave 5 min period
+
+           force_artifical:=true;{force database simulation}
           mount_error:=0;
-          if itemindex=12 then cycletime:=1 else
-          if itemindex=13 then cycletime:=2 else
-          if itemindex=14 then cycletime:=5 else
-          if itemindex=15 then cycletime:=1 else
-          if itemindex=16 then cycletime:=2 else
-          if itemindex=17 then cycletime:=5;
+          if itemindex=13 then cycletime:=1 else
+          if itemindex=14 then cycletime:=2 else
+          if itemindex=15 then cycletime:=5 else
+          if itemindex=16 then cycletime:=1 else
+          if itemindex=17 then cycletime:=2 else
+          if itemindex=18 then cycletime:=5;
 
           if get_tracking_error(cycletime {min})*20/3600*pi/180 >0 then
-          begin
-            if itemindex<=14 then
+          begin //positive part
+            if itemindex<=15 then //ra error
             begin
                seeing_errorRA:=+5*((1/3600)*pi/180); {square wave}
                seeing_errorDEC:=0;
             end
-            else
+            else  //dec error
             begin
               seeing_errorRA:=0;
               seeing_errorDEC:=+5*((1/3600)*pi/180); {square wave};
             end;
           end
           else
-          begin
-            if itemindex<=14 then
+          begin //negative part
+            if itemindex<=15 then
             begin
                seeing_errorRA:=-5*((1/3600)*pi/180); {square wave}
                seeing_errorDEC:=0;
@@ -1711,7 +1755,13 @@ begin
           update_required:=true; //force an update even for the smallest error or noise
         end
         else
-        if itemindex=18 then //18) Tracking error α, 10" sinus wave 5 min period
+         //19 Tracking error α, 10" sinus wave 5 min period
+         //21 Tracking error δ , 10" sinus wave 5 min period
+         //22 Tracking error α, 20" in 10 min| δ drift
+         //23 Tracking error α, 20" in 10 min| δ drift  | noise 1"
+         //24 Backlash 100 milliseconds and no tracking error
+
+        if itemindex=19 then //19) Tracking error α, 10" sinus wave 5 min period
         begin
           force_artifical:=true;{force database simulation}
           mount_error:=0;
@@ -1721,7 +1771,7 @@ begin
           update_required:=true; //force an update even for the smallest error or noise
         end
         else
-        if itemindex=19 then  //19) Tracking error δ , 10" sinus wave 5 min period
+        if itemindex=20 then  //20) Tracking error δ , 10" sinus wave 5 min period
         begin
           force_artifical:=true;{force database simulation}
           mount_error:=0;
@@ -1729,20 +1779,6 @@ begin
           seeing_errorDEC:=get_tracking_error(5 {min})*(5/3600)*pi/180  ;{introduce 20 arc seconds cyclic error}
           wait(1000);{slow down loop}
           update_required:=true; //force an update even for the smallest error or noise
-        end
-        else
-        if itemindex=20 then //20) Mount steady
-        begin
-          force_artifical:=true;{force database simulation}
-          mount_error:=0;
-          seeing_errorRA:=0;
-          seeing_errorDEC:=0;
-          drift:=0;
-          wait(1000);{slow down loop}
-          allowederror:=99;
-          ra_telescope_2000:=oldRA_telescope;
-          dec_telescope_2000:=oldDec_telescope;
-          update_required:=false;
         end
         else
         if itemindex=21 then //21) Tracking error α, 20" in 10 min| δ drift
@@ -1808,6 +1844,29 @@ begin
           form1.telescope_position2000_ra1.caption:=prepare_ra(ra_telescope_2000)+'      '+   floattostrF((mount_error+seeing_errorRA)*3600*180/pi,ffFixed,3,1)+'"';
           form1.telescope_position2000_dec1.caption:=prepare_dec(dec_telescope_2000)+'      '+floattostrF(seeing_errorDEC*3600*180/pi,ffFixed,3,1)+'"';
 
+          if ((polar_alignment_error) or (equatorial_mount)) then
+          begin
+            latitude:=strtofloat(form1.latitude1.text)*pi/180;;
+            longitude:=strtofloat(form1.longitude1.text)*pi/180;
+
+            calc_jd;{calc julian day from system clock}
+            calc_sidereal_time(longitude);
+            form1.caption:='Local sideral time '+prepare_ra(sidereal_time);
+
+            meridian:=sidereal_time*12/pi;//for equatorial mount alpaca. [hours]
+            if form1.mount_alpaca1.checked {alpaca} then
+            begin
+              if sideofpier_alpaca=99 then crosses_meridian(meridian); //initialise side of pier after program startup. Else it is done when slewing
+              if  equatorial_mount=false then sideofpier_alpaca:=-1;
+              side_of_pier:=sideofpier_alpaca; // is set while slewing in alpaca_mount_protocol.pas
+            end;
+          end;
+          case side_of_pier of //do this after above calculations
+             0: form1.pointing1.caption:='Pointing West';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
+             1: form1.pointing1.caption:='Pointing East';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
+            else
+              form1.pointing1.caption:='-';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
+          end;
 
           if form1.database_selected1.checked=false then {dss image}
           begin {dss image}
@@ -1831,45 +1890,31 @@ begin
             oldRA_telescope:=ra_telescope_2000; {here prior to polar alignment errors}
             oldDEC_telescope:=dec_telescope_2000;
 
-            if ((polar_alignment_error) or (equatorial_mount)) then
+            if polar_alignment_error then
             begin
-              latitude:=strtofloat(form1.latitude1.text)*pi/180;;
-              longitude:=strtofloat(form1.longitude1.text)*pi/180;
+            elevation_error:=form1.elevation_updown1.position*pi/(180*60);
+            azimuth_error:=form1.azimuth_updown1.position*pi/(180*60);
 
-              calc_jd;{calc julian day from system clock}
-              calc_sidereal_time(longitude);
-              form1.caption:='Local sideral time '+prepare_ra(sidereal_time);
+            precession5(2451545,jd {go to jNow}, ra_telescope_2000,dec_telescope_2000, ra3,dec3);
 
-              meridian:=sidereal_time*12/pi;//for equatorial mount alpaca. [hours]
-              if sideofpier_alpaca=99 then crosses_meridian(meridian); //initialise side of pier after program startup. Else it is done when slewing
+              {Polar error calculation based on two celestial reference points and the error of the telescope mount at these point(s).
+               Based on formulas from Ralph Pass documented at https://rppass.com/align.pdf.
+               They are based on the book “Telescope Control’ by Trueblood and Genet, p.111
+               Ralph added sin(latitude) term in the equation for the error in RA.
 
+              For one reference image the difference in RA and DEC caused by the misalignment of the polar axis, formula (3):
+                 delta_ra:= de * TAN(dec)*SIN(h)  + da * (sin(lat)- COS(lat)*(TAN(dec1)*COS(h_1))
+                 delta_dec:=de * COS(h)  + da * COS(lat)*SIN(h))}
+              dRa:=-elevation_error*(TAN(dec3)*SIN(sidereal_time-ra3) ) +azimuth_error*(sin(latitude)-COS(latitude)*TAN(dec3)*COS(sidereal_time-ra3));
+              dDec:=-elevation_error*(COS(sidereal_time-ra3))  +azimuth_error*COS(latitude)*(SIN(sidereal_time-ra3));
 
-              if polar_alignment_error then
-              begin
-              elevation_error:=form1.elevation_updown1.position*pi/(180*60);
-              azimuth_error:=form1.azimuth_updown1.position*pi/(180*60);
+              //This is also possible
+              //ra_az2(ra4,dec4,latitude-elevation_error,0,sidereal_time, azimuth2,altitude2);//conversion ra & dec to altitude, azimuth
+              //az_ra2(azimuth2+azimuth_error,altitude2,latitude,0,sidereal_time, ra3,dec3);//conversion az,alt to ra,dec
 
-              precession5(2451545,jd {go to jNow}, ra_telescope_2000,dec_telescope_2000, ra3,dec3);
-
-                {Polar error calculation based on two celestial reference points and the error of the telescope mount at these point(s).
-                 Based on formulas from Ralph Pass documented at https://rppass.com/align.pdf.
-                 They are based on the book “Telescope Control’ by Trueblood and Genet, p.111
-                 Ralph added sin(latitude) term in the equation for the error in RA.
-
-                For one reference image the difference in RA and DEC caused by the misalignment of the polar axis, formula (3):
-                   delta_ra:= de * TAN(dec)*SIN(h)  + da * (sin(lat)- COS(lat)*(TAN(dec1)*COS(h_1))
-                   delta_dec:=de * COS(h)  + da * COS(lat)*SIN(h))}
-                dRa:=-elevation_error*(TAN(dec3)*SIN(sidereal_time-ra3) ) +azimuth_error*(sin(latitude)-COS(latitude)*TAN(dec3)*COS(sidereal_time-ra3));
-                dDec:=-elevation_error*(COS(sidereal_time-ra3))  +azimuth_error*COS(latitude)*(SIN(sidereal_time-ra3));
-
-                //This is also possible
-                //ra_az2(ra4,dec4,latitude-elevation_error,0,sidereal_time, azimuth2,altitude2);//conversion ra & dec to altitude, azimuth
-                //az_ra2(azimuth2+azimuth_error,altitude2,latitude,0,sidereal_time, ra3,dec3);//conversion az,alt to ra,dec
-
-                ra3:=ra3-dRa;
-                dec3:=Dec3+dDec;
-                precession5(jd, 2451545 {go back to J2000},ra3,dec3,ra_telescope_2000,dec_telescope_2000);
-              end;
+              ra3:=ra3-dRa;
+              dec3:=Dec3+dDec;
+              precession5(jd, 2451545 {go back to J2000},ra3,dec3,ra_telescope_2000,dec_telescope_2000);
             end;
 
             orient:=form1.updown1.position*pi/180; {crota2,Image twist of Y axis(deg)}
@@ -1898,7 +1943,7 @@ begin
             if form1.plotted_info1.itemindex < 5 then  {0 No labels, 1 HFD, 2 Info, 3 Objects labels, 4 All labels, 5 No deepsky, 6 No stars no deepsky}
               plot_deepsky;{plot the deep sky object on the image}
 
-            image_array_to_screen;{luminance signal to screen. No noise in screen.  Noise is added in ascom driver or in alpaca_camera_protocol}
+            image_array_stretched_to_screen;{luminance signal to screen. No noise in screen.  Noise is added in ascom driver or in alpaca_camera_protocol}
 
             Screen.Cursor:=Save_Cursor;{back to normal cursor}
 
@@ -1920,6 +1965,7 @@ begin
     end;
     except
     end;
+
 
     application.processmessages;
     if esc_pressed then exit;
@@ -2078,7 +2124,10 @@ end;
 
 procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
+  form1.statusbar1.simpletext:='STOPPING SERVER ................';
+
   stop_alpaca;
+  wait(1000);
   if save_thesettings then {set in go_default1}
                save_settings(user_path+'sky_simulator.cfg');
   img_array:=nil;
@@ -2100,6 +2149,7 @@ end;
 procedure TForm1.exit1Click(Sender: TObject);
 begin
   esc_pressed:=true;{allow to leave}
+
   form1.close;
 end;
 
@@ -2398,6 +2448,7 @@ begin
   update_required:=true;
 end;
 
+
 procedure TForm1.Image1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
@@ -2406,9 +2457,14 @@ begin
   down_xy_valid := True;
 end;
 
-procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
+
+procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState; X,  Y: Integer);
+var
+   magnification : double;
+
 begin
+  magnification:=image1.Height/image1.canvas.height;
+  form1.caption:='FITS coordinates: '+inttostr(round(0.5+x/magnification))+',  '+inttostr(round(0.5+(image1.Height-y)/magnification));
   if ssleft in shift then {swipe effect}
   begin
     if down_xy_valid then
@@ -2495,12 +2551,6 @@ begin
 
 end;
 
-procedure TForm1.Image_TabSheet2Show(Sender: TObject);
-begin
- //form1.image1.height:=form1.height-3*form1.statusbar1.height;
-
-end;
-
 
 procedure TForm1.internetESO1Exit(Sender: TObject);
 begin
@@ -2560,6 +2610,138 @@ begin
   end;
 end;
 
+procedure TForm1.save_as_fits1Click(Sender: TObject);
+begin
+ savedialog1.defaultExt:='.fits';
+ savedialog1.filter:='.fits';
+ savedialog1.filename:='sky_image.fits';
+ if savedialog1.execute then
+  begin
+    if fileexists(savedialog1.filename) then
+       if MessageDlg('Existing file ' +savedialog1.filename+ ' Overwrite?', mtConfirmation, [mbYes, mbNo], 0)<>6 then
+         Exit;
+    save_fits(savedialog1.filename);
+  end;
+
+end;
+
+
+procedure TForm1.save_as_tiff1Click(Sender: TObject);
+begin
+  savedialog1.defaultExt:='.tiff';
+  savedialog1.filter:='.tiff';
+  savedialog1.filename:='sky_image.tiff';
+  if savedialog1.execute then
+   begin
+     if fileexists(savedialog1.filename) then
+        if MessageDlg('Existing file ' +savedialog1.filename+ ' Overwrite?', mtConfirmation, [mbYes, mbNo], 0)<>6 then
+          Exit;
+     save_tiff16(savedialog1.filename);
+   end;
+end;
+
+
+procedure TForm1.save_imaga_as1Click(Sender: TObject);
+var
+  PNG: TPortableNetworkGraphic;{FPC}
+begin
+  savedialog1.filename:='sky_image.png';
+  savedialog1.defaultExt:='.png';
+  savedialog1.filter:='.png';
+  if savedialog1.execute then
+   begin
+     if fileexists(savedialog1.filename) then
+        if MessageDlg('Existing file ' +savedialog1.filename+ ' Overwrite?', mtConfirmation, [mbYes, mbNo], 0)<>6 then
+          Exit;
+     if ((pos('.PNG',uppercase(savedialog1.filename))>0) or (savedialog1.filterindex=1) )  then
+     begin
+        png:= TPortableNetworkGraphic.Create;   {FPC}
+       try
+         PNG.Assign(image1.Picture.Graphic);    //Convert data into png
+         savedialog1.filename:=ChangeFileExt(savedialog1.filename,'.png');
+         PNG.SaveToFile(savedialog1.filename);
+       finally
+        PNG.Free;
+       end;
+     end
+  end;
+end;
+
+
+procedure TForm1.image_to_clipboard1Click(Sender: TObject);
+begin
+  Clipboard.Assign(Image1.Picture.Bitmap)
+end;
+
+procedure TForm1.mount_goto1Click(Sender: TObject);
+var
+  ok : boolean;
+  mount : T_Alpaca_Mount;
+  ra_1,ra_2,ra_3,dec_1,dec_2,dec_3  : string;
+  i,pos1,pos2,pos3,pos4,pos5,pos6    : integer;
+  thera, thedec : double;
+begin
+  if InputQuery('Slew to?', 'Slew to [hh  dd   or   hh mm  dd mm   or   hh mm ss  dd mm ss]?', gotopos)=false then
+        exit;
+  if gotopos='' then exit;
+
+  repeat  {remove all double spaces}
+    i:=pos('  ',gotopos);
+    if i>0 then delete(gotopos,i,1);
+  until i=0;;
+
+  while ((length(gotopos)>=1) and (gotopos[1]=' ')) do {remove spaces in the front for pos1 detectie}
+                                     delete(gotopos,1,1);
+  while ((length(gotopos)>=1) and (gotopos[length(gotopos)]=' ')) do {remove spaces in the end since VAL( can't cope with them}
+                                     delete(gotopos,length(gotopos),1);
+  pos1:=pos(' ',gotopos);  if pos1=0 then exit;
+  pos2:=posEX(' ',gotopos,pos1+1); if pos2=0 then pos2:=length(gotopos)+1;
+  pos3:=posEX(' ',gotopos,pos2+1); if pos3=0 then pos3:=length(gotopos)+1;
+  pos4:=posEX(' ',gotopos,pos3+1); if pos4=0 then pos4:=length(gotopos)+1;
+  pos5:=posEX(' ',gotopos,pos4+1); if pos5=0 then pos5:=length(gotopos)+1;
+  pos6:=posEX(' ',gotopos,pos5+1); if pos6=0 then pos6:=length(gotopos)+1;
+
+  if pos5<>pos6  then {6 string position}
+  begin
+    ra_1:=copy(gotopos,1, pos1-1);
+    ra_2:=copy(gotopos,pos1+1, pos2-pos1-1);
+    ra_3:=copy(gotopos,pos2+1,pos3-pos2-1);
+    dec_1:=copy(gotopos,pos3+1,pos4-pos3-1);
+    dec_2:=copy(gotopos,pos4+1,pos5-pos4-1);
+    dec_3:=copy(gotopos,pos5+1,99);
+    theRa:=strtofloat(ra_1)+strtofloat(ra_2)/60+strtofloat(ra_3)/3600;
+    theDec:=strtofloat(dec_1)+strtofloat(dec_2)/60+strtofloat(dec_3)/3600;
+  end
+  else
+  if pos3<>pos4  then {4 string position}
+  begin {4 string position}
+    ra_1:=copy(gotopos,1, pos1-1);
+    ra_2:=copy(gotopos,pos1+1, pos2-pos1-1);
+    dec_1:=copy(gotopos,pos2+1,pos3-pos2-1);
+    dec_2:=copy(gotopos,pos3+1,99);
+    theRa:=strtofloat(ra_1)+strtofloat(ra_2)/60;
+    theDec:=strtofloat(dec_1)+strtofloat(dec_2)/60;
+
+  end
+  else
+  begin {2 string position}
+    ra_1:=copy(gotopos,1, pos1);
+    dec_1:=copy(gotopos,pos1+1,99);
+    theRa:=strtofloat(ra_1);
+    theDec:=strtofloat(dec_1);
+  end;
+
+
+  mount := T_Alpaca_Mount.Create(nil);
+  try
+    Mount.slewtocoordinates(theRa, theDec, ok);
+  finally
+    mount.Free;
+  end;
+  if ok=false then
+    application.messagebox(pchar('Error'),pchar('Range error!'),MB_ICONWARNING+MB_OK);
+end;
+
 
 procedure TForm1.mount_alpaca1Change(Sender: TObject);
 var
@@ -2576,6 +2758,8 @@ begin
   mount_type1.visible:=alpacaMode;
   DecPulseReverses1.visible:=alpacaMode;
   NSswapped1.visible:=alpacaMode;
+//  GroupBox_slew_buttons1.enabled:=alpacaMode;
+
   update_required:=true;
 end;
 
@@ -2583,7 +2767,7 @@ procedure TForm1.mount_error1Change(Sender: TObject);
 var
   button_use : boolean;
 begin
-  button_use:=mount_error1.itemindex>=9;
+  button_use:=mount_error1.itemindex>=10;
   form1.buttonNorth1.enabled:=button_use;
   form1.buttonSouth1.enabled:=button_use;
   form1.buttonEast1.enabled:=button_use;
@@ -2622,6 +2806,11 @@ begin
   ascom_image1.visible:=camera_alpaca1.checked=false;
   fast_simulation1.visible:=camera_alpaca1.checked;
   update_required:=true;
+end;
+
+procedure TForm1.PopupMenu1Popup(Sender: TObject);
+begin
+  mount_goto1.enabled:=mount_alpaca1.checked;//only in alpca mode
 end;
 
 
@@ -2744,7 +2933,7 @@ begin
     connect_mount1.caption:='Connect mount';
     connect_mount1.font.style:=[];
     tab_mount1.imageindex:=0;//red
-    {canslew and canslewasync will be asked later. Here to early}
+    {canslew and canslewasync will be asked later. Here too early}
   end
   else
   begin
