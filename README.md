@@ -35,16 +35,27 @@ For a small field-of-view setting a seperate star database down to magnitude 16 
 History of the Sky Simulator for ASCOM
 
 2024-06-07,  Version 2.1.1. Some optimisations. Added a popup menu to save the created image directly to FITS or AstroFITS including astrometrical solution.
+
 2024-02-20,  Version 2.1.0a. Menu optimisation. Show better why artificial sky is forced.
+
 2024-02-17,  Version 2.1.0. Menu reorganisation. Put each equimpment simulation in a seperate tab.
+
 2023-12-28,  Version 2.0.3. Introduced menu option telescope focal ratio. This allows sufficient stars for guiding testing having a small FOV.
+
 2023-11-04,  Version 2.0.2c. While in simulation allow hot switching from Alpaca to Ascom.
+
 2023-09-15,  Version 2.0.2b. Fix initialise sideofPier correctly when starting up (Alpaca Only). 
+
 2023-08-16,  Version 2.0.2a, fixed Alpaca guider camera which was broken in version 2.0.2. Reduced gray level annotations
+
 2023-08-05,  Version 2.0.2, Added some OSC camera capabilities.
+
 2023-02-19,  Version 2.0.1c, For Alpaca mount: fixed RAtrackingrate to ra sec/sec, fixed direction for moveaxis
+
 2023-02-06,  Version 2.0.1b, Added for the Alpaca mount an option to swap north and south
+
 2023-02-06,  Version 2.0.1, Added equatorial mount for Alpaca. Improved simulation of meridian flip
+
 2023-01-31,  Version 2.0.0f, Added pulse guiding and pier side for Alpaca. Some minor changes
 2022-10-20,  Version 2.0.0e, Some cosmetic changes in calculator.
 2022-08-16,  Version 2.0.0d, Fixed the default Documents folder path.
