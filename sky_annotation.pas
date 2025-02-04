@@ -29,12 +29,15 @@ type
 procedure plot_deepsky;{plot the deep sky object on the image}
 procedure load_deep;{load the deepsky database once. If loaded no action}
 procedure plot_stars(realposition, perfectposition,a,b : double);{plot stars on the image}
-procedure image_array_to_bitmap(var  Bitmap  : TBitmap);
 procedure image_array_stretched_to_screen;
 procedure read_deepsky(searchmode:char; telescope_ra,telescope_dec, cos_telescope_dec {cos(telescope_dec},fov : double; out ra2,dec2,length2,width2,pa : double);{deepsky database search}
 procedure prepare_plotting(ra1,dec1,rota :double; fh,fv :boolean); {prepare image1 and set the parameters normally contained in fits header required for plotting}
 function hfd_calc(position,perfectfocusposition,a,b:double) :double; {calculate HFD from position and perfectfocusposition using hyperbola parameters}
 procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
+procedure sensor_to_celestial(fitsx,fitsy : double; out ra,dec :double); //(x,y) -> (RA,DEC)
+procedure az_ra2(az,alt,lat,long,t:double;out ra,de: double);{conversion az,alt to ra,dec, longitude is POSITIVE when west. At south azimuth is 180}
+procedure ra_az2(ra,dec,lat,long,t:double;out azimuth2,altitude2: double);{conversion ra & dec to altitude, azimuth, longitude is POSITIVE when west. At south azimuth is 180 }
+
 
 var
   img_array        : image_array;
@@ -46,9 +49,9 @@ var
   labels           : integer;
   width_arcmin, height_arcmin   : double;
   naam2,naam3,naam4: string;
-  latitude,longitude,azimuth2,altitude2,elevation_error,azimuth_error : double;
+  latitude,longitude,elevation_error,azimuth_error : double;
 
-  cd1_1,cd1_2,cd2_1, cd2_2,crpix1,crpix2,cdelt1,cdelt2,dec0,ra0,crota2  : double;
+  cd1_1,cd1_2,cd2_1, cd2_2,crpix1,crpix2,cdelt1,cdelt2,dec0,ra0,crota2,raJnow0,decJnow0  : double;
   flip_horizontal, flip_vertical : boolean;
 
 
@@ -1013,6 +1016,7 @@ var                                                                             
  w,h,i,j,k,value,flipH,flipV,len,x2,y2: integer;
  ch : pansichar;
 begin
+  if img=nil then exit;
   w:=Length(img[0]); {width}
   h:=Length(img); {height}
 
@@ -1038,15 +1042,96 @@ begin
 end;
 
 
+
+procedure ra_az2(ra,dec,lat,long,t:double;out azimuth2,altitude2: double);{conversion ra & dec to altitude, azimuth, longitude is POSITIVE when west. At south azimuth is 180 }
+{input ra [0..2*pi], dec [-pi/2..+pi/2],lat[-pi/2..pi/2],long[0..2*pi],time[0..2*pi]}
+var t5 :double;
+    sin_lat,cos_lat,sin_dec,cos_dec,sin_t5,cos_t5:double;
+begin
+  t5:=-ra+t-long;
+  sincos(lat,sin_lat,cos_lat);
+  sincos(dec,sin_dec,cos_dec);
+  sincos(t5,sin_t5,cos_t5);
+  try
+  {***** altitude calculation from ra&dec, meeus new 12.5 *******}
+  altitude2:=arcsin(sin_lat*sin_dec+cos_lat*cos_dec*cos_t5);
+
+  {***** azimuth calculation from ra&dec, meeus new 12.6 ****** }
+  azimuth2:=arctan2(sin_t5,cos_t5*sin_lat- tan(dec)*cos_lat);
+  except
+  {ignore floating point errors outside builder}
+  end;
+  azimuth2:=azimuth2+pi;
+end;
+
+
+procedure az_ra2(az,alt,lat,long,t:double;out ra,de: double);{conversion az,alt to ra,dec, longitude is POSITIVE when west. At south azimuth is 180}
+{input az [0..2*pi], alt [-pi/2..+pi/2],lat[-pi/2..+pi/2],long[0..2*pi],time[0..2*pi]}
+var
+  sin_lat, cos_lat, sin_alt, cos_alt,sin_az,cos_az   : double;
+begin
+  sincos(lat,sin_lat,cos_lat);
+  sincos(alt,sin_alt,cos_alt);
+  sincos(az-pi,sin_az,cos_az); {south is 180 degrees, shift 180 degrees}
+
+  de:=arcsin(sin_lat*sin_alt - cos_lat*cos_alt*cos_az) ;{new meeus, formule behind 12.6}
+  ra:=arctan2(sin_az, cos_az*sin_lat+tan(alt)*cos_lat  );
+
+  ra:=-ra+t-long;
+
+  while ra<0 do ra:=ra+2*pi;
+  while ra>=2*pi do ra:=ra-2*pi;
+end;
+
+
+function position_angle(ra1,dec1,ra0,dec0 : double): double;//Position angle between a line from ra0,dec0 to ra1,dec1 and a line from ra0, dec0 to the celestial north . Rigorous method
+//See book Meeus, Astronomical Algorithms, formula 46.5 edition 1991 or 48.5 edition 1998, angle of moon limb or page 116 edition 1998.
+//See also https://astronomy.stackexchange.com/questions/25306/measuring-misalignment-between-two-positions-on-sky
+//   PA=arctan2(cos(δ0)sin(α1−α0), sin(δ1)cos(δ0)−sin(δ0)cos(δ1)cos(α1−α0))      In lazarus the function is arctan2(y/x)
+//   is seen at point α0,δ0. This means you are calculating the angle at point α0,δ0 (the reference point) towards point α1,δ1 (the target point).
+//   To clarify:
+//     Point α0,δ0 (Reference Point): This is where the observation is made from, or the point of reference.
+//     Point α1,δ1 (Target Point): This is the point towards which the position angle is being measured.
+//     Position Angle (PA): This is the angle measured at the reference point α0,δ0, going from the direction of the North Celestial Pole towards the target point α1,δ1, measured eastward (or counter-clockwise).
+//     So in your observational scenario, if you were at point α0,δ0 and wanted to determine the direction to point α1,δ1, the PA would tell you the angle to rotate from the north, moving eastward, to align with the target point.
+
+var
+  sinDeltaRa,cosDeltaRa,
+  sinDec0,cosDec0,
+  sinDec1,cosDec1 : double;
+begin
+  sincos(ra1-ra0,sinDeltaRa,cosDeltaRa);
+  sincos(dec0,sinDec0,cosDec0);
+  sincos(dec1,sinDec1,cosDec1);
+  result:=arctan2(cosDec1*sinDeltaRa,sinDec1*cosDec0 - cosDec1*sinDec0*cosDeltaRa);
+end;
+
+
+procedure precession(jd, ra1,dec1 : double; out ra_jnow1,dec2 : double); {precession correction,  new Meeus chapter precession formula 20.1}
+var
+  t,dra,ddec,m,n,n2  : double;
+begin
+  t:=(jd-2451545)/36525; {time in julian centuries since j2000 }
+  m:=3.07496+0.00186*t;{seconds}
+  n:=1.33621-0.00057*t; {seconds}
+  n2:=20.0431-0.0085*t;{arcsec}
+  dra:=(m + n *sin(ra1)*tan(dec1))*pi/(3600*12);{yearly ra drift in radians}
+  ddec:=n2*cos(ra1)*pi/(3600*180); {yearly dec drift in radians}
+  ra_jnow1:=ra1+(dra*t*100);{multiply with number of years is t*100}
+  dec2:=dec1+(ddec*t*100);
+end;
+
+
 procedure prepare_plotting(ra1,dec1,rota :double; fh,fv :boolean); {prepare image1 and set the parameters normally contained in fits header required for plotting}
 var
    sign        : integer;
+   raJnow1,decJnow1,jnow_angle,dRa,dDec  : double;
 begin
-  ra0:=ra1;
+  ra0:=ra1;//global variables
   dec0:=dec1;
 
   height2:=strtoint(form1.height_pixels1.text);{height}
-  width2:=strtoint(form1.width_pixels1.text);{height}
+  width2:=strtoint(form1.width_pixels1.text);{width}
 
   height_arcmin:=strtofloat(form1.height1.text);
 
@@ -1059,25 +1144,77 @@ begin
 
   form1.image1.Canvas.Brush.Color :=rgbtocolor(1,1,1);//clblack; clear fill bitmap with background color. A value of 1 gives better result for jpeg artefacts. An  bias and noise will be added later}
 
-  form1.image1.Canvas.fillrect(rect(0,0,width2,height2){.clientrect}); {wis canvas using current brush}
+  form1.image1.Canvas.fillrect(rect(0,0,width2,height2){.clientrect}); //wis canvas using current brush
 
 
   crota2:=rota;
-  crpix1:=width2/2;
-  crpix2:=height2/2;
-  cdelt1:=-(width_arcmin/60)/width2;//X pixel size (deg)
+  crpix1:=(width2+1)/2;//since FITS pixels start at 1. So the middle of a 2x2 pixels image is at 1.5,1.5
+  crpix2:=(height2+1)/2;
+  cdelt1:=-(width_arcmin/60)/width2;//X pixel size (deg).
   cdelt2:=cdelt1;// Y pixel size (deg)
 
+  if polar_alignment_error=false then //no error
+  begin
+    //step one pixel in declination to calculate the angle in Jnow
+    precession5(2451545, jd ,ra0,dec0-cdelt2*10*pi/180,raJnow1,decJnow1);//position in Jnow coordinate system
+    precession5(2451545, jd ,ra0,dec0      ,raJnow0,decJnow0);//position in Jnow coordinate system
+
+    jnow_angle:=position_angle(raJnow1,decJnow1,raJnow0,decJnow0);//Position angle in Jnow
+    crota2:=crota2+jnow_angle; //correct the angle for Jnow pole
+  end
+  else
+  begin //polar alignment error
+     precession5(2451545, jd ,ra0,dec0,raJnow0,decJnow0);//position in Jnow coordinate system
+
+     //add error
+     //Polar error calculation based on two celestial reference points and the error of the telescope mount at these point(s).
+     //  Based on formulas from Ralph Pass documented at https://rppass.com/align.pdf.
+     //  They are based on the book “Telescope Control’ by Trueblood and Genet, p.111
+     //  Ralph added sin(latitude) term in the equation for the error in RA.
+
+     // For one reference image the difference in RA and DEC caused by the misalignment of the polar axis, formula (3):
+     //   delta_ra:= de * TAN(dec)*SIN(h)  + da * (sin(lat)- COS(lat)*(TAN(dec)*COS(h))
+     //   delta_dec:=de * COS(h)  + da * COS(lat)*SIN(h))
+
+     //   where de is the polar error in elevation (altitude)
+     //   where da is the polar error in azimuth
+     //   where h is the hour angle of the reference point equal ra - local_sidereal_time
+
+     dRa:=-elevation_error*(TAN(decJnow0)*SIN(sidereal_time-raJnow0) ) +azimuth_error*(sin(latitude)-COS(latitude)*TAN(decJnow0)*COS(sidereal_time-raJnow0));
+     dDec:=-elevation_error*(COS(sidereal_time-raJnow0))  +azimuth_error*COS(latitude)*(SIN(sidereal_time-raJnow0));
+     raJnow0:=raJnow0-dRa;
+     decJnow0:=decJnow0+dDec;
+
+    //This is also possible but not used:
+    //ra_az2(raJnow0,decJnow0,latitude+elevation_error,0,sidereal_time{local incl longitude}, azimuth2,altitude2);//conversion ra & dec to altitude, azimuth
+    // az_ra2(azimuth2-azimuth_error,altitude2{+elevation_error},latitude,0,sidereal_time, raJnow0,decJnow0);//conversion az,alt to ra,dec
+
+     precession5(jd, 2451545, raJnow0,decJnow0,ra0,dec0);//Back to J2000. Update J2000 position with polar alignment error
+
+    //calculate angle
+    //step one pixel in declination to calculate the angle in Jnow coordinate system
+    precession5(2451545, jd ,ra0,dec0-cdelt2*10*pi/180,raJnow1,decJnow1);//position in Jnow coordinate system
+    jnow_angle:=position_angle(raJnow1,decJnow1,raJnow0,decJnow0);//Position angle in Jnow
+    crota2:=crota2+jnow_angle; //correct the angle for Jnow pole
+  end;
+
+
   {CD matrix to convert (x,y) to (Ra, Dec)}
-  cd1_1:=cdelt1*cos(crota2); {note 2013 should be crota1 if skewed}
+  cd1_1:=-cdelt1*cos(crota2); {note 2013 should be crota1 if skewed}
   if cdelt1>=0 then sign:=+1 else sign:=-1;
-  cd1_2:=abs(cdelt2)*sign*sin(crota2);{note 2013 should be crota1 if skewed}
+  cd1_2:=+abs(cdelt2)*sign*sin(crota2);{note 2013 should be crota1 if skewed}
   if cdelt2>=0 then sign:=+1 else sign:=-1;
-  cd2_1:=-abs(cdelt1)*sign*sin(crota2);
-  cd2_2:= cdelt2*cos(crota2);
+  cd2_1:=+abs(cdelt1)*sign*sin(crota2);
+  cd2_2:=+cdelt2*cos(crota2);
+
 
   flip_vertical:=fv;//form1.flipV1.checked;
   flip_horizontal:=fh;//form1.flipH1.checked;
+
+  if fh then cd1_1:=-cd1_1;//flip
+  if fv then cd1_2:=-cd1_2;
+  if fh then cd2_1:=-cd2_1;
+  if fv then cd2_2:=-cd2_2;
 end;
 
 
@@ -1236,9 +1373,8 @@ begin
 //         continue;
       end;
 
-      case z of 1:
-                     ra2:=valint32(data1,fout)*pi*2/864000;{10*60*60*24, so RA 00:00 00.1=1}
-                          {valint32 takes 1 ms instead of 4ms}
+      case z of 1:  ra2:=valint32(data1,fout)*pi*2/864000;{10*60*60*24, so RA 00:00 00.1=1}
+                        {valint32 takes 1 ms instead of 4ms}
 
                 2: begin
                      dec2:=valint32(data1,fout)*pi*0.5/324000;{60*60*90, so DEC 00:00 01=1}
@@ -1404,8 +1540,29 @@ var
   sin_rot, cos_rot :double;
 begin
   sincos(rot, sin_rot, cos_rot);
-  x2:=x * + sin_rot + y*cos_rot;{ROTATION MOON AROUND CENTER OF PLANET}
-  y2:=x * - cos_rot + y*sin_rot;{SEE PRISMA WIS VADEMECUM BLZ 68}
+  x2:=x * + sin_rot + y*cos_rot;
+  y2:=x * - cos_rot + y*sin_rot;//SEE PRISMA WIS VADEMECUM BLZ 68}
+end;
+
+
+procedure sensor_to_celestial(fitsx,fitsy : double; out ra,dec :double); //(x,y) -> (RA,DEC)
+var
+  u2,v2,xi,eta,
+  sindec0,cosdec0,delta  : double;
+begin
+  u2:=fitsx-crpix1;
+  v2:=fitsy-crpix2;
+  xi :=(cd1_1*(u2)+cd1_2*(v2))*pi/180;
+  eta:=(cd2_1*(u2)+cd2_2*(v2))*pi/180;
+
+  sincos(dec0,sindec0,cosdec0);
+  delta:=cosdec0-eta*sindec0;
+
+  ra:=ra0+arctan2(xi,delta); {atan2 is required for images containing celestial pole}
+  dec:=arctan((sindec0+eta*cosdec0)/sqrt(sqr(xi)+sqr(delta)));
+
+  if ra<0 then ra:=ra+pi*2;
+  if ra>pi*2 then ra:=ra-pi*2;
 end;
 
 
@@ -1428,8 +1585,9 @@ end;
 
 procedure plot_deepsky;{plot the deep sky object on the image}
 var
-  fitsX,fitsY,dra,ddec,delta,gamma, telescope_ra,telescope_dec,cos_telescope_dec,fov,ra2,dec2,length1,width1,pa,len,flipped,
-  gx_orientation, delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh : double;
+  fitsX,fitsY,dra,ddec, cos_telescope_dec,fov,ra2,dec2,length1,width1,pa,len,flipped,
+  gx_orientation, delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,
+  ra_database, dec_database: double;
   name: string;
   x,y,labels                   : integer;
 begin
@@ -1437,14 +1595,9 @@ begin
   begin
     labels:=form1.plotted_info1.itemindex;{0 None, 1 HFD, 2 Info, 3 Objects, 4 All, 5 no deepsky, 6 no star saturation, 7 north-east indicator}
 
-    {6. Passage (x,y) -> (RA,DEC) to find RA0,DEC0 for middle of the image. See http://alain.klotz.free.fr/audela/libtt/astm1-fr.htm}
-    dRa :=(cd1_1*((width2/2)-crpix1)+cd1_2*((height2/2)-crpix2))*pi/180; {also valid for case crpix1,crpix2 is not in the middle}
-    dDec:=(cd2_1*((width2/2)-crpix1)+cd2_2*((height2/2)-crpix2))*pi/180;
-    delta:=cos(dec0)-dDec*sin(dec0);
-    gamma:=sqrt(dRa*dRa+delta*delta);
-    telescope_ra:=ra0+arctan(Dra/delta);
-    telescope_dec:=arctan((sin(dec0)+dDec*cos(dec0))/gamma);
-    cos_telescope_dec:=cos(telescope_dec);
+
+    ra_database:=ra0;
+    dec_database:=dec0;
 
     fov:=1.5*sqrt(sqr(0.5*width2*cdelt1)+sqr(0.5*height2*cdelt2))*pi/180; {field of view with 50% extra}
     linepos:=0;
@@ -1455,14 +1608,15 @@ begin
     form1.image1.Canvas.font.size:=14;
     form1.image1.Canvas.Pen.width :=2;
 
-
     form1.image1.Canvas.brush.Style:=bsClear;
     form1.image1.Canvas.font.color:=clyellow;
 
+
+    cos_telescope_dec:=cos(dec_database);
     sincos(dec0,SIN_dec_ref,COS_dec_ref);{do this in advance since it is for each pixel the same}
 
     repeat
-      read_deepsky('S',telescope_ra,telescope_dec, cos_telescope_dec {cos(telescope_dec},fov,{var} ra2,dec2,length1,width1,pa);{deepsky database search}
+      read_deepsky('S',ra_database, dec_database, cos_telescope_dec {cos(telescope_dec},fov,{var} ra2,dec2,length1,width1,pa);{deepsky database search}
 
       {5. Conversion (RA,DEC) -> (x,y). See http://alain.klotz.free.fr/audela/libtt/astm1-fr.htm}
       sincos(dec2,SIN_dec_new,COS_dec_new);{sincos is faster then seperate sin and cos functions}
@@ -1481,8 +1635,8 @@ begin
       if ((x>-0.25*width2) and (x<=1.25*width2) and (y>-0.25*height2) and (y<=1.25*height2)) then {within image1 with some overlap}
       begin
         gx_orientation:=pa*flipped+crota2*180/pi;
-        if flip_horizontal then begin x:=(width2-1)-x; gx_orientation:=-gx_orientation; end;
-        if flip_vertical then y:=(height2-1)-y else gx_orientation:=-gx_orientation;
+        if flip_horizontal then gx_orientation:=-gx_orientation;
+        if flip_vertical then gx_orientation:=-gx_orientation;
         if ((labels>=3) and (labels<=4) and (x>=0) and (x<=width2-1) and (y>=0) and (y<=height2-1) ) then {plot only text if center object is visible}
         begin
           if naam3='' then name:=naam2
@@ -1499,7 +1653,7 @@ begin
        if width1=0 then begin width1:=length1;pa:=999;end;
        len:=length1/(abs(cdelt2)*60*10*2); {Length in pixels}
 
-       if len<=2 then {too small to plot an elipse or circle, plot just four dots}
+       if len<=2 then {too small to plot an ellipse or circle, plot just four dots}
        begin
          if ( (x>=2) and (x<=width2-1-2) and (y>=2) and (y<=height2-1-2) ) then {plot only if visible}
          begin
@@ -1540,6 +1694,7 @@ begin
   result:=a*cosh(t);{convert t-position to y/hfd value}
 end;
 
+
 procedure colourshift(pattern,offsetX,offsetY : integer; var img: image_array);//colour shift OSC image
 var
   w,h,x,y : integer;
@@ -1553,7 +1708,7 @@ begin
     begin
       for x := 0 to w -1 do
       begin
-        if ((odd(x+offsetX)=false) and (odd(y+offsetY)=false)) then //red  sensitive pixels
+        if ((odd(x+offsetX)=false) and (odd(y+offsetY)=true)) then //red  sensitive pixels
           img[y,x]:=img[y,x]*4;
       end;
     end;
@@ -1565,9 +1720,7 @@ begin
     begin
       for x := 0 to w -1 do
         begin
-          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=false)) then //green sensitive pixels
-            img[y,x]:=img[y,x]*4;
-          if ((odd(x+offsetX)=false) and (odd(y+offsetY)=true)) then//green sensitive pixels
+          if odd(x+offsetX)=odd(y+offsetY) then //green sensitive pixels
             img[y,x]:=img[y,x]*4;
         end;
     end;
@@ -1579,7 +1732,7 @@ begin
     begin
       for x := 0 to w -1 do
         begin
-          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=true)) then //blue  sensitive pixels
+          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=false)) then //blue  sensitive pixels
             img[y,x]:=img[y,x]*4;
         end;
     end;
@@ -1602,11 +1755,8 @@ begin
     begin
       for x := 0 to w -1 do
         begin
-          if ((odd(x+offsetX)=true) and (odd(y+offsetY)=false)) then //green sensitive pixels
-            img[y,x]:=40000
-          else
-          if ((odd(x+offsetX)=false) and (odd(y+offsetY)=true)) then//green sensitive pixels
-            img[y,x]:=40000
+          if odd(x+offsetX)=odd(y+offsetY) then //green sensitive pixels
+             img[y,x]:=40000
           else
           img[y,x]:=0
         end;
@@ -1617,32 +1767,34 @@ end;
 procedure coloured_lines(x2,y2,bayeroffset_X,bayeroffset_Y:integer; var img: image_array);//mark with colour lines for raw OSC
 
 var
-  x,y : integer;
+  x,y,textoffset : integer;
 const
   white=3000;
   black=0;
 begin
-  annotation_to_array('R=',true{transparant},graylevel,2,x2,y2 {screen coord},img);
-  annotation_to_array('G=',true{transparant},graylevel,2,x2,y2+20 {screen coord},img);
-  annotation_to_array('B=',true{transparant},graylevel,2,x2,y2+40 {screen coord},img);
+  if form1.fliptext1.checked then textoffset:=0 else textoffset:=18;
+
+  annotation_to_array('R=',true{transparant},graylevel,2,x2,y2+textoffset+40 {screen coord},img);
+  annotation_to_array('G=',true{transparant},graylevel,2,x2,y2+textoffset+20 {screen coord},img);
+  annotation_to_array('B=',true{transparant},graylevel,2,x2,y2+textoffset {screen coord},img);
 
   for x:=x2+30   to x2+100 do
     for y:=y2+2 to y2+16 do
     begin
-      if ((odd(x+bayeroffset_X)=false) and (odd(y+bayeroffset_Y)=false))  then img[y,x]:=white else  img[y,x]:=black;//red
-      if ( ((odd(x+bayeroffset_X)=true) and (odd(y+bayeroffset_Y)=false)) or ((odd(x+bayeroffset_X)=false) and (odd(y+bayeroffset_Y)=true)) ) then img[y+20,x]:=white else  img[y+20,x]:=black;//green
-      if  ((odd(x+bayeroffset_X)=true) and (odd(y+bayeroffset_Y)=true)) then img[y+40,x]:=white else  img[y+40,x]:=black;//blue
+      if ((odd(x+bayeroffset_X)=true) and (odd(y+bayeroffset_Y)=false))  then img[y,x]:=white else  img[y,x]:=black;//blue
+      if ( odd(x+bayeroffset_X) = odd(y+bayeroffset_Y) ) then img[y+20,x]:=white else  img[y+20,x]:=black;//green
+      if  ((odd(x+bayeroffset_X)=false) and (odd(y+bayeroffset_Y)=true)) then img[y+40,x]:=white else  img[y+40,x]:=black;//red
     end;
 
 
-  annotation_to_array('RED',true{transparant},graylevel,2,x2+70,y2+70 {screen coord},img);
-  annotation_to_array('GREEN',true{transparant},graylevel,2,x2+120,y2+70 {screen coord},img);
-  annotation_to_array('BLUE',true{transparant},graylevel,2,x2+200,y2+70 {screen coord},img);
+  annotation_to_array('RED',true{transparant},graylevel,2,x2+70,y2+textoffset+70 {screen coord},img);
+  annotation_to_array('GREEN',true{transparant},graylevel,2,x2+120,y2+textoffset+70 {screen coord},img);
+  annotation_to_array('BLUE',true{transparant},graylevel,2,x2+200,y2+textoffset+70 {screen coord},img);
 
-  annotation_to_array('RGGB',true{transparant},graylevel,2,x2,y2+90 {screen coord},img);
-  annotation_to_array('GRBG',true{transparant},graylevel,2,x2,y2+110 {screen coord},img);
-  annotation_to_array('GBRG',true{transparant},graylevel,2,x2,y2+130 {screen coord},img);
-  annotation_to_array('BGGR',true{transparant},graylevel,2,x2,y2+150 {screen coord},img);
+  annotation_to_array('RGGB',true{transparant},graylevel,2,x2,y2+textoffset+90 {screen coord},img);
+  annotation_to_array('GRBG',true{transparant},graylevel,2,x2,y2+textoffset+110 {screen coord},img);
+  annotation_to_array('GBRG',true{transparant},graylevel,2,x2,y2+textoffset+130 {screen coord},img);
+  annotation_to_array('BGGR',true{transparant},graylevel,2,x2,y2+textoffset+150 {screen coord},img);
 
   for x:=x2+70 to x2+250 do
   for y:=y2+90 to y2+170 do
@@ -1651,11 +1803,11 @@ begin
     if ((x>x2+120) and (x<x2+190) and (y<y2+110)) then  begin if odd(x)=odd(y) then img[y,x]:=white else  img[y,x]:=black;  end; //rggb green
     if ((x>x2+190) and (x<x2+250) and (y<y2+110)) then  begin if ((odd(x)) and (odd(y+1))) then img[y,x]:=white else  img[y,x]:=black; end; //rggb blue
 
-    if ((x<x2+120) and (y>y2+110) and (y>y2+110) and (y<y2+130)) then begin if ((odd(x)) and (odd(y))) then img[y,x]:=white else  img[y,x]:=black; end;//grgb red
-    if ((x>x2+120) and (x<x2+190) and (y>y2+110) and (y<y2+130)) then  begin if odd(x+1)=odd(y) then img[y,x]:=white else  img[y,x]:=black;  end; //grgb green
-    if ((x>x2+190) and (x<x2+250) and (y>y2+110) and (y<y2+130)) then  begin if ((odd(x+1)) and (odd(y)=false)) then img[y,x]:=white else  img[y,x]:=black; end; //grgb blue
+    if ((x<x2+120) and (y>y2+110) and (y>y2+110) and (y<y2+130)) then begin if ((odd(x)) and (odd(y))) then img[y,x]:=white else  img[y,x]:=black; end;//grbG red
+    if ((x>x2+120) and (x<x2+190) and (y>y2+110) and (y<y2+130)) then  begin if odd(x+1)=odd(y) then img[y,x]:=white else  img[y,x]:=black;  end; //grbg green
+    if ((x>x2+190) and (x<x2+250) and (y>y2+110) and (y<y2+130)) then  begin if ((odd(x+1)) and (odd(y)=false)) then img[y,x]:=white else  img[y,x]:=black; end; //grbg blue
 
-    if ((x<x2+120) and (y>y2+110) and (y>y2+130) and (y<y2+150)) then begin if ((odd(x+1)) and (odd(y+1))) then img[y,x]:=white else  img[y,x]:=black; end;//gbrb red
+    if ((x<x2+120) and (y>y2+110) and (y>y2+130) and (y<y2+150)) then begin if ((odd(x+1)) and (odd(y+1))) then img[y,x]:=white else  img[y,x]:=black; end;//gbrg red
     if ((x>x2+120) and (x<x2+190) and (y>y2+130) and (y<y2+150)) then  begin if odd(x)=odd(y+1) then img[y,x]:=white else  img[y,x]:=black;  end; //gbrg green
     if ((x>x2+190) and (x<x2+250) and (y>y2+130) and (y<y2+150)) then  begin if ((odd(x)) and (odd(y+1)=false)) then img[y,x]:=white else  img[y,x]:=black; end; //gbrg blue
 
@@ -1663,28 +1815,24 @@ begin
     if ((x<x2+120) and (y>y2+110) and (y>y2+150) and (y<y2+170)) then begin if ((odd(x)) and (odd(y+1))) then img[y,x]:=white else  img[y,x]:=black; end;//bggr red
     if ((x>x2+120) and (x<x2+190) and (y>y2+150) and (y<y2+170)) then  begin if odd(x+1)=odd(y+1) then img[y,x]:=white else  img[y,x]:=black;  end; //bggr green
     if ((x>x2+190) and (x<x2+250) and (y>y2+150) and (y<y2+170)) then  begin if ((odd(x+1)) and (odd(y+1)=false)) then img[y,x]:=white else  img[y,x]:=black; end; //bggr blue
-
   end;
-
-
 end;
+
 
 procedure plot_stars(realposition, perfectposition,a,b : double);{plot stars}
 var
-  hfd,fitsX,fitsY, fitsX_middle, fitsY_middle,x2,y2,x1,y1,
-  dra,ddec,delta,gamma, telescope_ra,telescope_dec,fov,ra2,dec2, mag2,Bp_Rp, peakvalue,
+  hfd,fitsX,fitsY, x1,y1,
+  dra,ddec, ra_database,dec_database, fov,ra2,dec2, mag2,Bp_Rp, peakvalue,
   delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,sigma,max_magn,
   focal_ratio,angle,distance,sqr_distance,pedestal,cosdec,  frac1,frac2,frac3,frac4,val,
-  distance3,distance1,distanceX, distanceY,sqr_distance_norm,xc,yc,angle_starpos              : double;
+  distance3,distance1,distanceX, distanceY,sqr_distance_norm,xc,yc,angle_starpos : double;
   star_total_counter, stepsize,i, area1,area2,area3,area4,w,h,x,y,hotpixels,
   tilt_index,half_width,half_height                                                           : integer;
-
 
     PROCEDURE plot_star;
     var
        m,n,subsampling,xx,yy       : integer;
        sqrdistance,hfd2 : double;
-
     begin
      {5. Conversion (RA,DEC) -> (x,y)}
       sincos(dec2,SIN_dec_new,COS_dec_new);{sincos is faster then seperate sin and cos functions}
@@ -1728,6 +1876,8 @@ var
 
                                  x1:=x1+15*distanceX;//about 15 pixel pincushion distortion max
                                  y1:=y1+15*distanceY;//about 15 pixel pincushion distortion max
+                                 x1:=x1+15*distanceX;//about 15 pixel pincushion distortion max
+                                 y1:=y1+15*distanceY;//about 15 pixel pincushion distortion max
                                end;
                           else  hfd2:=hfd;
                           end; {case}
@@ -1737,16 +1887,9 @@ var
 
          if hfd2<=3 then subsampling:=5 //5 {sampling within the pixel}
                    else subsampling:=1;{out of focus stars, position less important}
-
-         if flip_horizontal then x2:=(width2-1)-x1 else x2:=x1;
-         if flip_vertical   then y2:=(height2-1)-y1 else y2:=y1;
-
          inc(star_total_counter);
-
          peakvalue:=$FFFFFF*power(2.5,(max_magn-mag2-140)/10);  {Sensitivity of the telescope. Limiting magnitude give gives a peak pixel value 45}
-
          peakvalue:=peakvalue*(2.35*2.35)/(hfd2*hfd2);{reduce peak value sqr of the hfd}
-
          if peakvalue>5 then //above noise
          begin
            stepsize:=stepsize*subsampling;{subsample within a pixel}
@@ -1757,8 +1900,8 @@ var
              val:=peakvalue*(1/sqr(subsampling))*EXP(-0.5*(sqrdistance)/(sigma*sigma)); {gaussian shaped stars sampled subsampling x subsampling within a pixel}
              if val>0 then
              begin
-               xx:=round(x2+m/subsampling);
-               yy:=round(y2+n/subsampling);
+               xx:=round(x1+m/subsampling);
+               yy:=round(y1+n/subsampling);
                if ((xx>=0) and (xx<width2) and (yy>=0) and (yy<height2)) then {within image}
                  img_array[yy,xx]:=min(img_array[yy,xx]+val,$FFFFFF);{integrate supsamples in case subsampling is larger then one. Integration is required for close overlapping double like Sirus. Prevent values above 24 bit equals $FFFFFF}
              end;
@@ -1785,18 +1928,13 @@ begin
 
     bp_rp:=999;{not defined in mono versions}
 
-    fitsX_middle:=(width2+1)/2;{range 1..width, if range 1,2,3,4  then middle is 2.5=(4+1)/2 }
-    fitsY_middle:=(height2+1)/2;
 
-    dRa :=(cd1_1*(fitsx_middle-crpix1)+cd1_2*(fitsy_middle-crpix2))*pi/180;
-    dDec:=(cd2_1*(fitsx_middle-crpix1)+cd2_2*(fitsy_middle-crpix2))*pi/180;
-    delta:=cos(dec0)-dDec*sin(dec0);
-    gamma:=sqrt(dRa*dRa+delta*delta);
-    telescope_ra:=ra0+arctan(Dra/delta);
-    telescope_dec:=arctan((sin(dec0)+dDec*cos(dec0))/gamma);
+    ra_database:=ra0;
+    dec_database:=dec0;
 
     fov:= sqrt(sqr(width2*cdelt1)+sqr(height2*cdelt2))*pi/180; {field of view diagonal with 0% extra}
-    fov:=min(fov,9.53*pi/180);{warning FOV should be less the database tiles dimensions, so <=9.53 degrees. Otherwise a tile beyond next tile could be selected}
+
+     fov:=min(fov,9.53*pi/180);{warning FOV should be less the database tiles dimensions, so <=9.53 degrees. Otherwise a tile beyond next tile could be selected}
 
     star_total_counter:=0;{total counter}
     focal_ratio:=max(2,strtofloat(copy(form1.focal_ratio1.text,3,2)));
@@ -1810,7 +1948,7 @@ begin
     end;
     form1.star_database1.text:=name_star;
 
-    find_areas( telescope_ra,telescope_dec, fov,{var} area1,area2,area3,area4, frac1,frac2,frac3,frac4);{find up to four star database areas for the square image}
+    find_areas( ra_database,dec_database, fov,{var} area1,area2,area3,area4, frac1,frac2,frac3,frac4);{find up to four star database areas for the square image}
 
     sincos(dec0,SIN_dec_ref,COS_dec_ref);{do this in advance since it is for each pixel the same}
 
@@ -1845,7 +1983,7 @@ begin
       {read 1th area}
       if area1<>0 then {read 1th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area1,{var} ra2,dec2, mag2,Bp_Rp)) ) do
+        while ((readdatabase290(ra_database,dec_database, fov,area1,{var} ra2,dec2, mag2,Bp_Rp)) ) do
                plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
@@ -1853,7 +1991,7 @@ begin
       {read 2th area}
       if area2<>0 then {read 2th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area2,{var} ra2,dec2, mag2,Bp_Rp))) do
+        while ((readdatabase290(ra_database,dec_database, fov,area2,{var} ra2,dec2, mag2,Bp_Rp))) do
                plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
@@ -1861,13 +1999,13 @@ begin
       {read 3th area}
       if area3<>0 then {read 3th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area3,{var} ra2,dec2, mag2,Bp_Rp)) ) do plot_star;{add star}
+        while ((readdatabase290(ra_database,dec_database, fov,area3,{var} ra2,dec2, mag2,Bp_Rp)) ) do plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
       {read 4th area}
       if area4<>0 then {read 4th area}
       begin
-        while ((readdatabase290(telescope_ra,telescope_dec, fov,area4,{var} ra2,dec2, mag2,Bp_Rp)) ) do plot_star;{add star}
+        while ((readdatabase290(ra_database,dec_database, fov,area4,{var} ra2,dec2, mag2,Bp_Rp)) ) do plot_star;{add star}
         close_star_database;{close reader, so next time same file is read from beginning}
       end;
 
@@ -1890,18 +2028,18 @@ begin
       ra2:=ra0;
       dec2:=dec0+fov*0.1;
       plot_star;//find x,y position
-      annotation_to_array('N',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      annotation_to_array('N',true{transparant},2*graylevel,3, round(x1),round(y1) {screen coord}, img_array);
       dec2:=dec0-fov*0.1;;
       plot_star;
-      annotation_to_array('S',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      annotation_to_array('S',true{transparant},2*graylevel,3, round(x1),round(y1) {screen coord}, img_array);
       ra2:=ra0+fov*0.1/cosdec;
       dec2:=dec0;
       plot_star;
-      annotation_to_array('E',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      annotation_to_array('E',true{transparant},2*graylevel,3, round(x1),round(y1) {screen coord}, img_array);
       ra2:=ra0-fov*0.1/cosdec;;
       dec2:=dec0;
       plot_star;
-      annotation_to_array('W',true{transparant},2*graylevel,3, round(x2),round(y2) {screen coord}, img_array);
+      annotation_to_array('W',true{transparant},2*graylevel,3, round(x1),round(y1) {screen coord}, img_array);
     end;
 
     //colour shift for OSC
@@ -1932,141 +2070,147 @@ begin
                   //19    RGGB FLAT green only
                   //20    GRBG FLAT green only
 
+//  Bayer offsets are both zero = RGGB
+//  Bayer offset is 1 and y bayer offset is 0, GRBG.
+//  Bayer offset is 0 and y bayer offset is 1, GBRG.
+//  both Bayer offsets are 1, BGGR.
+
 
                       5:begin //rggb reddish
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
                            colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
-                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1. Reddish',true{transparant},1000 {graylevel},2,250,20 {screen coord},img_array);
+                           annotation_to_array('RGGB (OffsetX=0, OffsetY=0). Reddish',true{transparant},1000 {graylevel},2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
                       6:begin //rggb greenish
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
                            colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
-                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('RGGB (OffsetX=0, OffsetY=0). Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                          end;
                       7:begin //rggb bluish
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
                            colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
-                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('RGGB (OffsetX=0, OffsetY=0). Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
 
 
-                      8:begin //grgb reddish
+                      8:begin //grbg reddish
                            bayeroffset_X:=1;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
                            colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
-                           annotation_to_array('GRGB, OffsetX=1, OffsetY=1. Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GRBG (RGGB & OffsetX=1, OffsetY=0). Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
-                      9:begin //grgb greenish
+                      9:begin //grbg greenish
                            bayeroffset_X:=1;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
                            colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
-                           annotation_to_array('GRGB, OffsetX=1, OffsetY=1. GRGB. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GRGB (RGGB & OffsetX=1, OffsetY=0). GRGB. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
-                      10:begin //grgb blueish
+                      10:begin //grbg blueish
                            bayeroffset_X:=1;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
                            colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
-                           annotation_to_array('GRGB, OffsetX=1, OffsetY=1. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GRGB (RGGB & OffsetX=1, OffsetY=0). Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
 
 
                       11:begin //gbrg reddish
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=0;
+                           bayeroffset_Y:=1;
                            sensor_type:=2;//OSC
                            colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
-                           annotation_to_array('GBRG, OffsetX=0, OffsetY=0. Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GBRG (RGGB & OffsetX=0, OffsetY=1). Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
                       12:begin //gbrg greenish
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=0;
+                           bayeroffset_Y:=1;
                            sensor_type:=2;//OSC
                            colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
-                           annotation_to_array('GBRG, OffsetX=0, OffsetY=0. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GBRG (RGGB & OffsetX=0, OffsetY=1). Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
                       13:begin //gbrg blueish
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=0;
+                           bayeroffset_Y:=1;
                            sensor_type:=2;//OSC
                            colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
-                           annotation_to_array('GBRG, OffsetX=0, OffsetY=0. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GBRG (RGGB & OffsetX=0, OffsetY=1). Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
 
 
                       14:begin //bggr reddish
                            bayeroffset_X:=1;
-                           bayeroffset_Y:=0;
+                           bayeroffset_Y:=1;
                            sensor_type:=2;//OSC
                            colourshift(1,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to red
-                           annotation_to_array('BGGR, OffsetX=1, OffsetY=0. Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('BGGR (RGGB & OffsetX=1, OffsetY=1). Reddish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
                       15:begin //bggr greenish
                            bayeroffset_X:=1;
-                           bayeroffset_Y:=0;
+                           bayeroffset_Y:=1;
                            sensor_type:=2;//OSC
                            colourshift(2,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to green
-                           annotation_to_array('BGGR, OffsetX=1, OffsetY=0. Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('BGGR (RGGB & OffsetX=1, OffsetY=1). Greenish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
                       16:begin //bggr blueish
                            bayeroffset_X:=1;
-                           bayeroffset_Y:=0;
+                           bayeroffset_Y:=1;
                            sensor_type:=2;//OSC
                            colourshift(3,bayeroffset_X,bayeroffset_Y,img_array);//colour shift OSC image to blue
-                           annotation_to_array('BGGR, OffsetX=1, OffsetY=0. Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('BGGR (RGGB & OffsetX=1, OffsetY=1). Bluish',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            coloured_lines(250,50,bayeroffset_X,bayeroffset_Y,img_array);
                         end;
 
+                      //  Bayer offsets are both zero = RGGB
+                      //  Bayer offset is 1 and y bayer offset is 0, GRBG.
+                      //  Bayer offset is 0 and y bayer offset is 1, GBRG.
+                      //  both Bayer offsets are 1, BGGR.
+
                       17:begin //Mono flat
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=0;//mono camera
                            colourshift(11,bayeroffset_X,bayeroffset_Y,img_array);//flat
                         end;
                       18:begin //RGGB flat
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
-                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('RGGB (OffsetX=0, OffsetY=0)',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            colourshift(11,bayeroffset_X,bayeroffset_Y,img_array);//flat
                         end;
                       19:begin //RGGB flat green only
                            bayeroffset_X:=0;
-                           bayeroffset_Y:=1;
+                           bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
-                           annotation_to_array('RGGB, OffsetX=0, OffsetY=1. Green only',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('RGGB (OffsetX=0, OffsetY=0). Green only',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            colourshift(12,bayeroffset_X,bayeroffset_Y,img_array);//flat green only
                         end;
                       20:begin //GRBG flat green only
                             bayeroffset_X:=1;
                             bayeroffset_Y:=0;
                            sensor_type:=2;//OSC
-                           annotation_to_array('GRGB, OffsetX=1, OffsetY=0. Green only.',true{transparant},graylevel,2,250,20 {screen coord},img_array);
+                           annotation_to_array('GRGB (RGGB & OffsetX=1, OffsetY=0). Green only.',true{transparant},graylevel,2,250,20 {screen coord},img_array);
                            colourshift(12,bayeroffset_X,bayeroffset_Y,img_array);//flat green only
                         end;
-
-
-
-
             else
             begin
               sensor_type:=0;//mono
@@ -2078,71 +2222,6 @@ begin
   end;
 end;{plot stars}
 
-
-
-procedure image_array_to_bitmap(var  Bitmap  : TBitmap);
-var
-   x,y,w,h,val,valR,valG,valB : integer;
-   valword : word;
-   xLine :  PByteArray;
-
-
-begin
-  w:=form1.image1.picture.Bitmap.Width;
-  h:=form1.image1.picture.Bitmap.Height;
-
-  try
-    with bitmap do
-    begin
-      Width := w;
-      Height := h;
-        // Unclear why this must follow width/height to work correctly.
-        // If PixelFormat precedes width/height, bitmap will always be black.
-      bitmap.PixelFormat := pf24bit;
-    end;
-    except;
-  end;
-
-
-  {copy array to bitmap}
-  for y:=0 to h-1 do
-  begin
-    xLine :=   Bitmap.ScanLine[y];
-    for x:=0 to w-1 do
-    begin
-
-      //img_array[y,x]:=round(65535*y/h);
-
-      if img_array[y,x]=0 then
-        val:=0  {ln(1) is zero. No need to take calculate ln()}
-      else
-        val:=round(189000*ln(1+img_array[y,x]));{transport grey level logarithmic in 24 bit range [0..$FFFFFF]  Range [0 .. 3.4E38].  No negative values}
-                                                {note decoding:  value:=(-1 + Math.Exp(  ((red * 256 * 256) + (green * 256) + (blue)) / 189000);}
-
-
-      valR:=hi(val);
-      valword:=lo(val);
-      valG:=hi(valword);
-      valB:=lo(valword);
-
-      {$ifdef mswindows}
-         xLine^[x*3]  :=valB; {3*8=24 bit}
-         xLine^[x*3+1]:=valG; {fast pixel write routine }
-         xLine^[x*3+2]:=valR;
-      {$endif}
-      {$ifdef darwin} {MacOS}
-         xLine^[x*4+1]:=valR; {4*8=32 bit}
-         xLine^[x*4+2]:=valG; {fast pixel write routine }
-         xLine^[x*4+3]:=valB;
-      {$endif}
-      {$ifdef linux}
-         xLine^[x*4]  :=valB; {4*8=32 bit}
-         xLine^[x*4+1]:=valG; {fast pixel write routine }
-         xLine^[x*4+2]:=valR;
-       {$endif}
-    end;
-  end;
-end;
 
 procedure image_array_stretched_to_screen;
 var
@@ -2175,7 +2254,7 @@ begin
     xLine :=   Bitmap.ScanLine[y];
     for x:=0 to w-1 do
     begin
-      val:=round(img_array[y,x]);{grey level [0..$FFFFFF]}
+      val:=round(img_array[h-1-y,x]);//grey level [0..$FFFFFF], follow fits convention. Pixel 1,1 bottom left
       min_val:=min(min_val,val);{for removing dark current}
       valG:=min(255,1+trunc(15*255*power(((val-min_val)/$FFFF),0.5))); {stretch data for display. give it a bias of 1 for case it is saved with the popup menu of the image tab}
 
@@ -2207,15 +2286,6 @@ begin
   form1.Image1.Picture.Bitmap.TransparentColor := clblack;
 
   form1.Image1.refresh;
-
-//  with form1.Image1.Picture.bitmap.canvas do
-//  begin
-//    Brush.Style := bsClear;
-//    font.size:=20;
-//    Font.Color := clgreen;
-//    TextOut(10,h-30,'Database data without noise.');
-//  end;
-
 end;
 
 

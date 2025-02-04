@@ -44,6 +44,7 @@ type
       function  maxbiny: integer; virtual; abstract;
       function  binx: integer; virtual; abstract;
       function  biny: integer; virtual; abstract;
+      function  readoutmode: integer; virtual; abstract;
       function  pixelsizex: integer; virtual; abstract;
       function  pixelsizey: integer; virtual; abstract;
       function  sensorname: string; virtual; abstract;
@@ -67,6 +68,7 @@ type
       procedure fastreadout(x: boolean); virtual; abstract;
       procedure setbinX(x: integer; out ok :boolean); virtual; abstract;
       procedure setbinY(x: integer; out ok :boolean); virtual; abstract;
+      procedure setreadoutmode(x: integer; out ok :boolean); virtual; abstract;
 
       function  cangetcoolerpower: boolean; virtual; abstract;
       function  cansetccdtemperature: boolean; virtual; abstract;
@@ -170,28 +172,22 @@ begin
     lst.Free;
   end
   else if ((method='gains') or (method='offsets')) then begin
-    lst:=TStringList.Create;
-    lst.Clear;
+//    lst:=TStringList.Create;
+//    lst.Clear;
     set_not_implemented;
-    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-    lst.Free;
+//    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+//    lst.Free;
   end
-  else if method='readoutmodes' then begin
+  else if method='readoutmodes' then begin  //Must be implemented if CanFastReadout is false, must throw a PropertyNotImplementedException if CanFastReadout is true.
     lst:=TStringList.Create;
     lst.Clear;
-    lst.add('normal');
-    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-    lst.Free;
-  end
-  else if method='readoutmodes' then begin
-    lst:=TStringList.Create;
-    lst.Clear;
-    lst.add('normal');
+    lst.add('normal1');
+    lst.add('normal2');//doesn't do anything in simulator
     result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
     lst.Free;
   end
   else if ((method='readoutmode') ) then begin
-    i:=0;{index to readoutmodes=normal}
+    i:=readoutmode;{index to readoutmodes=normal1, normal2}
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if ((method='offsetmin') or (method='offsetmax') or (method='offset') or (method='subexposureduration')) then begin {get integers not implemented}
@@ -244,12 +240,10 @@ begin
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='bayeroffsetx' then begin
-//    set_not_implemented;
     i:=bayeroffsetX;
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='bayeroffsety' then begin
-    //set_not_implemented;
     i:=bayeroffsetY;
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
@@ -294,7 +288,7 @@ begin
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='canfastreadout' then begin
-    ok:=false;
+    ok:=false;//If true then ReadoutModes Property has to be not implemented. See https://ascom-standards.org/help/developer/html/P_ASCOM_DriverAccess_Camera_ReadoutModes.htm
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='cooleron' then begin
@@ -498,19 +492,19 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='startx' then begin
-    if GetParamInt(params,'startx',i) then setstartx(i); {no check since it is binning dependend and clamped later. Check is done in startExposure}
+    if GetParamInt(params,'startx',i) then setstartx(i); {no check since it is binning dependent and clamped later. Check is done in startExposure}
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='starty' then begin
-    if GetParamInt(params,'starty',i) then setstarty(i); {no check since it is binning dependend and clamped later. Check is done in startExposure}
+    if GetParamInt(params,'starty',i) then setstarty(i); {no check since it is binning dependent and clamped later. Check is done in startExposure}
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='numx' then begin
-    if GetParamInt(params,'numx',i) then  setnumx(i);  {no check since it is binning dependend and clamped later. Check is done in startExposure}
+    if GetParamInt(params,'numx',i) then  setnumx(i);  {no check since it is binning dependent and clamped later. Check is done in startExposure}
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='numy' then begin
-    if GetParamInt(params,'numy',i) then setnumy(i);  {no check since it is binning dependend and clamped later. Check is done in startExposure}
+    if GetParamInt(params,'numy',i) then setnumy(i);  {no check since it is binning dependent and clamped later. Check is done in startExposure}
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='cooleron' then begin
@@ -530,8 +524,22 @@ begin
     if ok=false then set_invalid_range(i);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else if method='readoutmode' then begin
+    if GetParamInt(params,'readoutmode',i) then
+      setreadoutmode(i,ok);
+      if ok=false then set_invalid_range(i);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+
+
   else if ((method='offset') or (method='fastreadout') or (method='subexposureduration')) then begin
     set_not_implemented;  {not implemented}
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='readoutmode' then begin
+    if GetParamInt(params,'readoutmode',i) then
+      setreadoutmode(i,ok);
+      if ok=false then set_invalid_range(i);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
 

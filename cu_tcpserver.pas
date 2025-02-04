@@ -316,7 +316,8 @@ begin
          //     Connected=True&ClientID=3200023&ClientTransactionID=370       body
 
           if cl>0 then {there is a body behind the header}
-            body:=RecvBufferStr(cl,100) {receive the body, something like: Connected=True&ClientID=3200023&ClientTransactionID=370}
+            body:=RecvBufferStr(cl,500) {receive the body, something like: Connected=True&ClientID=3200023&ClientTransactionID=370}
+            //This has to be 500 ms instead of the original 100 ms because ASCOM 7 send the body in next package. See https://github.com/ASCOMInitiative/ASCOMPlatform/issues/79
           else
             body:='';
 

@@ -146,6 +146,7 @@ procedure SplitRec(buf,sep:string; var arg: TStringList);
 
 implementation
 
+//uses sky_simulator_main;
 
 constructor T_AlpacaDevice.Create(AOwner: TComponent);
 begin
@@ -243,9 +244,10 @@ end;
 end;
 
 function  T_AlpacaDevice.GetParamBool(params: Tstringlist; key: string; out value: boolean):boolean;
-var buf,dummy: string;
+var buf: string;
 begin
-dummy:=params.text;
+//dummy:=params.text;
+//Form1.memo1.lines.add('parameter: '+dummy);
 result:=GetParamString(params,key,buf);
 if result then begin
    buf:=UpperCase(buf);
@@ -399,6 +401,7 @@ begin
       buf:=buf+'['; {begin mark each row}
 
       for j:=0 to h-1 do
+//      for j:=h-1 downto 0 do
       begin
         buf:=buf+IntToStr(value[i,j]);
         if j<h-1 then buf:=buf+',';
@@ -443,7 +446,8 @@ begin
   // write image to sequential array
   n:=0;
   for i:=0 to metadata.Dimension1-1 do //cycle in width.
-    for j:=0 to metadata.Dimension2-1 do  //cycle in heighth Swapped :(
+    //for j:=0 to metadata.Dimension2-1 do  //cycle in heighth Swapped :(
+    for j:=metadata.Dimension2-1 downto 0 do  //cycle in heighth Swapped :(
     begin
       data[n]:=value[i,j];
       inc(n);

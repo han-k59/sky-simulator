@@ -16,10 +16,10 @@ function save_fits(filen2:ansistring): boolean;{save 16 fits file}
 
 implementation
 
-uses sky_annotation,sky_simulator_main;
+uses sky_annotation,sky_simulator_main, alpaca_camera_protocol;
 
 var
-  head : array [0..26] of ansistring=
+  head : array [0..30] of ansistring=
   (
      {0}('SIMPLE  =                    T / FITS header                                    '),
      {1}('BITPIX  =                   16 / Bits per entry                                 '),
@@ -45,9 +45,13 @@ var
     {21}('CD1_2   =                  0.0 / CD matrix to convert (x,y) to (Ra, Dec)        '),
     {22}('CD2_1   =                  0.0 / CD matrix to convert (x,y) to (Ra, Dec)        '),
     {23}('CD2_2   =                  0.0 / CD matrix to convert (x,y) to (Ra, Dec)        '),
-    {24}('SWCREATE=  Sky Simulator for Ascom and Alpaca                                   '),
-    {25}('PLTSOLVD=                    T / Astrometric solution by Sky Simulator          '),
-    {26}('END                                                                             '));
+    {24}('PLTSOLVD=                    T / Astrometric solution by Sky Simulator          '),
+    {25}('SWCREATE=  Sky Simulator for Ascom and Alpaca                                   '),
+    {26}('COMMENT                                                                         '),
+    {27}('COMMENT                                                                         '),
+    {28}('COMMENT                                                                         '),
+    {29}('COMMENT                                                                         '),
+    {30}('END                                                                             '));
 
 procedure setvalue(index : integer; value: single);
 var
@@ -55,6 +59,7 @@ var
   s2,s : string;
 begin
   s2:=head[index];
+  for i:=11 to 30 do s2[i]:=' ';//clear contains especially when integers change to floats
   if frac(value)=0 then
     str(round(value),s) //integers
   else
@@ -73,9 +78,8 @@ var
   writer: TFPCustomImageWriter;
   format,s3 : string;
   thecolor  : Tfpcolor;
-  factor    : single;
   flip_H,flip_V:boolean;
-  fv,fh     : double;
+  fv,fh        : double;
 
 begin
   if img_array=nil then
@@ -92,20 +96,52 @@ begin
   setvalue(3,width5);
   setvalue(4,height5);
   setvalue(8,bzero);
-  setvalue(13,ra_telescope_2000*180/pi);//ra
-  setvalue(14,dec_telescope_2000*180/pi);//dec
+  setvalue(13,ra0{ra_telescope_2000}*180/pi);//ra
+  setvalue(14,dec0{dec_telescope_2000*180/pi});//dec
   setvalue(15,jd);
   setvalue(16,(width5+1)/2);
   setvalue(17,(height5+1)/2);
-  setvalue(18,ra_telescope_2000*180/pi);//crval1
-  setvalue(19,dec_telescope_2000*180/pi);
+  setvalue(18,ra0{ra_telescope_2000}*180/pi);//crval1
+  setvalue(19,dec0{dec_telescope_2000}*180/pi);
 
-  if flip_horizontal then fh:=-1 else fh:=+1;
-  if flip_vertical then fv:=+1 else fv:=-1;
+   flip_v:=false; //no flip
+  flip_h:=false; //no flip
+
+  if flip_v then fv:=-1 else fv:=1;
+  if flip_h then fh:=-1 else fh:=1;
+
   setvalue(20,fh*cd1_1);
   setvalue(21,fv*cd1_2);
   setvalue(22,fh*cd2_1);
   setvalue(23,fv*cd2_2);
+  head[26]:='COMMENT  RA0='+prepare_RA(ra0)+'    DEC0='+prepare_DEC(dec0)+'                                             ';
+
+  //  Bayer offsets are both zero = RGGB
+  //  Bayer offset is 1 and y bayer offset is 0, GRBG.
+  //  Bayer offset is 0 and y bayer offset is 1, GBRG.
+  //  both Bayer offsets are 1, BGGR
+  if sensor_type=2 then
+  begin
+    if ((bayeroffset_X=0) and (bayeroffset_Y=0))  then
+        head[27]:='BAYERPAT= '+char(39)+'RGGB'+char(39)+'               / Bayer color pattern' //will be extended to 80 chars later
+    else
+    if ((bayeroffset_X=1) and (bayeroffset_Y=0))  then
+        head[27]:='BAYERPAT= '+char(39)+'GRBG'+char(39)+'               / Bayer color pattern' //will be extended to 80 chars later
+    else
+    if ((bayeroffset_X=0) and (bayeroffset_Y=1))  then
+        head[27]:='BAYERPAT= '+char(39)+'GBRG'+char(39)+'               / Bayer color pattern' //will be extended to 80 chars later
+    else
+    if ((bayeroffset_X=1) and (bayeroffset_Y=1))  then
+        head[27]:='BAYERPAT= '+char(39)+'BGGR'+char(39)+'               / Bayer color pattern'; //will be extended to 80 chars later
+
+    head[28]:='ROWORDER= '+char(39)+'BOTTOM-UP'+char(39)+'          / Bottom row image is the first row in the file.'; //will be extended to 80 chars later
+  end
+  else
+  begin
+    head[27]:='COMMENT ';//will be extended to 80 chars later
+    head[28]:='COMMENT ';//will be extended to 80 chars later
+  end;
+
 
   Image := TFPMemoryImage.Create(width5, height5);
   Writer := TFPWriterTIFF.Create;
@@ -113,7 +149,6 @@ begin
   Image.Extra[TiffAlphaBits]:='0';
 
   format:='16'; {32 bit is not available}
-  factor:=1;{default}
 
   Image.Extra[TiffRedBits]:=format;
   Image.Extra[TiffGreenBits]:=format;
@@ -127,13 +162,13 @@ begin
 
   s3:='';
   for i:=0 to length(head)-1  do
+  begin
+  if ((cd1_1<>0) or (i<16) or (i>24 )) then
     s3:=s3+head[i]+#10;
+  end;
   image.Extra[TiffImageDescription]:=s3; {store full header in TIFF}
 
   Image.Extra[TiffCompression]:= '8'; {FPWriteTiff only support only writing Deflate compression. Any other compression setting is silently replaced in FPWriteTiff at line 465 for Deflate. FPReadTiff that can read other compressed files including LZW.}
-
-  flip_v:=true;
-  flip_H:=false;
 
   For i:=0 to height5-1 do
   begin
@@ -164,21 +199,15 @@ end;
 
 
 function save_fits(filen2:ansistring): boolean;{save 16 fits file}
-type  byteX3  = array[0..2] of byte;
-      byteXX3 = array[0..2] of word;
-      byteXXXX3 = array[0..2] of single;
 const
    bufwide=1024*20;
 var
   fitsbuffer : array[0..bufwide] of byte;{buffer for 8 bit FITS file}
   fitsbuffer2: array[0..round(bufwide/2)] of word absolute fitsbuffer;{buffer for 16 bit FITS file}
   TheFile4 : tfilestream;
-  I,j,k,bzero, dum, remain,height5,width5 : integer;
-  dd : single;
+  I,j,bzero, dum, remain,height5,width5 : integer;
   line0                : ansistring;
   aline,empthy_line    : array[0..80] of ansichar;{79 required but a little more to have always room}
-  rgb  : byteX3;{array [0..2] containing r,g,b colours}
-  fv,fh     : double;
 
 begin
   result:=false;
@@ -196,21 +225,45 @@ begin
   setvalue(3,width5);
   setvalue(4,height5);
   setvalue(8,bzero);
-  setvalue(13,ra_telescope_2000*180/pi);//ra
-  setvalue(14,dec_telescope_2000*180/pi);//dec
+  setvalue(13,ra0{ra_telescope_2000}*180/pi);//ra
+  setvalue(14,dec0{dec_telescope_2000}*180/pi);//dec
   setvalue(15,jd);
   setvalue(16,(width5+1)/2);
   setvalue(17,(height5+1)/2);
-  setvalue(18,ra_telescope_2000*180/pi);//crval1
-  setvalue(19,dec_telescope_2000*180/pi);
+  setvalue(18,ra0{ra_telescope_2000}*180/pi);//crval1
+  setvalue(19,dec0{dec_telescope_2000}*180/pi);
+  setvalue(20,cd1_1);
+  setvalue(21,cd1_2);
+  setvalue(22,cd2_1);
+  setvalue(23,cd2_2);
+  head[26]:='COMMENT  RA0='+prepare_RA(ra0)+'    DEC0='+prepare_DEC(dec0)+'                                             ';
 
-  if flip_horizontal then fh:=-1 else fh:=+1;//different then for TIFF
-  if flip_vertical then fv:=+1 else fv:=-1;
+  //  Bayer offsets are both zero = RGGB
+  //  Bayer offset is 1 and y bayer offset is 0, GRBG.
+  //  Bayer offset is 0 and y bayer offset is 1, GBRG.
+  //  both Bayer offsets are 1, BGGR
+  if sensor_type=2 then
+  begin
+    if ((bayeroffset_X=0) and (bayeroffset_Y=0))  then
+        head[27]:='BAYERPAT= '+char(39)+'RGGB'+char(39)+'               / Bayer color pattern' //will be extended to 80 chars later
+    else
+    if ((bayeroffset_X=1) and (bayeroffset_Y=0))  then
+        head[27]:='BAYERPAT= '+char(39)+'GRBG'+char(39)+'               / Bayer color pattern' //will be extended to 80 chars later
+    else
+    if ((bayeroffset_X=0) and (bayeroffset_Y=1))  then
+        head[27]:='BAYERPAT= '+char(39)+'GBRG'+char(39)+'               / Bayer color pattern' //will be extended to 80 chars later
+    else
+    if ((bayeroffset_X=1) and (bayeroffset_Y=1))  then
+        head[27]:='BAYERPAT= '+char(39)+'BGGR'+char(39)+'               / Bayer color pattern'; //will be extended to 80 chars later
 
-  setvalue(20,fh*cd1_1);
-  setvalue(21,fv*cd1_2);
-  setvalue(22,fh*cd2_1);
-  setvalue(23,fv*cd2_2);
+    head[28]:='ROWORDER= '+char(39)+'BOTTOM-UP'+char(39)+'          / Bottom row image is the first row in the file.'; //will be extended to 80 chars later
+  end
+  else
+  begin
+    head[27]:='COMMENT ';//will be extended to 80 chars later
+    head[28]:='COMMENT ';//will be extended to 80 chars later
+  end;
+
 
   try
     TheFile4:=tfilestream.Create(filen2, fmcreate );
@@ -221,7 +274,10 @@ begin
       repeat
          if i<length(head) then
          begin
-           line0:=head[i];
+           if ((cd1_1<>0) or (i<16) or (i>24)) then
+             line0:=head[i]
+             else
+             line0:='COMMENT   No solution when "polar alignment error" is checked';
            while length(line0)<80 do line0:=line0+' ';{extend to length 80 if required}
 
            strpcopy(aline,(copy(line0,1,80)));{copy 80 and not more}
@@ -232,7 +288,7 @@ begin
          inc(i);
       until ((i>=length(head)-1) and (frac(i*80/2880)=0)); {write multiply records 36x80 or 2880 bytes}
 
-      for i:=height5-1 downto 0 do
+      for i:=0 to height5-1 do
       begin
         for j:=0 to width5-1 do
         begin

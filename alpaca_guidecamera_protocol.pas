@@ -52,6 +52,8 @@ var
   cooler_on  : boolean=true;
   bin_X      : integer=1;
   bin_Y      : integer=1;
+  read_out_mode: integer=0;//doesn't do anything normal1 or normal2
+  bin_maximum: integer=2;//will be set at 1 if DSS images are used
   last_exposureduration:double=-1;
   Percent_Completed: integer=0; {%}
   sensor_type: integer=0;
@@ -108,6 +110,7 @@ type
       function  maxbinY : integer; override;
       function  binx : integer; override;
       function  binY : integer; override;
+      function  readoutmode : integer; override;
       function  pixelsizex : integer; override;
       function  pixelsizeY : integer; override;
       function  sensorname : string; override;
@@ -161,6 +164,8 @@ type
       procedure setnumy(x: integer); override;
       procedure setbinX(x: integer; out ok :boolean); override;
       procedure setbinY(x: integer; out ok :boolean); override;
+      procedure setreadoutmode(x: integer; out ok :boolean); override;
+
 
       function  imagearray(out ok: boolean): Timg; override;
       function  canpulseguide: boolean; override;
@@ -309,54 +314,58 @@ end;
 function  T_Alpaca_GuideCam.cameraXsize: integer;
 begin
   img_width:=length(img_array[0]);
-  result:=img_width;
   if num_X>=9999 then num_X:=img_width; {initialise}
+  result:=img_width div bin_x; //binning is done after simulation to allow independent binning for camera and guide camera
 end;
 
 function  T_Alpaca_GuideCam.cameraYsize: integer;
 begin
   img_height:=length(img_array);
-  result:=img_height;
   if num_Y>=9999 then num_Y:=img_height; {initialise}
+  result:=img_height div bin_y; //binning is done after simulation to allow independent binning for camera and guide camera
 end;
 
-function  T_Alpaca_GuideCam.maxbinx: integer;
+function  T_Alpaca_Guidecam.maxbinx: integer;
 begin
-  result:=1;
+  result:=bin_maximum;
 end;
 
-function  T_Alpaca_GuideCam.maxbiny: integer;
+function  T_Alpaca_Guidecam.maxbiny: integer;
 begin
-  result:=1;
+  result:=bin_maximum;
 end;
 
-
-function  T_Alpaca_GuideCam.binx: integer;
+function  T_Alpaca_Guidecam.binx: integer;
 begin
   result:=bin_X;
 end;
 
-function  T_Alpaca_GuideCam.biny: integer;
+function  T_Alpaca_Guidecam.biny: integer;
 begin
   result:=bin_Y;
 end;
 
-function  T_Alpaca_GuideCam.pixelsizex: integer;
+function  T_Alpaca_guidecam.readoutmode: integer;
+begin
+  result:=read_out_mode;
+end;
+
+function  T_Alpaca_Guidecam.pixelsizex: integer;
 begin
   result:=5;
 end;
 
-function  T_Alpaca_GuideCam.pixelsizey: integer;
+function  T_Alpaca_Guidecam.pixelsizey: integer;
 begin
   result:=5;
 end;
 
-function  T_Alpaca_GuideCam.sensorname: string;
+function  T_Alpaca_Guidecam.sensorname: string;
 begin
-  result:='mono sensor';
+  result:='artificial sensor';
 end;
 
-function  T_Alpaca_GuideCam.maxadu: integer;
+function  T_Alpaca_Guidecam.maxadu: integer;
 begin
   result:=65535;
 end;
@@ -371,7 +380,8 @@ begin
   result:=bayeroffset_Y;
 end;
 
-function  T_Alpaca_GuideCam.camerastate: integer;
+
+function  T_Alpaca_Guidecam.camerastate: integer;
 begin
   result:=camera_state;
 
@@ -386,117 +396,118 @@ begin
    }
 end;
 
-function  T_Alpaca_GuideCam.cangetcoolerpower: boolean;
+function  T_Alpaca_Guidecam.cangetcoolerpower: boolean;
 begin
   result:=false;
 end;
-function  T_Alpaca_GuideCam.cansetccdtemperature: boolean;
+function  T_Alpaca_Guidecam.cansetccdtemperature: boolean;
 begin
   result:=true;
 end;
-function  T_Alpaca_GuideCam.cooleron: boolean;
+function  T_Alpaca_Guidecam.cooleron: boolean;
 begin
   result:=cooler_on;
 end;
-function  T_Alpaca_GuideCam.hasshutter: boolean;
+function  T_Alpaca_Guidecam.hasshutter: boolean;
 begin
   result:=false;
 end;
-function  T_Alpaca_GuideCam.imageready: boolean;
+function  T_Alpaca_Guidecam.imageready: boolean;
 begin
   result:=((img_array<>nil) and (last_exposureduration>=0) and (Percent_Completed>=100)); {image in the buffer and startexposure was given}
 end;
 
-function  T_Alpaca_GuideCam.ccdtemperature: double;
+function  T_Alpaca_Guidecam.ccdtemperature: double;
 begin
   result:=sensor_temperature;
 end;
 
-function  T_Alpaca_GuideCam.exposuremax: double;
+function  T_Alpaca_Guidecam.exposuremax: double;
 begin
   result:=3600;
 end;
 
-function  T_Alpaca_GuideCam.exposuremin: double;
+function  T_Alpaca_Guidecam.exposuremin: double;
 begin
   result:=0;
 end;
 
-function  T_Alpaca_GuideCam.fullwellcapacity: double;
+function  T_Alpaca_Guidecam.fullwellcapacity: double;
 begin
   result:=65535;
 end;
 
 
-function  T_Alpaca_GuideCam.electronsperadu: double;
+function  T_Alpaca_Guidecam.electronsperadu: double;
 begin
   result:=100/camera_gain; {100 is normal resulting in 1e/adu}
 end;
 
-function  T_Alpaca_GuideCam.gain: integer;
+function  T_Alpaca_Guidecam.gain: integer;
 begin
   result:=camera_gain;
 end;
 
-function  T_Alpaca_GuideCam.gainmax: integer;
+function  T_Alpaca_Guidecam.gainmax: integer;
 begin
   result:=gain_max;
 end;
 
-function  T_Alpaca_GuideCam.gainmin: integer;
+function  T_Alpaca_Guidecam.gainmin: integer;
 begin
   result:=gain_min; {100 is factor 1}
 end;
 
-function  T_Alpaca_GuideCam.coolerpower: double;
+function  T_Alpaca_Guidecam.coolerpower: double;
 begin
   result:=max(100,min(0,sqr((20 - set_temperature)/5)  ));
 end;
 
-function  T_Alpaca_GuideCam.heatsinktemperature: double;
+function  T_Alpaca_Guidecam.heatsinktemperature: double;
 begin
   result:=35;
 end;
-function  T_Alpaca_GuideCam.exposureresolution: double;
+function  T_Alpaca_Guidecam.exposureresolution: double;
 begin
   result:=0;
 end;
 
-function  T_Alpaca_GuideCam.lastexposureduration: double;
+function  T_Alpaca_Guidecam.lastexposureduration: double;
 begin
   result:=last_exposureduration;
 end;
 
-function  T_Alpaca_GuideCam.percentcompleted: integer;
+function  T_Alpaca_Guidecam.percentcompleted: integer;
 begin
   result:=Percent_Completed;
 end;
 
 
-function  T_Alpaca_GuideCam.sensortype: integer;
+function  T_Alpaca_Guidecam.sensortype: integer;
 begin
-  result:=0;{mono}
+  result:=sensor_type;{mono}
 end;
-function  T_Alpaca_GuideCam.ispulseguiding: boolean;
+
+function  T_Alpaca_Guidecam.ispulseguiding: boolean;
 begin
   result:=false;
 end;
 
-procedure T_Alpaca_GuideCam.abortexposure(out ok:boolean);
+procedure T_Alpaca_Guidecam.abortexposure(out ok:boolean);
 begin
   {abortexposure;}
   ok:=true; {}
   Percent_Completed:=0;{%}
 end;
 
-procedure T_Alpaca_GuideCam.stopexposure(out ok:boolean);
+procedure T_Alpaca_Guidecam.stopexposure(out ok:boolean);
 begin
   {abortexposure;}
   ok:=true; {}
   Percent_Completed:=0;{%}
 end;
 
-procedure T_Alpaca_GuideCam.startexposure(x: double; out errortype : integer);
+procedure T_Alpaca_Guidecam.startexposure(x: double; out errortype : integer);
 begin
   {startexposure}
   camera_exposure:=max(0,x);
@@ -504,7 +515,7 @@ begin
   errortype:=0;
   if abs(camera_exposure-x)>0.00001 {check one} then
     errortype:=1; {invalid range}
-  if ((start_X+num_X>img_width/bin_X) or (start_Y+num_Y>img_height/ bin_Y)) then {check two}
+  if ((start_X+num_X>img_width{/bin_X}) or (start_Y+num_Y>img_height{/ bin_Y})) then {check two}
     errortype:=2;{subwindow out out range}
 
   camera_state:=2; {exposure ongoing}
@@ -516,13 +527,12 @@ begin
    5 CameraError Camera error condition serious enough to prevent further operations (connection fail, etc.).
   }
 
-
   exposure_remaining:=camera_exposure;
   last_exposureduration:=camera_exposure;
   Percent_Completed:=0;{%}
 end;
 
-procedure T_Alpaca_GuideCam.SetCCDTemperature(x: double;out error:double);
+procedure T_Alpaca_Guidecam.SetCCDTemperature(x: double;out error:double);
 begin
   set_temperature:=min(max(-40,x),50);{limit setpoint range}
   error:=set_temperature-x;
@@ -534,91 +544,114 @@ begin
 
 end;
 
-procedure T_Alpaca_GuideCam.SetGain(x: integer;out error :integer);
+procedure T_Alpaca_Guidecam.SetGain(x: integer;out error :integer);
 begin
   camera_gain:=min(max(x,gain_min),gain_max); {minimum gain is 100%}
   error:=x-gain; {will be unequal if clamped}
 end;
 
-procedure T_Alpaca_GuideCam.setcooler(x: boolean);
+procedure T_Alpaca_Guidecam.setcooler(x: boolean);
 begin
   cooler_on:=x;
 end;
 
 
-function  T_Alpaca_GuideCam.startx: integer;
+function  T_Alpaca_Guidecam.startx: integer;
 begin
-  result:=start_x;  {report sub section begin x}
+  result:=start_x div bin_X;  {report sub section begin x}
 end;
 
-function  T_Alpaca_GuideCam.starty: integer;
+function  T_Alpaca_Guidecam.starty: integer;
 begin
-  result:=start_y; {report sub section begin y}
+  result:=start_y div bin_Y; {report sub section begin y}
 end;
 
-function  T_Alpaca_GuideCam.numx: integer;
+function  T_Alpaca_Guidecam.numx: integer;
 begin
-  result:=num_x;{report sub section width}
+  result:=num_x div bin_X;{Returns the current subframe width, if binning is active, value is in binned pixels.}
 end;
-function  T_Alpaca_GuideCam.numy: integer;
+function  T_Alpaca_Guidecam.numy: integer;
 begin
-  result:=num_y; {report sub section height}
+  result:=num_y div bin_Y; {Returns the current subframe width, if binning is active, value is in binned pixels.}
 end;
-function  T_Alpaca_GuideCam.setccdtemperature: integer;
+function  T_Alpaca_Guidecam.setccdtemperature: integer;
 begin
   result:=round(set_temperature);
 end;
 
-procedure T_Alpaca_GuideCam.setstartx(x: integer);
+procedure T_Alpaca_Guidecam.setstartx(x: integer);
 begin
-  start_x:=x; {set sub section begin x}
-  {no check since it is binning dependend and clamped later. Check is done in startExposure}
+  start_x:=x * bin_X; {set sub section begin x}
+  {no check since it is binning dependent and clamped later. Check is done in startExposure}
 end;
 
-procedure T_Alpaca_GuideCam.setstarty(x: integer);
+procedure T_Alpaca_Guidecam.setstarty(x: integer);
 begin
-  start_Y:=x; {set sub section begin y}
-  {no check since it is binning dependend and clamped later. Check is done in startExposure}
-
+  start_Y:=x * bin_Y; {set sub section begin y}
+  {no check since it is binning dependent and clamped later. Check is done in startExposure}
 end;
 
-procedure T_Alpaca_GuideCam.setnumx(x: integer);
+procedure T_Alpaca_Guidecam.setnumx(x: integer);
 begin
-  num_x:=x;{set sub section width}
-  {no check since it is binning dependend and clamped later. Check is done in startExposure}
+  num_x:=x * bin_X ;{set sub section width}
+  {no check since it is binning dependent and clamped later. Check is done in startExposure}
 end;
 
-procedure T_Alpaca_GuideCam.setnumy(x: integer);
+procedure T_Alpaca_Guidecam.setnumy(x: integer);
 begin
-  num_Y:=x;{set sub section heigth}
-  {no check on NumY since it is binning dependend and clamped  Check is done in startExposure}
+  num_Y:=x * bin_Y ;{set sub section heigth}
+  {no check on NumY since it is binning dependent and clamped  Check is done in startExposure}
 end;
 
-procedure T_Alpaca_GuideCam.setbinX(x: integer; out ok :boolean);
+procedure T_Alpaca_Guidecam.setbinX(x: integer; out ok :boolean);
 begin
-  bin_X:=max(1,min(1,x));{clamp range}
+  bin_X:=max(1,min(bin_maximum,x));{clamp range}
   ok:=(bin_X=x);
 end;
 
-procedure T_Alpaca_GuideCam.setbinY(x: integer; out ok :boolean);
+procedure T_Alpaca_Guidecam.setbinY(x: integer; out ok :boolean);
 begin
-  bin_Y:=max(1,min(1,x));{clamp range}
+  bin_Y:=max(1,min(bin_maximum,x));{clamp range}
   ok:=(bin_Y=x);
 end;
 
+procedure T_Alpaca_Guidecam.setreadoutmode(x: integer; out ok :boolean);
+begin
+  read_out_mode:=x;
+  ok:=true;
+end;
 
-function  T_Alpaca_GuideCam.imagearray(out ok: boolean): Timg;
+procedure bin_2X2(var img :Timg);{bin img 2x2}
+  var fitsX,fitsY,k, w,h  : integer;
+      img_temp2 : Timg;
+
+begin
+  w:=length(img[0]) div bin_x;
+  h:=length(img) div bin_y;
+
+  setlength(img_temp2,h,w);
+
+  for fitsY:=0 to h-1 do
+     for fitsX:=0 to w-1  do
+     begin
+       img_temp2[fitsY,fitsX]:=(img[fitsY*2,fitsX*2]+
+                                img[fitsY*2 +1,fitsX*2]+
+                                img[fitsY*2   ,fitsX*2+1]+
+                                img[fitsY*2 +1,fitsX*2+1]) div 4;
+     end;
+  img:=img_temp2;
+end;
+
+
+function  T_Alpaca_Guidecam.imagearray(out ok: boolean): Timg;
 var
   x,y, w, h,Ystart,Ystop,Xstart,Xstop : integer;
   noise,relative_gain : double;
 begin
-
   relative_gain:=camera_gain/100; { gain of 1 is normal}
   noise:=(5/relative_gain {read noise} +15*sqrt(camera_exposure/5) {sky noise});{assume Sky Noise Dominated case. Gain reduces read-noise (5/gain)}
   img_width:=length(img_array[0]);
   img_height:=length(img_array);
-
-  annotation_to_array('Guide cam',true{transparant},1000{gralevel},2, 10,img_height-25 {screen coord}, img_array);{string to image array as annotation}
 
   Ystop:= min(img_height,max(0,start_Y+num_Y));
   Ystart:=min(img_height,max(0,start_Y));
@@ -629,34 +662,38 @@ begin
   w:=Xstop-Xstart; {could be subsection}
   h:=Ystop-Ystart; {could be subsection}
 
-  setlength(the_img,w,h);//width and height are swapped here !! Less efficient
+  setlength(the_img,w,h );//width and height are swapped here !! Less efficient
 
-   for x:=Xstart to Xstop-1 do
-     for y:=Ystart to  Ystop-1 do
+  for y:=Ystart to  Ystop-1 do
+    for x:=Xstart to Xstop-1 do
         the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + randg(4*noise {mean},noise {sd}) )) ;
 
-  ok:=last_exposureduration>=0; {startexposure was given}
+  if bin_x=2 then
+  begin
+    bin_2X2(the_img);//here and not in simulation to allow independent binning for camera and guide camera
+  end;
 
+  ok:=last_exposureduration>=0; {startexposure was given}
 
   result:=the_img;
 end;
 
-function T_Alpaca_GuideCam.canpulseguide: boolean;
+function T_Alpaca_Guidecam.canpulseguide: boolean;
 begin
   result:=false;
 end;
 
-function T_Alpaca_GuideCam.canabortexposure: boolean;
+function T_Alpaca_Guidecam.canabortexposure: boolean;
 begin
   result:=true;
 end;
 
-function T_Alpaca_GuideCam.canstopexposure: boolean;
+function T_Alpaca_Guidecam.canstopexposure: boolean;
 begin
   result:=true;
 end;
 
-function T_Alpaca_GuideCam.canasymmetricbin: boolean;
+function T_Alpaca_Guidecam.canasymmetricbin: boolean;
 begin
   result:=false;
 end;

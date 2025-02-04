@@ -181,8 +181,11 @@ end;
 
 procedure T_AlpacaServer.StopServer;
 begin
-  TCPDaemon.Terminate;
-  Discovery.Terminate;
+  try
+    TCPDaemon.Terminate;
+    Discovery.Terminate;
+  except
+  end;
 end;
 
 procedure T_AlpacaServer.ShowError(var msg:string);

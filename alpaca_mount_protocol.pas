@@ -43,9 +43,9 @@ function alpaca_dec : double;{DEC position mount}
 procedure mount_simulation;{called by the timer every second}
 function crosses_meridian(meridian :double) : boolean;
 var
-  ra_encoder: double=3.5*15;{RA encoder position, degrees}
+  ra_encoder: double=256.741389196031;//14*360/24{3.5*15};{RA encoder position, degrees}
   ra_corr: double=0;{mount sync correction}
-  dec_encoder: double=50;{DEC encoder position}
+  dec_encoder: double=89.7900991439244;{DEC encoder position}
   dec_corr: double=0;{mount sync correction}
 
   alpaca_ra_target: double=3.5;{hours}
@@ -71,11 +71,14 @@ var
 
   meridian          : double=2; //hours
   equatorial_mount  : boolean=true;
+  equinox_communication : integer=1;   {equTopocentric}
 
   guiderateRa: double=0.5*360/(24*60*60);// 0.5x and 1.5x rate
   guiderateDec: double=0.5*360/(24*60*60);// 0.5x and 1.5x rate
 
-  theaxisrates : array[0..2]  of double=(0,0,0);
+  theaxisrates : array[0..2]  of double=(360/86164.098903691 {ra in deg/sec},0 {dec},0);
+  site_elevation: double=10;
+
 
 type
 
@@ -142,10 +145,10 @@ type
       function  sideofpier: integer; override;
       procedure setsideofpier(value: integer); override;
       function  siderealtime: double; override;
-      function  siteelevation: double; override;
-      procedure setsiteelevation(value: double); override;
       function  sitelatitude: double; override;
       procedure setsitelatitude(value: double); override;
+      function  siteElevation: double; override;
+      procedure setsiteElevation(value: double); override;
       function  sitelongitude: double; override;
       procedure setsitelongitude(value: double); override;
       function  is_slewing: boolean; override;
@@ -189,6 +192,34 @@ implementation
 
 uses sky_annotation,sky_simulator_main; {for siderealtime}
 
+
+procedure precession_to_jnow(ra, dec: double; out ra2,dec2: double);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
+begin
+  if  equinox_communication=2 then //J2000
+  begin
+    precession5(2451545, jd ,ra*pi/12,dec*pi/180,ra,dec);
+    ra2:=ra*12/pi;//convert to hours
+    dec2:=dec*180/pi;//convert to degrees
+  end
+  else
+  begin
+    ra2:=ra;
+    dec2:=dec;
+  end;
+end;
+
+procedure precession_from_jnow(var ra, dec: double);//ra in unit hours, dec in degrees
+begin
+  if  equinox_communication=2 then //J2000
+  begin
+    precession5(jd,2451545,ra*pi/12,dec*pi/180,ra,dec);
+    ra:=ra*12/pi;//convert to hours
+    dec:=dec*180/pi;//convert to degrees
+  end;
+end;
+
+
+
 function inc_angle(angle, adjustment :double): double; {make range -180..+180, simulate encoder behaviour}
 begin
   result:=angle+adjustment;
@@ -197,33 +228,38 @@ begin
 end;
 
 
-function alpaca_dec : double;{DEC position mount}
+procedure get_mount_position(out ra,de : double);
 begin
-  result:=inc_angle(dec_encoder,dec_corr);{calculate reported DEC position}
+  de:=inc_angle(dec_encoder,dec_corr);{calculate reported DEC position}
 
-  if result>+90 then {crossing celestial pole}
-    result:=180-result;
-  if result<-90 then {crossing celestial pole}
-    result:=-180-result;
+  if de>+90 then {crossing celestial pole, add 180 degrees to ra}
+    ra:=inc_angle(ra_encoder,ra_corr+180)
+  else
+  if de<-90 then {crossing celestial pole, add 180 degrees to ra}
+    ra:=inc_angle(ra_encoder,ra_corr+180)
+  else
+    ra:=inc_angle(ra_encoder,ra_corr);
+
+
+  if ra<0 then ra:=ra+360; {make range 0..360}
+  ra:=ra/15; {make hours}
+
+  precession_from_jnow(ra,de);//for case communication is in J2000. ra in unit hours, dec in degrees
+
+end;
+
+function alpaca_dec : double;{DEC position mount}
+var
+  ra: double;
+begin
+  get_mount_position(ra,result);
 end;
 
 
 function alpaca_ra : double;{RA position mount}
 var de :double;
 begin
-  de:=inc_angle(dec_encoder,dec_corr);{calculate reported DEC position}
-
-  if de>+90 then {crossing celestial pole, add 180 degrees to ra}
-    result:=inc_angle(ra_encoder,ra_corr+180)
-  else
-  if de<-90 then {crossing celestial pole, add 180 degrees to ra}
-    result:=inc_angle(ra_encoder,ra_corr+180)
-  else
-    result:=inc_angle(ra_encoder,ra_corr);
-
-
-  if result<0 then result:=result+360; {make range 0..360}
-  result:=result/15; {make hours}
+  get_mount_position(result,de);
 end;
 
 
@@ -247,44 +283,51 @@ begin
 
   if angular_distance_mount>=0 then sideofpier_alpaca:=1 else sideofpier_alpaca:=0; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
 
+//  if abs(abs(angular_distance_mount)-12)<=0.000003 then result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
   if abs(abs(angular_distance_mount)-12)<=0.00001 then result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
 end;
 
 
 procedure mount_simulation;{called every second by the timer}
 var
-  deltaRa,deltaDec,stepRa,stepDec,ra_target_north : double;
-  reverseDecPulse: integer;
+  deltaRa,deltaDec,stepRa,stepDec,ra_target, dec_target: double;
+  reverseDecPulse, pulseEast2, pulseWest2,pulseNorth2, pulseSouth2 : integer;
 begin
   if alpaca_mount_slewing then
   begin
 
     if equatorial_mount=false then sideofpier_alpaca:=-1; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
     if ((equatorial_mount) and (crosses_meridian(meridian) )) then
-    begin //go first to north to avoid crossing meridian
-      ra_target_north:=inc_angle((meridian)*15,180)/15;
+    begin //go first to celestial pole to avoid crossing meridian
+      ra_target:=inc_angle((meridian)*15,180)/15;
+      if pos('-',form1.latitude1.text)=0 then
+        dec_target:=90 //go near to celestial pole for flip
+      else
+        dec_target:=-90; //go near to celestial pole for flip
+
     end
     else
     begin //no meridian crossing
-      ra_target_north:=alpaca_ra_target;
+      ra_target:=alpaca_ra_target;
+      dec_target:=alpaca_dec_target;
     end;
 
-    deltaRa:=inc_angle((ra_target_north-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees}
+    deltaRa:=inc_angle((ra_target-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees}
     stepRA:=min(abs(deltaRA),10); {degrees, slew speed ten degree per second}
     if deltaRA<0 then
       ra_encoder:=inc_angle(ra_encoder,-stepRa)    //decrement
     else
       ra_encoder:=inc_angle(ra_encoder,+stepRa);   //increment
 
-    deltaDec:=alpaca_dec_target-alpaca_Dec;{calculate dec distance}
+    deltaDec:=dec_target-alpaca_Dec;{calculate dec distance}
     stepDec:=min(abs(deltaDec),10); {slew speed ten degree per second}
     if deltaDec<0 then
       dec_encoder:=inc_angle(dec_encoder,-stepDec)
     else
       dec_encoder:=inc_angle(dec_encoder,+stepDec);
 
-    if ra_target_north=alpaca_ra_target then //do not stop at first stop north
-      alpaca_mount_slewing:=((stepRa>0.00001) or (stepDec>0.00001)) {reached target?}
+    if ra_target=alpaca_ra_target then //do not stop at first stop north
+      alpaca_mount_slewing:=((stepRa>0.000003) or (stepDec>0.000003)) {reached target?}
     else
       alpaca_mount_slewing:=true;
 
@@ -314,15 +357,17 @@ begin
         if ((pulsedirection=+1){north} and (pulseSouth<>0))  then begin pulseSouth:=max(pulseSouth-100,0);pulsedirection:=-1;{south} end;//100 ms backslash
         if ((pulsedirection=-1){south} and (pulseNorth<>0))  then begin pulseNorth:=max(pulseNorth-100,0);pulsedirection:=1;{North} end;//100 ms backslash
       end;
-      ra_encoder:=inc_angle(ra_encoder, (pulseEast-pulseWest){ms}*guiderateRa/1000); //pulse duration is in milliseconds
-      dec_encoder:=inc_angle(dec_encoder,NSswapped*reverseDecPulse*(pulseNorth-pulseSouth) {ms}*guiderateDec/1000);
+      pulseEast2:=min(pulseEast,1000);  pulseEast:=pulseEast-pulseEast2;//process 1000 ms pulse per cycle
+      pulseWest2:=min(pulseWest,1000);  pulseWest:=pulseWest-pulseWest2;
+      pulseNorth2:=min(pulseNorth,1000);pulseNorth:=pulseNorth-pulseNorth2;
+      pulseSouth2:=min(pulseSouth,1000);pulseSouth:=pulseSouth-pulseSouth2;
 
-      pulseNorth:=0;//processed, zero it.
-      pulseSouth:=0;
-      pulseEast:=0;
-      pulseWest:=0;
+      //memo2_message('Pulse East:'+inttostr(pulseEast)+',  Pulse West:'+inttostr(pulseWest)+'            '+'Pulse East2:'+inttostr(pulseEast2)+',  Pulse West2:'+inttostr(pulseWest2));
 
-      ra_encoder:=ra_encoder+theaxisrates[0];//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
+      ra_encoder:=inc_angle(ra_encoder, (pulseEast2-pulseWest2){ms}*guiderateRa/1000); //pulse duration is in milliseconds
+      dec_encoder:=inc_angle(dec_encoder,NSswapped*reverseDecPulse*(pulseNorth2-pulseSouth2) {ms}*guiderateDec/1000);
+
+      ra_encoder:=ra_encoder+theaxisrates[0]-360/86164.098903691;//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
       dec_encoder:=dec_encoder+ NSswapped*reverseDecPulse*theaxisrates[1];
 
       //if alpaca_mount_slewing then memo2_message('reverse dec pulse '+inttostr(reverseDecPulse)+'  Side of pier '+ inttostr(Sideofpier_alpaca)+ ' slewing' )
@@ -330,7 +375,6 @@ begin
     end
   end;
 end;
-
 
 // Replace the following by the driver UniqueID
 // On Linux this can be generated by the command uuidgen
@@ -589,7 +633,7 @@ end;
 
 function  T_Alpaca_Mount.equatorialsystem: integer;
 begin
-  result:=2; {J2000 for simulation}
+  result:=equinox_communication;
   {equOther	0	Custom or unknown equinox and/or reference frame.
   equTopocentric	1	Topocentric coordinates. Coordinates of the object at the current date having allowed for annual aberration, precession and nutation. This is the most common coordinate type for amateur telescopes.
   equJ2000	2	J2000 equator/equinox. Coordinates of the object at mid-day on 1st January 2000, ICRS reference frame.
@@ -663,43 +707,34 @@ begin
   FErrorMessage:=MSG_NOT_IMPLEMENTED;
 end;
 
-function  T_Alpaca_Mount.siteelevation: double;
+function  T_Alpaca_Mount.siteElevation: double;
 begin
-  result:=0;
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  result:=site_elevation;
 end;
 
 procedure T_Alpaca_Mount.setsiteelevation(value: double);
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  site_elevation:=value;
 end;
 
 function  T_Alpaca_Mount.sitelatitude: double;
 begin
-  result:=0;
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  result:=strtofloat(form1.latitude1.text);
 end;
 
 procedure T_Alpaca_Mount.setsitelatitude(value: double);
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  form1.latitude1.text:=floattostrF(value,FFfixed,0,2);
 end;
 
 function  T_Alpaca_Mount.sitelongitude: double;
 begin
-  result:=0;
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  result:=strtofloat(form1.longitude1.text);
 end;
 
 procedure T_Alpaca_Mount.setsitelongitude(value: double);
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  form1.longitude1.text:=floattostrF(value,FFfixed,0,2);
 end;
 
 function  T_Alpaca_Mount.is_slewing: boolean;
@@ -795,13 +830,13 @@ begin
   FErrorMessage:=MSG_NOT_IMPLEMENTED;
 end;
 
+
 procedure T_Alpaca_Mount.abortslew;
 begin
   alpaca_mount_slewing:=false;
-
-
   //alpaca_tracking:=false;
 end;
+
 
 function  T_Alpaca_Mount.axisrates(axis:integer): TAxisRates;
 var
@@ -813,15 +848,12 @@ begin
   setlength(axisrates,1);
   axisrates[0]:=newitem;
   result:=AxisRates;
-
 end;
-
 
 function  T_Alpaca_Mount.canmoveaxis(axis:integer): boolean;
 begin
   result:=axis<2; //(axis<=axis);  // 0 = axisPrimary, 1 = axisSecondary, 2 = axisTertiary.
 end;
-
 
 function  T_Alpaca_Mount.destinationsideofpier(ra,dec: double):integer;
 begin
@@ -829,6 +861,7 @@ begin
   FErrorMessage:=MSG_NOT_IMPLEMENTED;
   result:=0;
 end;
+
 
 procedure T_Alpaca_Mount.findhome;
 begin
@@ -881,31 +914,35 @@ end;
 
 procedure T_Alpaca_Mount.slewtocoordinates(ra,dec: double; out ok : boolean);
 begin
+  precession_to_jnow(ra, dec,ra,dec);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
   alpaca_ra_target:=min(24,max(0,ra));
   alpaca_dec_target:=min(90,max(-90,dec));
+  memo2_message('Slew to [Jnow] '+prepare_ra(ra*pi/12)+'  '+prepare_dec(dec*pi/180));
   alpaca_mount_slewing:=true;
   ok:=((abs(alpaca_ra_target-ra)<0.00001) and (abs(alpaca_dec_target-dec)<0.00001)); {within range?}
 end;
 
 procedure T_Alpaca_Mount.slewtocoordinatesasync(ra,dec: double; out ok : boolean);
 begin
+  precession_to_jnow(ra, dec,ra,dec);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
   alpaca_ra_target:=min(24,max(0,ra));
   alpaca_dec_target:=min(90,max(-90,dec));
+  memo2_message('Slew async [Jnow] '+prepare_ra(ra*pi/12)+'  '+prepare_dec(dec*pi/180));
   alpaca_mount_slewing:=true;
   ok:=((abs(alpaca_ra_target-ra)<0.00001) and (abs(alpaca_dec_target-dec)<0.00001)); {within range?}
 end;
 
 procedure T_Alpaca_Mount.slewtotarget;
 begin
-  alpaca_ra_target:=alpaca_ra_target2; {copy temp value to final value}
-  alpaca_dec_target:=alpaca_dec_target2; {copy temp value to final value}
+  precession_to_jnow(alpaca_ra_target2 {temp value},alpaca_ra_target2 {temp value},alpaca_ra_target,alpaca_dec_target);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
+  memo2_message('Slew to target [Jnow] '+prepare_ra(alpaca_ra_target*pi/12)+'  '+prepare_dec(alpaca_dec_target*pi/180));
   alpaca_mount_slewing:=true;
 end;
 
 procedure T_Alpaca_Mount.slewtotargetasync;
 begin
-  alpaca_ra_target:=alpaca_ra_target2; {copy temp value to final value}
-  alpaca_dec_target:=alpaca_dec_target2; {copy temp value to final value}
+  precession_to_jnow(alpaca_ra_target2 {temp value},alpaca_ra_target2 {temp value},alpaca_ra_target,alpaca_dec_target);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
+  memo2_message('Slew async [Jnow] '+prepare_ra(alpaca_ra_target*pi/12)+'  '+prepare_dec(alpaca_dec_target*pi/180));
   alpaca_mount_slewing:=true;
 end;
 
@@ -917,6 +954,8 @@ end;
 
 procedure T_Alpaca_Mount.synctocoordinates(ra,dec: double; out ok: boolean);
 begin
+  precession_to_jnow(ra,dec,ra,dec);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
+  memo2_message('Mount sync at [Jnow] '+prepare_ra(ra*pi/12)+'  '+prepare_dec(dec*pi/180));
   if ((ra>=0) and (ra<24) and (dec>=-90) and (dec<=90)) then
   begin
     ra_corr:=ra_corr+15*(ra-alpaca_ra);{Unit is degrees. Sync mount by setting and offset ra_corr}
@@ -929,8 +968,9 @@ end;
 
 procedure T_Alpaca_Mount.synctotarget;
 begin
-  ra_corr:=ra_corr+15*(alpaca_ra_target2-alpaca_ra);{Unit is degrees. Sync mount by setting and offset ra_corr}
-  dec_corr:=dec_corr+(alpaca_dec_target2-alpaca_dec);{degrees}
+  precession_to_jnow(alpaca_ra_target2 {temp value},alpaca_ra_target2 {temp value},alpaca_ra_target,alpaca_dec_target);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
+  ra_corr:=ra_corr+15*(alpaca_ra_target-alpaca_ra);{Unit is degrees. Sync mount by setting and offset ra_corr}
+  dec_corr:=dec_corr+(alpaca_dec_target-alpaca_dec);{degrees}
 end;
 
 procedure T_Alpaca_Mount.unpark;

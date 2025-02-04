@@ -54,12 +54,14 @@ var
   cooler_on  : boolean=true;
   bin_X      : integer=1;
   bin_Y      : integer=1;
+  read_out_mode: integer=0;//doesn't do anything normal1 or normal2
+  bin_maximum: integer=2;//could be set at one if DSS images are used
   last_exposureduration:double=-1;
   Percent_Completed: integer=0; {%}
   sensor_type: integer=0;
   { 0 = Monochrome,
     1 = Colour not requiring Bayer decoding
-    2 = RGGB Bayer encoding
+    2 =  Bayer encoding
     3 = CMYG Bayer encoding
     4 = CMYG2 Bayer encoding
     5 = LRGB TRUESENSE Bayer encoding.}
@@ -111,6 +113,7 @@ type
       function  maxbinY : integer; override;
       function  binx : integer; override;
       function  binY : integer; override;
+      function  readoutmode : integer; override;
       function  pixelsizex : integer; override;
       function  pixelsizeY : integer; override;
       function  sensorname : string; override;
@@ -164,6 +167,7 @@ type
       procedure setnumy(x: integer); override;
       procedure setbinX(x: integer; out ok :boolean); override;
       procedure setbinY(x: integer; out ok :boolean); override;
+      procedure setreadoutmode(x: integer; out ok :boolean); override;
 
       function  imagearray(out ok: boolean): Timg; override;
       function  canpulseguide: boolean; override;
@@ -313,27 +317,26 @@ end;
 function  T_Alpaca_cam.cameraXsize: integer;
 begin
   img_width:=length(img_array[0]);
-  result:=img_width;
   if num_X>=9999 then num_X:=img_width; {initialise}
+  result:=img_width div bin_x; //binning is done after simulation to allow independent binning for camera and guide camera
 end;
 
 function  T_Alpaca_cam.cameraYsize: integer;
 begin
   img_height:=length(img_array);
-  result:=img_height;
   if num_Y>=9999 then num_Y:=img_height; {initialise}
+  result:=img_height div bin_y; //binning is done after simulation to allow independent binning for camera and guide camera
 end;
 
 function  T_Alpaca_cam.maxbinx: integer;
 begin
-  result:=1;
+  result:=bin_maximum;
 end;
 
 function  T_Alpaca_cam.maxbiny: integer;
 begin
-  result:=1;
+  result:=bin_maximum;
 end;
-
 
 function  T_Alpaca_cam.binx: integer;
 begin
@@ -343,6 +346,11 @@ end;
 function  T_Alpaca_cam.biny: integer;
 begin
   result:=bin_Y;
+end;
+
+function  T_Alpaca_cam.readoutmode: integer;
+begin
+  result:=read_out_mode;
 end;
 
 function  T_Alpaca_cam.pixelsizex: integer;
@@ -510,7 +518,7 @@ begin
   errortype:=0;
   if abs(camera_exposure-x)>0.00001 {check one} then
     errortype:=1; {invalid range}
-  if ((start_X+num_X>img_width/bin_X) or (start_Y+num_Y>img_height/ bin_Y)) then {check two}
+  if ((start_X+num_X>img_width{/bin_X}) or (start_Y+num_Y>img_height{/ bin_Y})) then {check two}
     errortype:=2;{subwindow out out range}
 
   camera_state:=2; {exposure ongoing}
@@ -553,21 +561,21 @@ end;
 
 function  T_Alpaca_cam.startx: integer;
 begin
-  result:=start_x;  {report sub section begin x}
+  result:=start_x div bin_X;  {report sub section begin x}
 end;
 
 function  T_Alpaca_cam.starty: integer;
 begin
-  result:=start_y; {report sub section begin y}
+  result:=start_y div bin_Y; {report sub section begin y}
 end;
 
 function  T_Alpaca_cam.numx: integer;
 begin
-  result:=num_x;{report sub section width}
+  result:=num_x div bin_X;{Returns the current subframe width, if binning is active, value is in binned pixels.}
 end;
 function  T_Alpaca_cam.numy: integer;
 begin
-  result:=num_y; {report sub section height}
+  result:=num_y div bin_Y; {Returns the current subframe width, if binning is active, value is in binned pixels.}
 end;
 function  T_Alpaca_cam.setccdtemperature: integer;
 begin
@@ -576,39 +584,65 @@ end;
 
 procedure T_Alpaca_cam.setstartx(x: integer);
 begin
-  start_x:=x; {set sub section begin x}
-  {no check since it is binning dependend and clamped later. Check is done in startExposure}
+  start_x:=x * bin_X; {set sub section begin x}
+  {no check since it is binning dependent and clamped later. Check is done in startExposure}
 end;
 
 procedure T_Alpaca_cam.setstarty(x: integer);
 begin
-  start_Y:=x; {set sub section begin y}
-  {no check since it is binning dependend and clamped later. Check is done in startExposure}
-
+  start_Y:=x * bin_Y; {set sub section begin y}
+  {no check since it is binning dependent and clamped later. Check is done in startExposure}
 end;
 
 procedure T_Alpaca_cam.setnumx(x: integer);
 begin
-  num_x:=x;{set sub section width}
-  {no check since it is binning dependend and clamped later. Check is done in startExposure}
+  num_x:=x * bin_X ;{set sub section width}
+  {no check since it is binning dependent and clamped later. Check is done in startExposure}
 end;
 
 procedure T_Alpaca_cam.setnumy(x: integer);
 begin
-  num_Y:=x;{set sub section heigth}
-  {no check on NumY since it is binning dependend and clamped  Check is done in startExposure}
+  num_Y:=x * bin_Y ;{set sub section heigth}
+  {no check on NumY since it is binning dependent and clamped  Check is done in startExposure}
 end;
 
 procedure T_Alpaca_cam.setbinX(x: integer; out ok :boolean);
 begin
-  bin_X:=max(1,min(1,x));{clamp range}
+  bin_X:=max(1,min(bin_maximum,x));{clamp range}
   ok:=(bin_X=x);
 end;
 
 procedure T_Alpaca_cam.setbinY(x: integer; out ok :boolean);
 begin
-  bin_Y:=max(1,min(1,x));{clamp range}
+  bin_Y:=max(1,min(bin_maximum,x));{clamp range}
   ok:=(bin_Y=x);
+end;
+
+procedure T_Alpaca_cam.setreadoutmode(x: integer; out ok :boolean);
+begin
+  read_out_mode:=x;
+  ok:=true;
+end;
+
+procedure bin_2X2(var img :Timg);{bin img 2x2}
+  var fitsX,fitsY,k, w,h  : integer;
+      img_temp2 : Timg;
+
+begin
+  w:=length(img[0]) div bin_x;
+  h:=length(img) div bin_y;
+
+  setlength(img_temp2,h,w);
+
+  for fitsY:=0 to h-1 do
+     for fitsX:=0 to w-1  do
+     begin
+       img_temp2[fitsY,fitsX]:=(img[fitsY*2,fitsX*2]+
+                                img[fitsY*2 +1,fitsX*2]+
+                                img[fitsY*2   ,fitsX*2+1]+
+                                img[fitsY*2 +1,fitsX*2+1]) div 4;
+     end;
+  img:=img_temp2;
 end;
 
 
@@ -635,7 +669,12 @@ begin
 
   for y:=Ystart to  Ystop-1 do
     for x:=Xstart to Xstop-1 do
-        the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + randg(4*noise {mean},noise {sd}) )) ;
+      the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + randg(4*noise {mean},noise {sd}) )) ;
+
+  if bin_x=2 then
+  begin
+    bin_2X2(the_img);//here and not in simulation to allow independent binning for camera and guide camera
+  end;
 
   ok:=last_exposureduration>=0; {startexposure was given}
 

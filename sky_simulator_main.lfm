@@ -1,74 +1,74 @@
 object Form1: TForm1
-  Left = 300
-  Height = 558
-  Top = 196
-  Width = 978
+  Left = 352
+  Height = 569
+  Top = 160
+  Width = 992
   Caption = 'Sky Simulator for ASCOM and ALPACA. Camera simulator with "Deep Sky Survey" images or artificial images based on mount and focuser position.'
-  ClientHeight = 558
-  ClientWidth = 978
+  ClientHeight = 569
+  ClientWidth = 992
   KeyPreview = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
   OnResize = FormResize
   OnShow = FormShow
-  LCLVersion = '2.2.6.0'
+  LCLVersion = '3.6.0.0'
   object StatusBar1: TStatusBar
     Left = 0
     Height = 23
-    Top = 535
-    Width = 978
+    Top = 546
+    Width = 992
     Panels = <>
   end
   object PageControl1: TPageControl
     Left = 0
-    Height = 495
+    Height = 506
     Top = 0
-    Width = 978
-    ActivePage = Control_TabSheet1
+    Width = 992
+    ActivePage = tab_image_source1
     Align = alClient
     Images = ImageList_colors
     TabIndex = 0
     TabOrder = 1
-    object Control_TabSheet1: TTabSheet
+    object tab_image_source1: TTabSheet
       Caption = 'Image source'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       object go_default1: TButton
-        Left = 696
+        Left = 808
         Height = 25
         Hint = 'Reset all settings and leave program.'
-        Top = 136
+        Top = 168
         Width = 116
         Caption = 'Go default'
-        OnClick = go_default1Click
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
+        OnClick = go_default1Click
       end
-      object Button1: TButton
-        Left = 696
+      object about1: TButton
+        Left = 808
         Height = 25
-        Top = 88
+        Top = 112
         Width = 116
-        Caption = 'About v2.1.1'
-        OnClick = Button1Click
+        Caption = 'About v3.0.2'
         TabOrder = 1
+        OnClick = about1Click
       end
       object internetskyview1: TEdit
         Left = 137
         Height = 25
-        Hint = 'Internet link for downloading images from Skyview. Only enabled for the first eight mount error settings. See tab mount.'
+        Hint = 'Internet link for downloading images from Skyview. Only enabled for the first nine mount error settings. See tab mount.'
         Top = 8
         Width = 760
         Font.Height = -13
-        OnExit = internetskyview1Exit
         ParentColor = True
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
         TabOrder = 2
         Text = 'https://skyview.gsfc.nasa.gov/cgi-bin/pskcall?return=jpeg&Survey=DSS2R'
+        OnExit = internetskyview1Exit
       end
       object skyviewbutton1: TButton
         Left = 904
@@ -77,10 +77,10 @@ object Form1: TForm1
         Top = 8
         Width = 16
         Caption = '->'
-        OnClick = skyviewbutton1Click
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
+        OnClick = skyviewbutton1Click
       end
       object esobutton1: TButton
         Left = 904
@@ -89,76 +89,76 @@ object Form1: TForm1
         Top = 40
         Width = 16
         Caption = '->'
-        OnClick = esobutton1Click
         ParentShowHint = False
         ShowHint = True
         TabOrder = 4
+        OnClick = esobutton1Click
       end
       object internetESO1: TEdit
         Left = 136
         Height = 25
-        Hint = 'Internet link for downloading  images from ESO. Only enabled for the first eight mount error settings. See tab mount.'
+        Hint = 'Internet link for downloading  images from ESO. Only enabled for the first nine mount error settings. See tab mount.'
         Top = 40
         Width = 760
         Font.Height = -13
-        OnExit = internetESO1Exit
         ParentColor = True
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
         TabOrder = 5
         Text = 'https://archive.eso.org/dss/dss?mime-type=download-gif&equinox=J2000&Sky-Survey=DSS'
+        OnExit = internetESO1Exit
       end
       object skyview_selected1: TRadioButton
         Left = 112
-        Height = 19
-        Top = 14
-        Width = 20
-        OnChange = skyview_selected1Change
+        Height = 17
+        Top = 8
+        Width = 18
         TabOrder = 6
+        OnChange = skyview_selected1Change
       end
       object eso_selected1: TRadioButton
         Left = 112
-        Height = 19
+        Height = 17
         Top = 40
-        Width = 20
-        OnChange = skyview_selected1Change
+        Width = 18
         TabOrder = 7
+        OnChange = skyview_selected1Change
       end
       object Label2: TLabel
-        Left = 6
+        Left = 13
         Height = 15
-        Top = 16
+        Top = 10
         Width = 86
         Caption = 'Download from:'
         ParentColor = False
       end
       object GroupBox1: TGroupBox
         Left = 137
-        Height = 304
-        Top = 80
-        Width = 472
-        Caption = 'Artificial sky using database  (16 bit resolution, 24 bit depth)'
-        ClientHeight = 284
-        ClientWidth = 468
+        Height = 320
+        Top = 104
+        Width = 656
+        Caption = 'Artificial sky using the star and deepsky database'
+        ClientHeight = 300
+        ClientWidth = 652
         TabOrder = 8
         object Angle2: TEdit
-          Left = 83
+          Left = 104
           Height = 23
           Hint = 'The angle (PA) of the camera'
-          Top = 4
+          Top = 96
           Width = 56
-          OnChange = Angle2Change
           ParentColor = True
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
           Text = 'Angle2'
+          OnChange = Angle2Change
         end
         object UpDown1: TUpDown
-          Left = 139
+          Left = 160
           Height = 23
-          Top = 4
+          Top = 96
           Width = 17
           Associate = Angle2
           Increment = 5
@@ -168,58 +168,58 @@ object Form1: TForm1
           TabOrder = 1
         end
         object flipH1: TCheckBox
-          Left = 5
+          Left = 8
           Height = 19
           Hint = 'Flip image horizontal'
-          Top = 32
-          Width = 53
+          Top = 124
+          Width = 51
           Caption = 'Flip-H'
-          OnChange = flipH1Change
           ParentShowHint = False
           ShowHint = True
           TabOrder = 2
+          OnChange = flipH1Change
         end
         object flipV1: TCheckBox
-          Left = 5
+          Left = 8
           Height = 19
           Hint = 'Flip image vertical'
-          Top = 4
-          Width = 51
+          Top = 96
+          Width = 49
           Caption = 'Flip-V'
-          OnChange = flipV1Change
           ParentShowHint = False
           ShowHint = True
           TabOrder = 3
+          OnChange = flipV1Change
         end
         object Label10: TLabel
-          Left = 161
+          Left = 182
           Height = 15
-          Top = 4
+          Top = 96
           Width = 75
           Caption = 'Position angle'
           ParentColor = False
         end
         object focuser_position4: TLabel
-          Left = 75
+          Left = 78
           Height = 15
-          Top = 140
+          Top = 12
           Width = 70
           Caption = 'Star database'
           ParentColor = False
         end
         object focuser_position5: TLabel
-          Left = 75
+          Left = 78
           Height = 15
-          Top = 168
+          Top = 40
           Width = 55
           Caption = 'Focal ratio'
           ParentColor = False
         end
         object plotted_info1: TComboBox
-          Left = 136
+          Left = 128
           Height = 23
           Hint = 'Labels in the artificial image'
-          Top = 208
+          Top = 192
           Width = 176
           ItemHeight = 15
           Items.Strings = (
@@ -232,168 +232,38 @@ object Form1: TForm1
             'No stars (Cover telescope)'
             'North-East indication'
           )
-          OnChange = plotted_info1Change
           ParentColor = True
           ParentShowHint = False
           ShowHint = True
           Style = csDropDownList
           TabOrder = 4
-        end
-        object polar_alignment_error1: TCheckBox
-          Left = 5
-          Height = 19
-          Hint = 'Simulate a polar alignment error of the mount'
-          Top = 72
-          Width = 132
-          Caption = 'Polar alignment error'
-          OnChange = polar_alignment_error1Change
-          TabOrder = 5
-        end
-        object elevation_error1: TEdit
-          Left = 176
-          Height = 23
-          Hint = 'Elevation (latitude) error of the mount in arc minutes.'
-          Top = 72
-          Width = 40
-          Enabled = False
-          OnExit = elevation_error1Exit
-          ParentColor = True
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 6
-          Text = '0'
-        end
-        object elevation_updown1: TUpDown
-          Left = 216
-          Height = 23
-          Top = 72
-          Width = 17
-          Associate = elevation_error1
-          Enabled = False
-          Increment = 5
-          Max = 300
-          Min = -300
-          OnChanging = elevation_updown1Changing
-          Position = 0
-          TabOrder = 7
-        end
-        object azimuth_error1: TEdit
-          Left = 176
-          Height = 23
-          Hint = 'Azimuth error of the mount in arc minutes.'
-          Top = 100
-          Width = 40
-          Enabled = False
-          OnExit = azimuth_error1Exit
-          ParentColor = True
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 8
-          Text = '0'
-        end
-        object azimuth_updown1: TUpDown
-          Left = 216
-          Height = 23
-          Top = 100
-          Width = 17
-          Associate = azimuth_error1
-          Enabled = False
-          Increment = 5
-          Max = 300
-          Min = -300
-          OnChanging = azimuth_updown1Changing
-          Position = 0
-          TabOrder = 9
-        end
-        object Label_elevation1: TLabel
-          Left = 234
-          Height = 15
-          Top = 72
-          Width = 90
-          Caption = 'Elevation error[''] '
-          Enabled = False
-          ParentColor = False
-        end
-        object Label_azimuth1: TLabel
-          Left = 234
-          Height = 15
-          Top = 100
-          Width = 87
-          Caption = 'Azimuth error[''] '
-          Enabled = False
-          ParentColor = False
-        end
-        object latitude1: TEdit
-          Left = 368
-          Height = 23
-          Hint = 'Latitude of the observer'
-          Top = 72
-          Width = 48
-          Enabled = False
-          OnExit = latitude1Exit
-          ParentColor = True
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 10
-          Text = '0'
-        end
-        object longitude1: TEdit
-          Left = 368
-          Height = 23
-          Hint = 'Longitude of the observer. For west enter negative values. For east enter positive values.'
-          Top = 100
-          Width = 48
-          Enabled = False
-          OnExit = longitude1Exit
-          ParentColor = True
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 11
-          Text = '0'
-        end
-        object Label_latitude1: TLabel
-          Left = 419
-          Height = 15
-          Top = 72
-          Width = 13
-          Caption = 'lat'
-          Enabled = False
-          ParentColor = False
-        end
-        object Label_longitude1: TLabel
-          Left = 418
-          Height = 15
-          Top = 100
-          Width = 24
-          Caption = 'long'
-          Enabled = False
-          ParentColor = False
+          OnChange = plotted_info1Change
         end
         object star_database1: TComboBox
-          Left = 5
+          Left = 8
           Height = 23
           Hint = 'You can als install and use the g16, g17 star databases from www.hnsky.org'
-          Top = 136
+          Top = 8
           Width = 64
           BorderSpacing.Around = 5
           ItemHeight = 15
           Items.Strings = (
             '1'
           )
-          OnChange = star_database1Change
-          OnDropDown = star_database1DropDown
           ParentFont = False
           ParentShowHint = False
           ShowHint = True
           Sorted = True
-          TabOrder = 12
+          TabOrder = 5
           Text = 'g14'
+          OnChange = star_database1Change
+          OnDropDown = star_database1DropDown
         end
         object hotpixels1: TComboBox
-          Left = 83
+          Left = 104
           Height = 23
           Hint = 'Hotpixels'
-          Top = 32
+          Top = 124
           Width = 72
           BorderSpacing.Around = 5
           DropDownCount = 10
@@ -409,28 +279,96 @@ object Form1: TForm1
             '500'
             '1000'
           )
-          OnChange = hotpixels1Change
-          OnDropDown = star_database1DropDown
           ParentColor = True
           ParentFont = False
           ParentShowHint = False
           ShowHint = True
-          TabOrder = 13
+          TabOrder = 6
           Text = '0'
+          OnChange = hotpixels1Change
+          OnDropDown = star_database1DropDown
         end
         object focuser_position7: TLabel
-          Left = 161
+          Left = 182
           Height = 15
-          Top = 36
+          Top = 128
           Width = 53
           Caption = 'Hot pixels'
           ParentColor = False
         end
+        object fliptext1: TCheckBox
+          Left = 392
+          Height = 19
+          Hint = 'Flip text vertical'
+          Top = 192
+          Width = 23
+          Caption = '↕'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 7
+          OnChange = fliptext1Change
+        end
+        object focal_ratio1: TComboBox
+          Left = 8
+          Height = 23
+          Hint = 'Focal ratio of the telescope. For f/7 as 5 second exposure will go down to about magnitude 14. The lower the focal ratio the more sensitive the setup is. Note that longer exposures also show more stars'
+          Top = 36
+          Width = 64
+          BorderSpacing.Around = 5
+          DropDownCount = 30
+          ItemHeight = 15
+          ItemIndex = 5
+          Items.Strings = (
+            'f/2'
+            'f/3'
+            'f/4'
+            'f/5'
+            'f/6'
+            'f/7'
+            'f/8'
+            'f/10'
+            'f/12'
+            'f/15'
+            'f/30'
+          )
+          ParentFont = False
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 8
+          Text = 'f/7'
+          OnChange = focal_ratio1Change
+        end
+        object Label23: TLabel
+          Left = 8
+          Height = 15
+          Top = 192
+          Width = 65
+          Alignment = taRightJustify
+          Caption = 'Plotted info:'
+          ParentColor = False
+        end
+        object Label24: TLabel
+          Left = 328
+          Height = 15
+          Top = 192
+          Width = 45
+          Caption = 'Flip text:'
+          ParentColor = False
+        end
+        object Label25: TLabel
+          Left = 8
+          Height = 15
+          Top = 240
+          Width = 97
+          Alignment = taRightJustify
+          Caption = 'Camera && system:'
+          ParentColor = False
+        end
         object manipulations1: TComboBox
-          Left = 136
+          Left = 128
           Height = 23
           Hint = 'Several camera and system variations'
-          Top = 248
+          Top = 239
           Width = 176
           DropDownCount = 30
           ItemHeight = 15
@@ -458,87 +396,31 @@ object Form1: TForm1
             'RGGB FLAT green only'
             'GRBG FLAT green only'
           )
-          OnChange = manipulations1Change
           ParentColor = True
           ParentShowHint = False
           ShowHint = True
           Style = csDropDownList
-          TabOrder = 14
+          TabOrder = 9
           Text = 'Mono'
+          OnChange = manipulations1Change
         end
-        object fliptext1: TCheckBox
-          Left = 412
-          Height = 19
-          Hint = 'Flip text vertical'
-          Top = 208
-          Width = 25
-          Caption = '↕'
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 15
-        end
-        object focal_ratio1: TComboBox
-          Left = 5
-          Height = 23
-          Hint = 'Focal ratio of the telescope. For f/7 as 5 second exposure will go down to about magnitude 14. The lower the focal ratio the more sensitive the setup is. Note that longer exposures also show more stars'
-          Top = 164
-          Width = 64
-          BorderSpacing.Around = 5
-          DropDownCount = 30
-          ItemHeight = 15
-          ItemIndex = 5
-          Items.Strings = (
-            'f/2'
-            'f/3'
-            'f/4'
-            'f/5'
-            'f/6'
-            'f/7'
-            'f/8'
-            'f/10'
-            'f/12'
-            'f/15'
-            'f/30'
-          )
-          OnChange = focal_ratio1Change
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 16
-          Text = 'f/7'
-        end
-        object Label23: TLabel
-          Left = 47
-          Height = 15
-          Top = 208
-          Width = 65
-          Alignment = taRightJustify
-          Caption = 'Plotted info:'
+        object bayer_change_warning1: TLabel
+          Left = 328
+          Height = 45
+          Top = 239
+          Width = 300
+          Caption = 'If bayer pattern is changed, disconnect and reconnect in the aquistion program to update bayer pattern recognision.'
+          Constraints.MaxWidth = 300
+          Constraints.MinWidth = 300
           ParentColor = False
-        end
-        object Label24: TLabel
-          Left = 344
-          Height = 15
-          Top = 208
-          Width = 45
-          Caption = 'Flip text:'
-          ParentColor = False
-        end
-        object Label25: TLabel
-          Left = 15
-          Height = 15
-          Top = 248
-          Width = 97
-          Alignment = taRightJustify
-          Caption = 'Camera && system:'
-          ParentColor = False
+          WordWrap = True
         end
       end
-      object database_selected1: TRadioButton
+      object artificial_selected1: TRadioButton
         Left = 112
-        Height = 19
-        Top = 100
-        Width = 20
+        Height = 17
+        Top = 104
+        Width = 18
         Checked = True
         TabOrder = 9
         TabStop = True
@@ -546,36 +428,57 @@ object Form1: TForm1
       object Label15: TLabel
         Left = 52
         Height = 15
-        Top = 100
+        Top = 104
         Width = 47
         Caption = 'Artificial:'
         ParentColor = False
       end
+      object file_from_disk_selected1: TRadioButton
+        Left = 112
+        Height = 17
+        Top = 72
+        Width = 18
+        TabOrder = 10
+        OnChange = skyview_selected1Change
+      end
+      object File_from_disk2: TLabel
+        Left = 416
+        Height = 15
+        Top = 72
+        Width = 5
+        Caption = '-'
+      end
+      object Label36: TLabel
+        Left = 13
+        Height = 15
+        Top = 38
+        Width = 86
+        Caption = 'Download from:'
+        ParentColor = False
+      end
+      object file_form_disk1: TBitBtn
+        Left = 136
+        Height = 26
+        Hint = 'Single image for special purposes like focus testing or OSC testing. Colour images are converted to OSC raw pattern RGGB.  '
+        Top = 72
+        Width = 226
+        AutoSize = True
+        BidiMode = bdRightToLeft
+        Caption = 'Single file from disk. Processed as:'
+        Images = ImageList_colors
+        ImageIndex = 6
+        OnClick = file_form_disk1Click
+        ParentBidiMode = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 11
+      end
     end
     object tab_camera1: TTabSheet
       Caption = 'Camera'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       ImageIndex = 3
-      object camera_ascom1: TRadioButton
-        Left = 16
-        Height = 19
-        Top = 8
-        Width = 509
-        Caption = 'Ascom interface. The images will be exported to disk and loaded by the Sky Simulator driver. '
-        Checked = True
-        TabOrder = 0
-        TabStop = True
-      end
-      object camera_alpaca1: TRadioButton
-        Left = 16
-        Height = 19
-        Top = 32
-        Width = 620
-        Caption = 'Alpaca interface. Select in your imaging program "Camera Sky Simulator (Alpaca) && Guide Camera Sky Simulator"'
-        OnChange = camera_alpaca1Change
-        TabOrder = 1
-      end
       object Label1: TLabel
         Left = 16
         Height = 15
@@ -601,12 +504,12 @@ object Form1: TForm1
         Hint = 'Image width in pixels.'
         Top = 104
         Width = 80
-        OnExit = width_pixels1Exit
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 2
+        TabOrder = 0
         Text = '2000'
+        OnExit = width_pixels1Exit
       end
       object Label5: TLabel
         Left = 344
@@ -630,12 +533,12 @@ object Form1: TForm1
         Hint = 'Image height in pixels'
         Top = 135
         Width = 80
-        OnExit = height_pixels1Exit
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 3
+        TabOrder = 1
         Text = '1500'
+        OnExit = height_pixels1Exit
       end
       object calculator1: TButton
         Left = 208
@@ -645,11 +548,11 @@ object Form1: TForm1
         Width = 29
         Caption = '🖩'
         Font.Height = -47
-        OnClick = calculator1Click
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 4
+        TabOrder = 2
+        OnClick = calculator1Click
       end
       object height1: TEdit
         Left = 126
@@ -657,12 +560,12 @@ object Form1: TForm1
         Hint = 'Image height in arc minutes.'
         Top = 136
         Width = 80
-        OnExit = height1Exit
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 5
+        TabOrder = 3
         Text = '100'
+        OnExit = height1Exit
       end
       object Label3: TLabel
         Left = 16
@@ -690,116 +593,114 @@ object Form1: TForm1
       end
       object instruction2: TLabel
         Left = 504
-        Height = 45
-        Top = 72
-        Width = 300
-        Caption = 'Disconnect in the aquisition program the ASCOM camera "Sky_Simulator" prior to change the image dimensions.'
-        Constraints.MaxWidth = 300
+        Height = 30
+        Top = 87
+        Width = 370
+        Caption = 'Disconnect the cameras in the aquisition program prior to change the image dimensions.'
+        Constraints.MaxWidth = 400
         Constraints.MinWidth = 300
         ParentColor = False
         WordWrap = True
       end
-      object ascom_image1: TGroupBox
-        Left = 16
-        Height = 112
-        Top = 208
-        Width = 624
-        Caption = 'Ascom image'
-        ClientHeight = 92
-        ClientWidth = 620
-        TabOrder = 6
-        object Label8: TLabel
-          Left = 8
-          Height = 15
-          Top = 64
-          Width = 101
-          Caption = 'Save image.png to:'
-          ParentColor = False
-        end
-        object path_to_image1: TEdit
-          Left = 144
-          Height = 23
-          Hint = 'Location where the sky image is saved.'
-          Top = 64
-          Width = 400
-          ParentColor = True
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 0
-        end
-        object info5: TLabel
-          Left = 8
-          Height = 45
-          Top = 8
-          Width = 600
-          Caption = 'Please select in your imaging program the ASCOM camera "Sky Simulator" and select in the "Sky Simulator" setting the image.PNG in the path below. This image will be regulary updated.   Use exposure time of 5 seconds or longer. Normal camera gain is 100.'
-          Constraints.MaxHeight = 100
-          Constraints.MaxWidth = 600
-          Constraints.MinWidth = 600
-          Font.Height = -12
-          ParentColor = False
-          ParentFont = False
-          WordWrap = True
-        end
-        object selectpath1: TBitBtn
-          Left = 552
-          Height = 23
-          Hint = 'Browse for directory to save the image.'
-          Top = 64
-          Width = 19
-          Caption = '...'
-          OnClick = selectpath1Click
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 1
-        end
+      object Label12: TLabel
+        Left = 504
+        Height = 30
+        Top = 142
+        Width = 400
+        Caption = 'Star flux  and SNR are depending on exposure length and camera gain. Normal camera gain is 100.'
+        Constraints.MaxWidth = 400
+        Constraints.MinWidth = 400
+        ParentColor = False
+        WordWrap = True
       end
       object fast_simulation1: TCheckBox
         Left = 16
         Height = 19
-        Hint = 'Alpaca only. If fast simulation is activated all exposures are completed in less then a second'
-        Top = 64
-        Width = 100
+        Hint = 'If fast simulation is activated all exposures are completed in less then a second'
+        Top = 232
+        Width = 98
         Caption = 'Fast simulation'
         Checked = True
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 7
+        TabOrder = 4
       end
-      object Label12: TLabel
-        Left = 504
-        Height = 30
-        Top = 152
-        Width = 300
-        Caption = 'Star flux  and SNR are depending on exposure length and camera gain. Normal camera gain is 100.'
-        Constraints.MaxWidth = 300
-        Constraints.MinWidth = 300
+      object Label27: TLabel
+        Left = 16
+        Height = 75
+        Top = 8
+        Width = 1600
+        AutoSize = False
+        Caption = 'Important for Windows. This is an Alpaca camera. If your imaging program can not connect to Alpaca and it doesn''t use the ASCOM camera chooser  then use'#13#10' the ASCOM chooser below for creating a new dynamic driver (once).'#13#10#13#10'Select in your imaging program "Camera Sky Simulator ALPACA (Alpaca) && Guide Camera Sky Simulator ALPACA (Alpaca)". '#13#10'Both camera are accessible as an Alpaca device or in Windows only as a COM service.'
         ParentColor = False
         WordWrap = True
       end
+      object Label34: TLabel
+        Left = 504
+        Height = 45
+        Top = 240
+        Width = 400
+        Caption = 'Avoid camera binning for speed. The binning is implemented in the communication and not in the simulation. This allows independent binning factors for the camera and guide camera.'
+        Constraints.MaxWidth = 400
+        Constraints.MinWidth = 400
+        ParentColor = False
+        WordWrap = True
+      end
+      object Label18: TLabel
+        Left = 504
+        Height = 15
+        Top = 200
+        Width = 400
+        Caption = 'To create darks select in tab Image source option "No stars".'
+        Constraints.MaxWidth = 400
+        Constraints.MinWidth = 400
+        ParentColor = False
+        WordWrap = True
+      end
+      object GroupBox_camera_chooser1: TGroupBox
+        Left = 16
+        Height = 169
+        Top = 288
+        Width = 768
+        Caption = 'Create a dynamic driver between COM and Alpaca'
+        ClientHeight = 149
+        ClientWidth = 764
+        TabOrder = 5
+        object Label35: TLabel
+          Left = 8
+          Height = 144
+          Top = 8
+          Width = 752
+          AutoSize = False
+          Caption = 'Use the button below to invoke the ASCOM camera chooser and create a dynamic driver between COM and ALPACA. This is only once required. In the ASCOM camera chooser click on the Alpaca tab and enable discovery. Then select in the camera chooser * New ALPACA device Camera.. and click ok. Same for  * New ALPACA device Guide Camera... and click ok.  Then in your imaging program you can access the Alpaca cameras via the standard  COM interface.'#13#10#13#10'Select in your imaging program "Camera Sky Simulator ALPACA (Alpaca)"and/or "Guide Camera Sky Simulator ALPACA (Alpaca)".'
+          WordWrap = True
+        end
+        object Button1: TButton
+          Left = 256
+          Height = 25
+          Top = 112
+          Width = 155
+          AutoSize = True
+          Caption = 'ASCOM camera chooser'
+          TabOrder = 0
+          OnClick = Button1Click
+        end
+      end
     end
     object tab_mount1: TTabSheet
+      Hint = 'The sky'
       Caption = 'Mount'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       ImageIndex = 3
       OnContextPopup = tab_mount1ContextPopup
-      object mount_indication1: TLabel
-        Left = 176
-        Height = 15
-        Hint = 'Jnow indication of the mount'
-        Top = 136
-        Width = 15
-        Caption = '---'
-        ParentColor = False
-        ParentShowHint = False
-        ShowHint = True
-      end
+      ParentShowHint = False
+      ShowHint = True
       object connect_mount1: TBitBtn
         Left = 16
         Height = 30
-        Top = 368
+        Top = 426
         Width = 184
         Caption = 'Connect Ascom mount'
         OnClick = connect_mount1Click
@@ -807,25 +708,25 @@ object Form1: TForm1
         TabOrder = 0
       end
       object mount1: TLabel
-        Left = 16
+        Left = 544
         Height = 15
-        Top = 171
+        Top = 160
         Width = 124
         Caption = 'Mount encoder [J2000]:'
         ParentColor = False
       end
       object ra1: TLabel
-        Left = 176
+        Left = 704
         Height = 15
-        Top = 171
+        Top = 160
         Width = 15
         Caption = '---'
         ParentColor = False
       end
       object dec1: TLabel
-        Left = 176
+        Left = 704
         Height = 15
-        Top = 192
+        Top = 181
         Width = 15
         Caption = '---'
         ParentColor = False
@@ -834,8 +735,8 @@ object Form1: TForm1
         Left = 16
         Height = 19
         Top = 8
-        Width = 762
-        Caption = 'Ascom interface. The mount will be an external simulator or a real mount. Select in your imaging program the same mount as for the button.'
+        Width = 858
+        Caption = 'Ascom interface to external mount. The mount will be an external simulator or a real mount. Select in your imaging program the same mount as for the button.'
         Checked = True
         TabOrder = 1
         TabStop = True
@@ -844,80 +745,24 @@ object Form1: TForm1
         Left = 16
         Height = 19
         Top = 32
-        Width = 718
-        Caption = 'Alpaca interface. The mount will be simulated inside this program.  Select in your imaging program "mount_sky_simulator (Alpaca)".'
-        OnChange = mount_alpaca1Change
+        Width = 606
+        Caption = 'Alpaca interface to internal simulated mount.  Select in your imaging program "mount_sky_simulator (Alpaca)".'
         TabOrder = 2
+        OnChange = mount_alpaca1Change
       end
-      object Label9: TLabel
-        Left = 16
+      object looking_at1: TLabel
+        Left = 544
         Height = 15
-        Top = 80
-        Width = 67
-        Caption = 'Mount error:'
-        ParentColor = False
-      end
-      object mount_error1: TComboBox
-        Left = 133
-        Height = 23
-        Hint = 'Introduce mount error. The error increases  linear with slew distance or time. With a plus sign the mount will point at a position with a too high RA value, with a minus sign it will point at a position with to a too low RA value. Additional two tracking error options for guiding simulation.'
-        Top = 80
-        Width = 392
-        DropDownCount = 40
-        ItemHeight = 15
-        Items.Strings = (
-          '0   no slew error'
-          '++  RA error based on slew distance'
-          '+     RA error based on slew distance'
-          '-      RA error based on slew distance'
-          '--    RA error based on slew distance'
-          '++  RA error based on slew time'
-          '+    RA error based on slew time'
-          '-     RA error based on slew time'
-          '--   RA error based on slew time'
-          'Mount steady'
-          'No tracking error (for guider calibration) '
-          'No tracking error | noise 0.4" (for guider calibration) '
-          'No tracking error | noise 1.0" (for guider calibration) '
-          'Tracking error α, 10" square wave 1 min period'
-          'Tracking error α, 10" square wave 2 min period'
-          'Tracking error α, 10" square wave 5 min period'
-          'Tracking error δ, 10" square wave 1 min period'
-          'Tracking error δ, 10" square wave 2 min period'
-          'Tracking error δ, 10" square wave 5 min period'
-          'Tracking error α, 10" sinus wave 5 min period'
-          'Tracking error δ , 10" sinus wave 5 min period'
-          'Tracking error α, 20" in 10 min| δ drift '
-          'Tracking error α, 20" in 10 min| δ drift  | noise 1" '
-          'Backlash 100 milliseconds and no tracking error'
-        )
-        OnChange = mount_error1Change
-        ParentShowHint = False
-        ShowHint = True
-        Style = csDropDownList
-        TabOrder = 3
-      end
-      object Label18: TLabel
-        Left = 16
-        Height = 15
-        Top = 134
-        Width = 98
-        Caption = 'Mount  indication:'
-        ParentColor = False
-      end
-      object Label11: TLabel
-        Left = 16
-        Height = 15
-        Top = 224
+        Top = 208
         Width = 98
         Caption = 'Looking at [J2000]:'
         ParentColor = False
       end
       object telescope_position2000_ra1: TLabel
-        Left = 176
+        Left = 704
         Height = 15
         Hint = 'Looking at α position and error. Note the simulation can not make make steps smaller then one pixel.'
-        Top = 224
+        Top = 208
         Width = 15
         Caption = '---'
         ParentColor = False
@@ -925,10 +770,10 @@ object Form1: TForm1
         ShowHint = True
       end
       object telescope_position2000_dec1: TLabel
-        Left = 176
+        Left = 704
         Height = 15
         Hint = 'Looking at δ  position and error. Note the simulation can not make make steps smaller then one pixel.'
-        Top = 244
+        Top = 228
         Width = 15
         Caption = '---'
         ParentColor = False
@@ -936,18 +781,18 @@ object Form1: TForm1
         ShowHint = True
       end
       object pointing1: TLabel
-        Left = 176
+        Left = 704
         Height = 15
         Hint = 'Which side of the meridian the mount is pointing at'
-        Top = 112
+        Top = 120
         Width = 15
         Caption = '---'
         ParentColor = False
       end
       object Label19: TLabel
-        Left = 16
+        Left = 544
         Height = 15
-        Top = 112
+        Top = 120
         Width = 110
         Caption = 'Flipped for direction:'
         ParentColor = False
@@ -956,33 +801,33 @@ object Form1: TForm1
         Left = 216
         Height = 19
         Hint = 'Mount North/South (δ) pulse guiding is swapped after meridian flip. Normal situtation. Same applies for camera'
-        Top = 304
-        Width = 194
+        Top = 56
+        Width = 192
         Caption = 'δ pulse guiding reverses after flip'
         Checked = True
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 4
+        TabOrder = 3
         Visible = False
       end
       object NSswapped1: TCheckBox
         Left = 216
         Height = 19
         Hint = 'North South  (δ) pulse guiding swapped'
-        Top = 328
-        Width = 163
+        Top = 80
+        Width = 161
         Caption = 'δ  pulse guiding swapped ↕'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 5
+        TabOrder = 4
         Visible = False
       end
       object mount_type1: TComboBox
         Left = 16
         Height = 23
         Hint = 'Labels in the artificial image'
-        Top = 304
+        Top = 72
         Width = 184
         ItemHeight = 15
         ItemIndex = 1
@@ -990,92 +835,483 @@ object Form1: TForm1
           'Fork mount'
           'Equatorial mount'
         )
-        OnChange = mount_type1Change
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
         Style = csDropDownList
-        TabOrder = 6
+        TabOrder = 5
         Text = 'Equatorial mount'
         Visible = False
+        OnChange = mount_type1Change
       end
-      object message_artificial_sky1: TLabel
-        Left = 536
-        Height = 15
-        Hint = 'For this mount error mode only fast artifical image creation will work fast enough.'
-        Top = 80
-        Width = 300
-        Caption = '(This mount error setting will force an artifical sky image)'
+      object groupbox_mount_errors1: TGroupBox
+        Left = 16
+        Height = 200
+        Top = 216
+        Width = 464
+        Caption = 'Additional mount errors (for artificial image only)'
+        ClientHeight = 180
+        ClientWidth = 460
+        TabOrder = 6
+        object mount_noise1: TComboBox
+          Left = 120
+          Height = 23
+          Hint = 'Noise due to mouse movement and seeing'
+          Top = 8
+          Width = 320
+          DropDownCount = 40
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'None'
+            'Noise 0.4" '
+            'Noise 1.0"'
+            'Noise 2.0"'
+          )
+          ParentShowHint = False
+          ShowHint = True
+          Style = csDropDownList
+          TabOrder = 0
+          Text = 'None'
+        end
+        object mount_periodic_error1: TComboBox
+          Left = 120
+          Height = 23
+          Hint = 'Mount period error'
+          Top = 48
+          Width = 320
+          DropDownCount = 40
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'None'
+            'Tracking error α, 10" square wave 1 min period'
+            'Tracking error α, 10" square wave 2 min period'
+            'Tracking error α, 10" square wave 5 min period'
+            'Tracking error δ, 10" square wave 1 min period'
+            'Tracking error δ, 10" square wave 2 min period'
+            'Tracking error δ, 10" square wave 5 min period'
+            'Tracking error α, 10" sinus wave 5 min period'
+            'Tracking error α, 20" sinus wave 5 min period'
+          )
+          ParentShowHint = False
+          ShowHint = True
+          Style = csDropDownList
+          TabOrder = 1
+          Text = 'None'
+        end
+        object backlash_mount1: TCheckBox
+          Left = 24
+          Height = 19
+          Top = 88
+          Width = 154
+          Caption = 'Backlash 100 milliseconds'
+          TabOrder = 2
+        end
+        object Label8: TLabel
+          Left = 24
+          Height = 15
+          Top = 13
+          Width = 30
+          Caption = 'Noise'
+          ParentColor = False
+        end
+        object Label28: TLabel
+          Left = 24
+          Height = 15
+          Top = 48
+          Width = 71
+          Caption = 'Periodic error'
+          ParentColor = False
+        end
+        object groupbox_mount_offset1: TGroupBox
+          Left = 264
+          Height = 87
+          Top = 88
+          Width = 153
+          AutoSize = True
+          BorderSpacing.InnerBorder = 5
+          Caption = 'Mount incidental offset'
+          ClientHeight = 67
+          ClientWidth = 149
+          TabOrder = 3
+          object buttonEast1: TButton
+            Left = 0
+            Height = 25
+            Hint = 'Add tracking error five arcseconds.'
+            Top = 16
+            Width = 19
+            Caption = 'E'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 0
+            OnClick = buttonEast1Click
+          end
+          object buttonNorth1: TButton
+            Left = 24
+            Height = 25
+            Hint = 'Add tracking error five arcseconds.'
+            Top = 0
+            Width = 19
+            Caption = 'N'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 1
+            OnClick = buttonNorth1Click
+          end
+          object buttonWest1: TButton
+            Left = 48
+            Height = 25
+            Hint = 'Add tracking error five arcseconds.'
+            Top = 16
+            Width = 19
+            Caption = 'W'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 2
+            OnClick = buttonWest1Click
+          end
+          object buttonSouth1: TButton
+            Left = 24
+            Height = 25
+            Hint = 'Add tracking error five arcseconds.'
+            Top = 32
+            Width = 19
+            Caption = 'S'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 3
+            OnClick = buttonSouth1Click
+          end
+        end
+        object labelerrorRA1: TLabel
+          Left = 24
+          Height = 15
+          Top = 136
+          Width = 38
+          Caption = 'Error α:'
+          ParentColor = False
+        end
+        object labelerrorDEC1: TLabel
+          Left = 24
+          Height = 15
+          Top = 160
+          Width = 38
+          Caption = 'Error δ:'
+          ParentColor = False
+        end
+        object seeingRA1: TLabel
+          Left = 80
+          Height = 15
+          Hint = 'The seeing and period errors introduced.'
+          Top = 136
+          Width = 15
+          Caption = '---'
+          ParentColor = False
+        end
+        object seeingDEC1: TLabel
+          Left = 80
+          Height = 15
+          Hint = 'The seeing and period errors introduced.'
+          Top = 160
+          Width = 15
+          Caption = '---'
+          ParentColor = False
+        end
+      end
+      object panel_sky1: TPanel
+        Left = 544
+        Height = 185
+        Top = 271
+        Width = 365
+        BevelOuter = bvNone
+        BorderStyle = bsSingle
+        ClientHeight = 181
+        ClientWidth = 361
+        Color = clMenu
+        ParentBackground = False
         ParentColor = False
         ParentShowHint = False
-        ShowHint = True
-        Visible = False
-      end
-      object GroupBox2: TGroupBox
-        Left = 296
-        Height = 87
-        Top = 208
-        Width = 98
-        AutoSize = True
-        BorderSpacing.InnerBorder = 5
-        Caption = 'Mount offset'
-        ClientHeight = 67
-        ClientWidth = 94
+        PopupMenu = popupmenu_sky1
         TabOrder = 7
-        object buttonEast1: TButton
-          Left = 0
-          Height = 25
-          Hint = 'Add tracking error five arcseconds.'
-          Top = 16
-          Width = 19
-          Caption = 'E'
-          OnClick = buttonEast1Click
+        OnMouseLeave = panel_sky1MouseLeave
+        OnMouseMove = panel_sky1MouseMove
+        OnPaint = panel_sky1Paint
+        object telescope_cursor1: TShape
+          Left = 80
+          Height = 10
+          Top = 53
+          Width = 10
+          Brush.Color = clDefault
+          ParentShowHint = False
+          Pen.Color = clRed
+          Pen.Width = 2
+          OnMouseEnter = telescope_cursor1MouseEnter
+          Shape = stCircle
+          ShowHint = True
+          Visible = False
+        end
+      end
+      object Label9: TLabel
+        Left = 544
+        Height = 15
+        Top = 256
+        Width = 6
+        Caption = '0'
+        ParentColor = False
+      end
+      object Label29: TLabel
+        Left = 904
+        Height = 15
+        Top = 256
+        Width = 12
+        Caption = '24'
+        ParentColor = False
+      end
+      object Label30: TLabel
+        Left = 528
+        Height = 15
+        Top = 264
+        Width = 12
+        Caption = '90'
+        ParentColor = False
+      end
+      object Label31: TLabel
+        Left = 523
+        Height = 15
+        Top = 446
+        Width = 17
+        Caption = '-90'
+        ParentColor = False
+      end
+      object mouse_position1: TLabel
+        Left = 688
+        Height = 15
+        Top = 256
+        Width = 63
+        Caption = '12:00. 90:00 '
+        ParentColor = False
+      end
+      object groupbox_polar_alignment_error1: TGroupBox
+        Left = 16
+        Height = 112
+        Top = 104
+        Width = 464
+        Caption = 'Polar alignment error'
+        ClientHeight = 92
+        ClientWidth = 460
+        TabOrder = 8
+        object Label_azimuth1: TLabel
+          Left = 232
+          Height = 15
+          Top = 64
+          Width = 100
+          Caption = 'Azimuth ↺ error[''] '
+          Enabled = False
+          ParentColor = False
+        end
+        object Label_elevation1: TLabel
+          Left = 232
+          Height = 15
+          Top = 36
+          Width = 90
+          Caption = 'Elevation error[''] '
+          Enabled = False
+          ParentColor = False
+        end
+        object latitude1: TEdit
+          Left = 360
+          Height = 23
+          Hint = 'Latitude of the observer'
+          Top = 36
+          Width = 48
+          Enabled = False
+          ParentColor = True
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
+          Text = '0'
+          OnExit = latitude1Exit
         end
-        object buttonNorth1: TButton
-          Left = 24
-          Height = 25
-          Hint = 'Add tracking error five arcseconds.'
-          Top = 0
-          Width = 19
-          Caption = 'N'
-          OnClick = buttonNorth1Click
+        object longitude1: TEdit
+          Left = 360
+          Height = 23
+          Hint = 'Longitude of the observer. For west enter negative values. For east enter positive values.'
+          Top = 64
+          Width = 48
+          Enabled = False
+          ParentColor = True
           ParentShowHint = False
           ShowHint = True
           TabOrder = 1
+          Text = '0'
+          OnExit = longitude1Exit
         end
-        object buttonWest1: TButton
-          Left = 48
+        object Label_longitude1: TLabel
+          Left = 416
+          Height = 15
+          Top = 64
+          Width = 24
+          Caption = 'long'
+          Enabled = False
+          ParentColor = False
+        end
+        object Label_latitude1: TLabel
+          Left = 416
+          Height = 15
+          Top = 36
+          Width = 13
+          Caption = 'lat'
+          Enabled = False
+          ParentColor = False
+        end
+        object slew_to_test_position1: TButton
+          Left = 8
           Height = 25
-          Hint = 'Add tracking error five arcseconds.'
-          Top = 16
-          Width = 19
-          Caption = 'W'
-          OnClick = buttonWest1Click
-          ParentShowHint = False
-          ShowHint = True
+          Hint = 'Equatorial mount. weight down, one degree from celestial pole'
+          Top = 36
+          Width = 141
+          AutoSize = True
+          Caption = 'Slew to celestial north'
           TabOrder = 2
+          OnClick = slew_to_test_position1Click
         end
-        object buttonSouth1: TButton
-          Left = 24
-          Height = 25
-          Hint = 'Add tracking error five arcseconds.'
-          Top = 32
-          Width = 19
-          Caption = 'S'
-          OnClick = buttonSouth1Click
-          ParentShowHint = False
-          ShowHint = True
+        object elevation_error1: TFloatSpinEdit
+          Left = 160
+          Height = 23
+          Hint = 'Elevation (latitude) error of the mount in arc minutes.'
+          Top = 36
+          Width = 65
+          DecimalPlaces = 1
+          Enabled = False
+          Increment = 5
+          MaxValue = 300
+          MinValue = -300
+          OnChange = elevation_error1Change
           TabOrder = 3
         end
+        object azimuth_error1: TFloatSpinEdit
+          Left = 160
+          Height = 23
+          Hint = 'Azimuth error of the mount in arc minutes.'
+          Top = 64
+          Width = 65
+          DecimalPlaces = 1
+          Enabled = False
+          Increment = 5
+          MaxValue = 300
+          MinValue = -300
+          OnChange = azimuth_error1Change
+          TabOrder = 4
+        end
+        object polar_alignment_error1: TCheckBox
+          Left = 8
+          Height = 19
+          Hint = 'Polar alignment error mount'
+          Top = 5
+          Width = 169
+          Caption = 'Polar alignment error mount'
+          TabOrder = 5
+          OnChange = polar_alignment_error1Change
+        end
+        object polar_error_describtion1: TLabel
+          Left = 232
+          Height = 15
+          Top = 8
+          Width = 15
+          Caption = '---'
+          ParentColor = False
+        end
+      end
+      object ra_jnow1: TLabel
+        Left = 872
+        Height = 15
+        Top = 160
+        Width = 15
+        Caption = '---'
+        ParentColor = False
+      end
+      object dec_jnow1: TLabel
+        Left = 872
+        Height = 15
+        Top = 181
+        Width = 15
+        Caption = '---'
+        ParentColor = False
+      end
+      object telescope_positionJnow_ra1: TLabel
+        Left = 872
+        Height = 15
+        Hint = 'Looking at α position and error. Note the simulation can not make steps smaller then one pixel.'
+        Top = 208
+        Width = 15
+        Caption = '---'
+        ParentColor = False
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object telescope_positionJnow_dec1: TLabel
+        Left = 872
+        Height = 15
+        Hint = 'Looking at α position and error. Note the simulation can not make make steps smaller then one pixel.'
+        Top = 228
+        Width = 15
+        Caption = '---'
+        ParentColor = False
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object Label11: TLabel
+        Left = 832
+        Height = 15
+        Top = 160
+        Width = 27
+        Caption = 'Jnow'
+        ParentColor = False
+      end
+      object Label32: TLabel
+        Left = 832
+        Height = 15
+        Top = 208
+        Width = 27
+        Caption = 'Jnow'
+        ParentColor = False
+      end
+      object equinox_communication1: TComboBox
+        Left = 832
+        Height = 23
+        Hint = 'Equinox of the communication with the mount. Fixed for external mounts'
+        Top = 64
+        Width = 80
+        Enabled = False
+        ItemHeight = 15
+        ItemIndex = 0
+        Items.Strings = (
+          'Jnow'
+          'J2000'
+          'J2050'
+        )
+        ParentColor = True
+        ParentShowHint = False
+        ShowHint = True
+        Style = csDropDownList
+        TabOrder = 9
+        Text = 'Jnow'
+        OnChange = equinox_communication1Change
+      end
+      object Label33: TLabel
+        Left = 544
+        Height = 15
+        Top = 64
+        Width = 240
+        Caption = 'Mount communication in coordinate system:'
+        ParentColor = False
       end
     end
     object tab_focuser1: TTabSheet
       Caption = 'Focuser'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       ImageIndex = 3
       object connect_focuser1: TBitBtn
         Left = 16
@@ -1151,12 +1387,12 @@ object Form1: TForm1
         Hint = 'Best focus position for image.'
         Top = 72
         Width = 72
-        OnExit = focus_at1Exit
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
         Text = '25000'
+        OnExit = focus_at1Exit
       end
       object Label6: TLabel
         Left = 16
@@ -1172,12 +1408,12 @@ object Form1: TForm1
         Hint = 'Focus range. If the focuser is this value from the focus, then the  HFD will be 10.'
         Top = 72
         Width = 80
-        OnExit = focus_range1Exit
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
         TabOrder = 2
         Text = '1000'
+        OnExit = focus_range1Exit
       end
       object focuser_position2: TLabel
         Left = 296
@@ -1201,12 +1437,12 @@ object Form1: TForm1
         Hint = 'Backlash of the focuser. Set to zero to switch off.'
         Top = 112
         Width = 80
-        OnExit = backlash1Exit
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
         Text = '100'
+        OnExit = backlash1Exit
       end
       object focuser_position6: TLabel
         Left = 296
@@ -1220,7 +1456,7 @@ object Form1: TForm1
         Left = 16
         Height = 19
         Top = 8
-        Width = 771
+        Width = 769
         Caption = 'Ascom interface. The focuser will be an external simulator or a real focuser. Select in your imaging program the same focuser as for the button.'
         Checked = True
         TabOrder = 4
@@ -1230,10 +1466,10 @@ object Form1: TForm1
         Left = 16
         Height = 19
         Top = 32
-        Width = 724
+        Width = 722
         Caption = 'Alpaca interface. The focuser will be simulated inside this program.  Select in your imaging program "focuser_sky_simulator (Alpaca)".'
-        OnChange = focuser_alpaca1Change
         TabOrder = 5
+        OnChange = focuser_alpaca1Change
       end
       object Label20: TLabel
         Left = 16
@@ -1246,14 +1482,14 @@ object Form1: TForm1
     end
     object tab_rotator1: TTabSheet
       Caption = 'Rotator'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       ImageIndex = 3
       object rotator_ascom1: TRadioButton
         Left = 16
         Height = 19
         Top = 8
-        Width = 109
+        Width = 107
         Caption = 'Ascom interface.'
         Checked = True
         TabOrder = 0
@@ -1263,10 +1499,10 @@ object Form1: TForm1
         Left = 16
         Height = 19
         Top = 32
-        Width = 372
+        Width = 370
         Caption = 'Alpaca interface. The focuser will be simulated inside this program.'
-        OnChange = rotator_alpaca1Change
         TabOrder = 1
+        OnChange = rotator_alpaca1Change
       end
       object rotator_position1: TLabel
         Left = 144
@@ -1295,7 +1531,7 @@ object Form1: TForm1
         Height = 19
         Hint = 'Rotator reverse action'
         Top = 72
-        Width = 60
+        Width = 58
         Caption = 'Reverse'
         TabOrder = 2
       end
@@ -1326,15 +1562,15 @@ object Form1: TForm1
         TabOrder = 3
       end
     end
-    object Image_TabSheet2: TTabSheet
+    object tab_Image1: TTabSheet
       Caption = 'Image'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       object Image1: TImage
         Left = -4
-        Height = 352
+        Height = 456
         Top = 0
-        Width = 706
+        Width = 884
         Align = alCustom
         Anchors = []
         OnMouseDown = Image1MouseDown
@@ -1342,7 +1578,7 @@ object Form1: TForm1
         OnMouseUp = Image1MouseUp
         OnMouseWheelDown = Image1MouseWheelDown
         OnMouseWheelUp = Image1MouseWheelUp
-        PopupMenu = PopupMenu1
+        PopupMenu = PopupMenu_map1
         Proportional = True
         Stretch = True
       end
@@ -1355,10 +1591,10 @@ object Form1: TForm1
         ParentColor = False
       end
     end
-    object Alpaca_tab1: TTabSheet
+    object tab_alpaca1: TTabSheet
       Caption = 'Alpaca'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       object alpaca_groupBox1: TGroupBox
         Left = 48
         Height = 43
@@ -1416,9 +1652,9 @@ object Form1: TForm1
       end
       object Memo1: TMemo
         Left = -4
-        Height = 380
+        Height = 391
         Top = 88
-        Width = 978
+        Width = 992
         Anchors = [akTop, akLeft, akRight, akBottom]
         Lines.Strings = (
           'Alpaca log'
@@ -1447,7 +1683,7 @@ object Form1: TForm1
         Left = 536
         Height = 19
         Top = 61
-        Width = 122
+        Width = 120
         Caption = 'Activate Alpaca log'
         TabOrder = 2
       end
@@ -1456,7 +1692,7 @@ object Form1: TForm1
         Height = 19
         Hint = 'Write alpaca_log.txt to your document folder.'
         Top = 61
-        Width = 143
+        Width = 141
         Caption = 'Write file alpaca_log.txt'
         ParentShowHint = False
         ShowHint = True
@@ -1470,10 +1706,10 @@ object Form1: TForm1
         Width = 73
         AutoSize = True
         Caption = 'Clear log'
-        OnClick = clear_log_button1Click
         ParentShowHint = False
         ShowHint = True
         TabOrder = 4
+        OnClick = clear_log_button1Click
       end
       object filter1: TEdit
         Left = 1008
@@ -1495,15 +1731,15 @@ object Form1: TForm1
         ParentColor = False
       end
     end
-    object Log: TTabSheet
+    object tab_log1: TTabSheet
       Caption = 'Log'
-      ClientHeight = 467
-      ClientWidth = 970
+      ClientHeight = 478
+      ClientWidth = 984
       object Memo2: TMemo
         Left = 0
-        Height = 467
+        Height = 478
         Top = 0
-        Width = 970
+        Width = 984
         Align = alClient
         ParentColor = True
         ScrollBars = ssAutoBoth
@@ -1514,11 +1750,11 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Height = 40
-    Top = 495
-    Width = 978
+    Top = 506
+    Width = 992
     Align = alBottom
     ClientHeight = 40
-    ClientWidth = 978
+    ClientWidth = 992
     Constraints.MaxHeight = 40
     TabOrder = 2
     object start_button1: TButton
@@ -1528,10 +1764,10 @@ object Form1: TForm1
       Top = 8
       Width = 352
       Caption = 'Start simulation.'
-      OnClick = start_button1Click
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
+      OnClick = start_button1Click
     end
     object imagecounter1: TLabel
       Left = 368
@@ -1549,10 +1785,10 @@ object Form1: TForm1
       Top = 8
       Width = 75
       Caption = 'Stop'
-      OnClick = stopbutton1Click
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
+      OnClick = stopbutton1Click
     end
     object savesettings1: TButton
       Left = 616
@@ -1561,8 +1797,8 @@ object Form1: TForm1
       Top = 8
       Width = 115
       Caption = 'Save settings'
-      OnClick = savesettings1Click
       TabOrder = 2
+      OnClick = savesettings1Click
     end
     object exit1: TButton
       Left = 744
@@ -1571,22 +1807,22 @@ object Form1: TForm1
       Top = 8
       Width = 139
       Caption = 'Save settings && Exit'
-      OnClick = exit1Click
       TabOrder = 3
+      OnClick = exit1Click
     end
   end
   object SelectDirectoryDialog1: TSelectDirectoryDialog
-    Left = 704
-    Top = 200
+    Left = 760
+    Top = 456
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 704
-    Top = 272
+    Left = 656
+    Top = 456
   end
   object PopupMenu_memo1: TPopupMenu
-    Left = 704
-    Top = 336
+    Left = 696
+    Top = 456
     object Menufind1: TMenuItem
       Caption = 'Find'
       ShortCut = 16454
@@ -1611,24 +1847,46 @@ object Form1: TForm1
     end
   end
   object ImageList_colors: TImageList
-    Left = 800
-    Top = 240
+    Left = 616
+    Top = 456
     Bitmap = {
-      4C7A050000001000000010000000570000000000000078DAEDD4410AC0200C44
-      D1B9793C5A6E16576E84526B400BF984B7D238104529240025B5260045F10302
-      75B93B80A2E27299596465B39FD6B2FD6F67ACF4EF66ACCCE96BFFBCF764FE8D
-      F967EEFFEF6F7F54074EE865C2
+      4C7A070000001000000010000000760000000000000078DAEDD6410AC0200C44
+      D1DC5C8FE6CD52372E6A29B50ED4623EE1ADE25430523473330021E56C0082E2
+      0F08C4554A0110942FAE9492ABD4BDEF7A6AFEE91B23F9D93D46CEE96DBE5FFB
+      E5FE2BCE5F99FFDFEF7EABFA0AF093CB82CDFB5DF581EDFBCC3FF8FC75F51D31
+      853C79F27A5E71004D941C0D
     }
   end
-  object PopupMenu1: TPopupMenu
-    OnPopup = PopupMenu1Popup
-    Left = 469
-    Top = 232
+  object PopupMenu_map1: TPopupMenu
+    OnPopup = PopupMenu_map1Popup
+    Left = 848
+    Top = 408
+    object slew_to_mouse_pos_image1: TMenuItem
+      Caption = 'Slew to mouse position'
+      OnClick = slew_to_mouse_pos_image1Click
+    end
+    object Separator4: TMenuItem
+      Caption = '-'
+    end
     object mount_goto1: TMenuItem
-      Caption = 'Slew to α, δ (Alpaca interface only)'
+      Caption = 'Specify new mount J2000 position (α, δ)'
+      Hint = 'Enter a new mount J2000 position (α, δ)'
+      OnClick = mount_goto1Click
+    end
+    object slew_to_jnow2: TMenuItem
+      Caption = 'Specify new mount JNow position (α, δ)'
+      Hint = 'Specify new mount JNow position (α, δ)'
       OnClick = mount_goto1Click
     end
     object Separator1: TMenuItem
+      Caption = '-'
+    end
+    object abort_slew2: TMenuItem
+      Caption = 'Abort slew'
+      ShortCut = 27
+      OnClick = abort_slew1Click
+    end
+    object Separator6: TMenuItem
       Caption = '-'
     end
     object image_to_clipboard1: TMenuItem
@@ -1658,7 +1916,47 @@ object Form1: TForm1
   end
   object SaveDialog1: TSaveDialog
     FileName = 'sky_image'
-    Left = 800
-    Top = 131
+    Left = 576
+    Top = 456
+  end
+  object popupmenu_sky1: TPopupMenu
+    Left = 848
+    Top = 352
+    object menu_slew_to1: TMenuItem
+      Caption = 'Slew to this position'
+      OnClick = menu_slew_to1Click
+    end
+    object Slew_to_radec1: TMenuItem
+      Caption = 'Specify new mount J2000 position (α, δ)'
+      Hint = 'Enter a new mount position (α, δ)'
+      OnClick = mount_goto1Click
+    end
+    object slew_to_jnow1: TMenuItem
+      Caption = 'Specify new mount JNow position (α, δ)'
+      OnClick = mount_goto1Click
+    end
+    object Separator5: TMenuItem
+      Caption = '-'
+    end
+    object j2000_to_Jnow1: TMenuItem
+      Caption = 'Convert J2000 to JNow tool'
+      OnClick = j2000_to_Jnow1Click
+    end
+    object jnow_to_j2000_1: TMenuItem
+      Caption = 'Convert JNow to J2000 tool'
+      OnClick = jnow_to_j2000_1Click
+    end
+    object Separator7: TMenuItem
+      Caption = '-'
+    end
+    object abort_slew1: TMenuItem
+      Caption = 'Abort slew'
+      ShortCut = 27
+      OnClick = abort_slew1Click
+    end
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 808
+    Top = 456
   end
 end
