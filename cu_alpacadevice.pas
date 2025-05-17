@@ -37,6 +37,7 @@ type
   end;
   TAxisRates = array of TAxisRate;
   TTrackingRates = array of integer;
+  Tfocusoffsets = array of integer;
   Timg           = array of array of word;
 
   // ImageBytes support, from Alpaca documentation

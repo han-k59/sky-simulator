@@ -76,9 +76,15 @@ var
   guiderateRa: double=0.5*360/(24*60*60);// 0.5x and 1.5x rate
   guiderateDec: double=0.5*360/(24*60*60);// 0.5x and 1.5x rate
 
-  theaxisrates : array[0..2]  of double=(360/86164.098903691 {ra in deg/sec},0 {dec},0);
+  theaxisrates : array[0..2]  of double=(360/86164.098903691 {ra in deg/sec equals 3600* 15.041067"/sec},0 {dec},0);
   site_elevation: double=10;
 
+  thetrackingrate: integer=0; //sidereal, lunar, solar
+
+  alpaca_altitude:double=0;
+  alpaca_azimuth: double=0;
+  is_parked     : integer=0; //2 is parked, 1 is going to park position, 0 not parked. This is a simulation variable
+  focal_length_telescope: double=0.560;//meters
 
 type
 
@@ -283,21 +289,29 @@ begin
 
   if angular_distance_mount>=0 then sideofpier_alpaca:=1 else sideofpier_alpaca:=0; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
 
-//  if abs(abs(angular_distance_mount)-12)<=0.000003 then result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
-  if abs(abs(angular_distance_mount)-12)<=0.00001 then result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
+  if abs(abs(angular_distance_mount)-12)<=0.000003 then
+     result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
+ // memo2_message(floattostr(ra_encoder)+' ,  '+floattostr(dec_encoder)+',  ' + floattostr((abs(angular_distance_mount)-12)) );
 end;
 
 
 procedure mount_simulation;{called every second by the timer}
 var
-  deltaRa,deltaDec,stepRa,stepDec,ra_target, dec_target: double;
+  deltaRa,deltaDec,stepRa,stepDec,ra_target, dec_target            : double;
   reverseDecPulse, pulseEast2, pulseWest2,pulseNorth2, pulseSouth2 : integer;
 begin
+  if ((is_parked=1) and (alpaca_mount_slewing=false)) then //slewing to park position finished
+  begin
+    is_parked:=2;//next phase
+    alpaca_tracking:=false;
+    exit;
+  end;
+
   if alpaca_mount_slewing then
   begin
 
     if equatorial_mount=false then sideofpier_alpaca:=-1; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
-    if ((equatorial_mount) and (crosses_meridian(meridian) )) then
+    if ((equatorial_mount) and (crosses_meridian(meridian)) ) then
     begin //go first to celestial pole to avoid crossing meridian
       ra_target:=inc_angle((meridian)*15,180)/15;
       if pos('-',form1.latitude1.text)=0 then
@@ -312,8 +326,15 @@ begin
       dec_target:=alpaca_dec_target;
     end;
 
+    //memo2_message('dec_target:'+floattostr(dec_target) );
+
     deltaRa:=inc_angle((ra_target-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees}
-    stepRA:=min(abs(deltaRA),10); {degrees, slew speed ten degree per second}
+
+    if abs(dec_encoder)<90 then
+      stepRA:=min(abs(deltaRA),10) {degrees, slew speed ten degree per second}
+    else
+       stepRA:=abs(deltaRA); //flip RA at celestial pole
+
     if deltaRA<0 then
       ra_encoder:=inc_angle(ra_encoder,-stepRa)    //decrement
     else
@@ -326,11 +347,10 @@ begin
     else
       dec_encoder:=inc_angle(dec_encoder,+stepDec);
 
-    if ra_target=alpaca_ra_target then //do not stop at first stop north
+   if ra_target=alpaca_ra_target then //do not stop at first stop north
       alpaca_mount_slewing:=((stepRa>0.000003) or (stepDec>0.000003)) {reached target?}
     else
       alpaca_mount_slewing:=true;
-
   end
   else
   begin
@@ -367,7 +387,7 @@ begin
       ra_encoder:=inc_angle(ra_encoder, (pulseEast2-pulseWest2){ms}*guiderateRa/1000); //pulse duration is in milliseconds
       dec_encoder:=inc_angle(dec_encoder,NSswapped*reverseDecPulse*(pulseNorth2-pulseSouth2) {ms}*guiderateDec/1000);
 
-      ra_encoder:=ra_encoder+theaxisrates[0]-360/86164.098903691;//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
+      ra_encoder:=ra_encoder+theaxisrates[0]-15.04107/3600;//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
       dec_encoder:=dec_encoder+ NSswapped*reverseDecPulse*theaxisrates[1];
 
       //if alpaca_mount_slewing then memo2_message('reverse dec pulse '+inttostr(reverseDecPulse)+'  Side of pier '+ inttostr(Sideofpier_alpaca)+ ' slewing' )
@@ -487,9 +507,7 @@ end;
 
 function  T_Alpaca_Mount.altitude: double;
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=0;
+  result:=alpaca_altitude*180/pi;
 end;
 
 function  T_Alpaca_Mount.aperturearea: double;
@@ -513,24 +531,22 @@ end;
 
 function  T_Alpaca_Mount.atpark: boolean;
 begin
-  result:=false;
+  result:=is_parked=2;
 end;
 
 function  T_Alpaca_Mount.azimuth: double;
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=0;
+  result:=alpaca_azimuth*180/pi;
 end;
 
 function  T_Alpaca_Mount.canpark: boolean;
 begin
-  result:=false;
+  result:=true;
 end;
 
 function  T_Alpaca_Mount.canunpark: boolean;
 begin
-  result:=false;
+  result:=true;
 end;
 
 function  T_Alpaca_Mount.canpulseguide: boolean;
@@ -611,11 +627,15 @@ end;
 function  T_Alpaca_Mount.declinationrate: double;
 begin
   result:= theaxisrates[1]*3600;//from [deg/sec] to ["/sec]
+  //memo2_message('Alpaca, get declinate rate["] '+floattostrF(result,FFfixed,0,5));
 end;
 
 procedure T_Alpaca_Mount.setdeclinationrate(value: double);
 begin
+  if value=0 then exit;//Nina send a zero when setting trackingrates, Temporary fix
+
   theaxisrates[1]:=value/3600;//from ["/sec] to [deg/sec]
+  //memo2_message('Alpaca, set declinate rate["] '+floattostrF(value,FFfixed,0,5));
 end;
 
 function  T_Alpaca_Mount.doesrefraction: boolean;
@@ -642,9 +662,7 @@ end;
 
 function  T_Alpaca_Mount.focallength: double;
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=0;
+  result:=focal_length_telescope;//in meters
 end;
 
 function  T_Alpaca_Mount.guideratedeclination: double;
@@ -677,16 +695,29 @@ begin
   result:=alpaca_ra;
 end;
 
-function  T_Alpaca_Mount.rightascensionrate: double;
+function  T_Alpaca_Mount.rightascensionrate: double; // unit is (RA) seconds per sidereal second
 begin
   result:= theaxisrates[0]*(24/(360*0.9972695677))*3600;//from [deg/sec] to [ra_sec/sec]
-  //To convert a given rate in (the more common) units of sidereal seconds per UTC (clock) second, multiply the value by 0.9972695677 (the number of UTC seconds in a sidereal second) then set the property. Please note that these units were chosen for the Telescope V1 standard, and in retrospect, this was an unfortunate choice. However, to maintain backwards compatibility, the units cannot be changed. A simple multiplication is all that's needed, as noted.
+  // unit is (RA) seconds per sidereal second
+  // so sidereal 15.041067/3600 deg/sec is reported as 1 RA arcsec/sec
+
+  //To convert a given rate in (the more common) units of sidereal seconds per UTC (clock) second, multiply the value by 0.9972695677 (the number of UTC seconds in a sidereal second) then set the property.
+  //Please note that these units were chosen for the Telescope V1 standard, and in retrospect, this was an unfortunate choice. However, to maintain backwards compatibility, the units cannot be changed. A simple multiplication is all that's needed, as noted.
+  //memo2_message('Alpaca, get right ascension rate[ra sec] '+floattostrF(result,FFfixed,0,5));
+
 end;
 
-procedure T_Alpaca_Mount.setrightascensionrate(value: double);
+procedure T_Alpaca_Mount.setrightascensionrate(value: double);// unit is (RA) seconds per sidereal second
 begin
-  theaxisrates[0]:=value*(360/24)*0.9972695677/(3600);//from [ra_/sec] to [deg/sec]
-  //To convert a given rate in (the more common) units of sidereal seconds per UTC (clock) second, multiply the value by 0.9972695677 (the number of UTC seconds in a sidereal second) then set the property. Please note that these units were chosen for the Telescope V1 standard, and in retrospect, this was an unfortunate choice. However, to maintain backwards compatibility, the units cannot be changed. A simple multiplication is all that's needed, as noted.
+  if value=0 then exit;//Nina send a zero when setting trackingrates, Temporary fix
+
+  theaxisrates[0]:=value*(360/24)*1.00273791 /(3600);//from [ra_sec/sec] to [deg/sec]
+  //So input value 1 is converted to 15.041067/3600 deg/sec.
+  //To convert a given rate in (the more common) units of sidereal seconds per UTC (clock) second, multiply the value by 0.9972695677 (the number of UTC seconds in a sidereal second) then set the property.
+  //Please note that these units were chosen for the Telescope V1 standard, and in retrospect, this was an unfortunate choice. However, to maintain backwards compatibility, the units cannot be changed. A simple multiplication is all that's needed, as noted.
+  //memo2_message('Alpaca, set right ascension rate[ra sec] '+floattostrF(theaxisrates[0],FFfixed,0,5));
+
+  thetrackingrate:=0;//set sidereal but undefined would be better but that is not possible
 end;
 
 function  T_Alpaca_Mount.SiderealTime: double;
@@ -778,31 +809,73 @@ end;
 function  T_Alpaca_Mount.tracking: boolean;
 begin
   result:=((alpaca_tracking) and (alpaca_mount_slewing=false));
+
+  //if result then
+  //  memo2_message('Alpaca, get tracking is on')
+  //else
+  //  memo2_message('Alpaca, get tracking is off');
+
 end;
 
 procedure T_Alpaca_Mount.settracking(value: boolean);
 begin
   alpaca_tracking:=value;
+
+  //if value then
+  //  memo2_message('Alpaca, set tracking on')
+  //else
+  //  memo2_message('Alpaca, set tracking off');
 end;
 
 function  T_Alpaca_Mount.trackingrate: integer;
 begin
-  result:=0;
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  result:=thetrackingrate;
+  //memo2_message('Alpaca, get tracking rate: '+inttostr(trackingrate));
 end;
 
 procedure T_Alpaca_Mount.settrackingrate(value: integer);
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  thetrackingrate:=value;
+  if value=0 then //sidereal
+  begin
+    theaxisrates[0]:=15.041067/3600; //deg/sec
+    theaxisrates[1]:=0; //dec
+    //memo2_message('Alpaca, set tracking rate sidereal');
+  end
+  else
+  if value=1 then
+  begin //lunar
+    theaxisrates[0]:=14.685/3600;//deg/sec
+    theaxisrates[1]:=0; //dec keep it zero. Not fully correct for Moon
+    //memo2_message('Alpaca, set tracking rate lunar');
+  end
+  else
+  if value=2 then
+  begin //solar
+    theaxisrates[0]:=15/3600;//deg/sec
+    theaxisrates[1]:=0;
+    //memo2_message('Alpaca, set tracking rate solar');
+  end;
 end;
 
 function  T_Alpaca_Mount.trackingrates: TTrackingRates;
+const
+  rates: array[0..2] of integer=(0,1,2);
 begin
-  result:=nil;
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  result:=rates;
+  {Integer value corresponding to one of the standard drive rates.
+
+  Sidereal tracking rate (15.041 arcseconds per second).
+  Const0
+
+  Lunar tracking rate (14.685 arcseconds per second).
+  Const1
+
+  Solar tracking rate (15.0 arcseconds per second).
+  Const2
+
+  King tracking rate (15.0369 arcseconds per second).
+  Const3}
 end;
 
 function  T_Alpaca_Mount.utcdate: string;
@@ -869,6 +942,7 @@ begin
   FErrorMessage:=MSG_NOT_IMPLEMENTED;
 end;
 
+
 procedure T_Alpaca_Mount.moveaxis(axis:integer;rate:double);
 begin
   if axis=0 then
@@ -878,10 +952,15 @@ begin
 end;
 
 procedure T_Alpaca_Mount.park;
+var
+  dect     : double;
+  theresult: boolean;
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  if latitude>0 then  dect:=89 else dect:=-89;//park position just above the pole
+  slewtocoordinates(sidereal_time*12/pi,dect,theresult);//stop tracking will be done in simulation
+  is_parked:=1;//going to park position
 end;
+
 
 procedure T_Alpaca_Mount.pulseguide(direction,duration: integer);
 begin
@@ -914,6 +993,8 @@ end;
 
 procedure T_Alpaca_Mount.slewtocoordinates(ra,dec: double; out ok : boolean);
 begin
+  if is_parked<>0 then exit;
+
   precession_to_jnow(ra, dec,ra,dec);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
   alpaca_ra_target:=min(24,max(0,ra));
   alpaca_dec_target:=min(90,max(-90,dec));
@@ -975,8 +1056,8 @@ end;
 
 procedure T_Alpaca_Mount.unpark;
 begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  is_parked:=0;
+  alpaca_tracking:=true;
 end;
 
 

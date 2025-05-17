@@ -68,7 +68,7 @@ var
    bayeroffset_X : integer=0;
    bayeroffset_Y : integer=0;
 
-
+  pixelsizemicrometer:double=5;//pixel size in micrometer
   the_img    : Timg;
   camera_state : integer=0;
     {Returns one of the following status information:
@@ -114,8 +114,8 @@ type
       function  binx : integer; override;
       function  binY : integer; override;
       function  readoutmode : integer; override;
-      function  pixelsizex : integer; override;
-      function  pixelsizeY : integer; override;
+      function  pixelsizex : double; override;
+      function  pixelsizeY : double; override;
       function  sensorname : string; override;
 
       function  maxadu : integer; override;
@@ -353,14 +353,14 @@ begin
   result:=read_out_mode;
 end;
 
-function  T_Alpaca_cam.pixelsizex: integer;
+function  T_Alpaca_cam.pixelsizex: double;
 begin
-  result:=5;
+  result:=pixelsizemicrometer;//micrometer
 end;
 
-function  T_Alpaca_cam.pixelsizey: integer;
+function  T_Alpaca_cam.pixelsizey: double;
 begin
-  result:=5;
+  result:=pixelsizemicrometer;
 end;
 
 function  T_Alpaca_cam.sensorname: string;

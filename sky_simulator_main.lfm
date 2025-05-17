@@ -1,30 +1,30 @@
 object Form1: TForm1
-  Left = 352
-  Height = 569
-  Top = 160
-  Width = 992
+  Left = 380
+  Height = 605
+  Top = 291
+  Width = 1353
   Caption = 'Sky Simulator for ASCOM and ALPACA. Camera simulator with "Deep Sky Survey" images or artificial images based on mount and focuser position.'
-  ClientHeight = 569
-  ClientWidth = 992
+  ClientHeight = 605
+  ClientWidth = 1353
   KeyPreview = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
   OnResize = FormResize
   OnShow = FormShow
-  LCLVersion = '3.6.0.0'
+  LCLVersion = '3.8.0.0'
   object StatusBar1: TStatusBar
     Left = 0
     Height = 23
-    Top = 546
-    Width = 992
+    Top = 582
+    Width = 1353
     Panels = <>
   end
   object PageControl1: TPageControl
     Left = 0
-    Height = 506
+    Height = 542
     Top = 0
-    Width = 992
+    Width = 1353
     ActivePage = tab_image_source1
     Align = alClient
     Images = ImageList_colors
@@ -32,8 +32,8 @@ object Form1: TForm1
     TabOrder = 1
     object tab_image_source1: TTabSheet
       Caption = 'Image source'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       object go_default1: TButton
         Left = 808
         Height = 25
@@ -51,7 +51,7 @@ object Form1: TForm1
         Height = 25
         Top = 112
         Width = 116
-        Caption = 'About v3.0.2'
+        Caption = 'About v3.0.4b'
         TabOrder = 1
         OnClick = about1Click
       end
@@ -126,10 +126,10 @@ object Form1: TForm1
         OnChange = skyview_selected1Change
       end
       object Label2: TLabel
-        Left = 13
-        Height = 15
-        Top = 10
-        Width = 86
+        Left = 5
+        Height = 19
+        Top = 8
+        Width = 98
         Caption = 'Download from:'
         ParentColor = False
       end
@@ -139,12 +139,13 @@ object Form1: TForm1
         Top = 104
         Width = 656
         Caption = 'Artificial sky using the star and deepsky database'
-        ClientHeight = 300
+        ClientHeight = 296
         ClientWidth = 652
+        ParentFont = False
         TabOrder = 8
         object Angle2: TEdit
           Left = 104
-          Height = 23
+          Height = 27
           Hint = 'The angle (PA) of the camera'
           Top = 96
           Width = 56
@@ -157,7 +158,7 @@ object Form1: TForm1
         end
         object UpDown1: TUpDown
           Left = 160
-          Height = 23
+          Height = 27
           Top = 96
           Width = 17
           Associate = Angle2
@@ -169,10 +170,10 @@ object Form1: TForm1
         end
         object flipH1: TCheckBox
           Left = 8
-          Height = 19
+          Height = 23
           Hint = 'Flip image horizontal'
           Top = 124
-          Width = 51
+          Width = 55
           Caption = 'Flip-H'
           ParentShowHint = False
           ShowHint = True
@@ -181,10 +182,10 @@ object Form1: TForm1
         end
         object flipV1: TCheckBox
           Left = 8
-          Height = 19
+          Height = 23
           Hint = 'Flip image vertical'
           Top = 96
-          Width = 49
+          Width = 54
           Caption = 'Flip-V'
           ParentShowHint = False
           ShowHint = True
@@ -193,35 +194,35 @@ object Form1: TForm1
         end
         object Label10: TLabel
           Left = 182
-          Height = 15
+          Height = 19
           Top = 96
-          Width = 75
+          Width = 85
           Caption = 'Position angle'
           ParentColor = False
         end
         object focuser_position4: TLabel
           Left = 78
-          Height = 15
+          Height = 19
           Top = 12
-          Width = 70
+          Width = 83
           Caption = 'Star database'
           ParentColor = False
         end
         object focuser_position5: TLabel
           Left = 78
-          Height = 15
+          Height = 19
           Top = 40
-          Width = 55
+          Width = 63
           Caption = 'Focal ratio'
           ParentColor = False
         end
         object plotted_info1: TComboBox
           Left = 128
-          Height = 23
+          Height = 27
           Hint = 'Labels in the artificial image'
           Top = 192
           Width = 176
-          ItemHeight = 15
+          ItemHeight = 19
           Items.Strings = (
             'No labels'
             'HFD'
@@ -241,12 +242,12 @@ object Form1: TForm1
         end
         object star_database1: TComboBox
           Left = 8
-          Height = 23
+          Height = 27
           Hint = 'You can als install and use the g16, g17 star databases from www.hnsky.org'
           Top = 8
           Width = 64
           BorderSpacing.Around = 5
-          ItemHeight = 15
+          ItemHeight = 19
           Items.Strings = (
             '1'
           )
@@ -261,13 +262,13 @@ object Form1: TForm1
         end
         object hotpixels1: TComboBox
           Left = 104
-          Height = 23
+          Height = 27
           Hint = 'Hotpixels'
           Top = 124
           Width = 72
           BorderSpacing.Around = 5
           DropDownCount = 10
-          ItemHeight = 15
+          ItemHeight = 19
           ItemIndex = 0
           Items.Strings = (
             '0'
@@ -290,18 +291,18 @@ object Form1: TForm1
         end
         object focuser_position7: TLabel
           Left = 182
-          Height = 15
+          Height = 19
           Top = 128
-          Width = 53
+          Width = 60
           Caption = 'Hot pixels'
           ParentColor = False
         end
         object fliptext1: TCheckBox
           Left = 392
-          Height = 19
+          Height = 23
           Hint = 'Flip text vertical'
           Top = 192
-          Width = 23
+          Width = 24
           Caption = '↕'
           ParentShowHint = False
           ShowHint = True
@@ -310,13 +311,13 @@ object Form1: TForm1
         end
         object focal_ratio1: TComboBox
           Left = 8
-          Height = 23
+          Height = 27
           Hint = 'Focal ratio of the telescope. For f/7 as 5 second exposure will go down to about magnitude 14. The lower the focal ratio the more sensitive the setup is. Note that longer exposures also show more stars'
           Top = 36
           Width = 64
           BorderSpacing.Around = 5
           DropDownCount = 30
-          ItemHeight = 15
+          ItemHeight = 19
           ItemIndex = 5
           Items.Strings = (
             'f/2'
@@ -340,38 +341,38 @@ object Form1: TForm1
         end
         object Label23: TLabel
           Left = 8
-          Height = 15
+          Height = 19
           Top = 192
-          Width = 65
+          Width = 74
           Alignment = taRightJustify
           Caption = 'Plotted info:'
           ParentColor = False
         end
         object Label24: TLabel
           Left = 328
-          Height = 15
+          Height = 19
           Top = 192
-          Width = 45
+          Width = 51
           Caption = 'Flip text:'
           ParentColor = False
         end
         object Label25: TLabel
           Left = 8
-          Height = 15
+          Height = 19
           Top = 240
-          Width = 97
+          Width = 112
           Alignment = taRightJustify
           Caption = 'Camera && system:'
           ParentColor = False
         end
         object manipulations1: TComboBox
           Left = 128
-          Height = 23
+          Height = 27
           Hint = 'Several camera and system variations'
           Top = 239
           Width = 176
           DropDownCount = 30
-          ItemHeight = 15
+          ItemHeight = 19
           ItemIndex = 0
           Items.Strings = (
             'Mono'
@@ -406,7 +407,7 @@ object Form1: TForm1
         end
         object bayer_change_warning1: TLabel
           Left = 328
-          Height = 45
+          Height = 57
           Top = 239
           Width = 300
           Caption = 'If bayer pattern is changed, disconnect and reconnect in the aquistion program to update bayer pattern recognision.'
@@ -427,9 +428,9 @@ object Form1: TForm1
       end
       object Label15: TLabel
         Left = 52
-        Height = 15
+        Height = 19
         Top = 104
-        Width = 47
+        Width = 51
         Caption = 'Artificial:'
         ParentColor = False
       end
@@ -443,25 +444,25 @@ object Form1: TForm1
       end
       object File_from_disk2: TLabel
         Left = 416
-        Height = 15
+        Height = 19
         Top = 72
-        Width = 5
+        Width = 6
         Caption = '-'
       end
       object Label36: TLabel
-        Left = 13
-        Height = 15
-        Top = 38
-        Width = 86
+        Left = 5
+        Height = 19
+        Top = 40
+        Width = 98
         Caption = 'Download from:'
         ParentColor = False
       end
       object file_form_disk1: TBitBtn
         Left = 136
-        Height = 26
+        Height = 29
         Hint = 'Single image for special purposes like focus testing or OSC testing. Colour images are converted to OSC raw pattern RGGB.  '
         Top = 72
-        Width = 226
+        Width = 252
         AutoSize = True
         BidiMode = bdRightToLeft
         Caption = 'Single file from disk. Processed as:'
@@ -476,31 +477,31 @@ object Form1: TForm1
     end
     object tab_camera1: TTabSheet
       Caption = 'Camera'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       ImageIndex = 3
       object Label1: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 104
-        Width = 80
+        Width = 89
         Caption = 'Width[arcmin]:'
         ParentColor = False
       end
-      object width1: TLabel
+      object width_arcmin1: TLabel
         Left = 128
-        Height = 15
+        Height = 19
         Hint = 'Image width in arc minutes'
         Top = 104
-        Width = 20
+        Width = 24
         Caption = '----'
         ParentColor = False
         ParentShowHint = False
         ShowHint = True
       end
       object width_pixels1: TEdit
-        Left = 256
-        Height = 23
+        Left = 240
+        Height = 27
         Hint = 'Image width in pixels.'
         Top = 104
         Width = 80
@@ -512,26 +513,26 @@ object Form1: TForm1
         OnExit = width_pixels1Exit
       end
       object Label5: TLabel
-        Left = 344
-        Height = 15
+        Left = 328
+        Height = 19
         Top = 104
-        Width = 70
+        Width = 78
         Caption = 'Width[pixels]'
         ParentColor = False
       end
       object Label4: TLabel
-        Left = 344
-        Height = 15
+        Left = 328
+        Height = 19
         Top = 136
-        Width = 74
+        Width = 82
         Caption = 'Height[pixels]'
         ParentColor = False
       end
       object height_pixels1: TEdit
-        Left = 256
-        Height = 23
+        Left = 240
+        Height = 27
         Hint = 'Image height in pixels'
-        Top = 135
+        Top = 136
         Width = 80
         ParentColor = True
         ParentShowHint = False
@@ -540,62 +541,51 @@ object Form1: TForm1
         Text = '1500'
         OnExit = height_pixels1Exit
       end
-      object calculator1: TButton
-        Left = 208
-        Height = 41
-        Hint = 'Calculate the field of view (height) from focal length and pixel size.'
-        Top = 120
-        Width = 29
-        Caption = '🖩'
-        Font.Height = -47
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 2
-        OnClick = calculator1Click
-      end
-      object height1: TEdit
-        Left = 126
-        Height = 23
+      object height_arcmin1: TEdit
+        Left = 128
+        Height = 27
         Hint = 'Image height in arc minutes.'
         Top = 136
         Width = 80
         ParentColor = True
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 3
+        TabOrder = 2
         Text = '100'
-        OnExit = height1Exit
+        OnExit = height_arcmin1Exit
       end
       object Label3: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 136
-        Width = 82
+        Width = 91
         Caption = 'height[arcmin]:'
         ParentColor = False
       end
       object Label7: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 168
-        Width = 73
+        Width = 78
         Caption = 'Scale["/pixel]:'
         ParentColor = False
       end
       object scale1: TLabel
         Left = 128
-        Height = 15
+        Height = 19
+        Hint = 'Pixel size in arc seconds.'
         Top = 168
-        Width = 20
+        Width = 24
         Caption = '----'
         ParentColor = False
+        ParentShowHint = False
+        ShowHint = True
       end
       object instruction2: TLabel
         Left = 504
-        Height = 30
+        Height = 38
         Top = 87
-        Width = 370
+        Width = 358
         Caption = 'Disconnect the cameras in the aquisition program prior to change the image dimensions.'
         Constraints.MaxWidth = 400
         Constraints.MinWidth = 300
@@ -604,7 +594,7 @@ object Form1: TForm1
       end
       object Label12: TLabel
         Left = 504
-        Height = 30
+        Height = 38
         Top = 142
         Width = 400
         Caption = 'Star flux  and SNR are depending on exposure length and camera gain. Normal camera gain is 100.'
@@ -615,30 +605,34 @@ object Form1: TForm1
       end
       object fast_simulation1: TCheckBox
         Left = 16
-        Height = 19
+        Height = 23
         Hint = 'If fast simulation is activated all exposures are completed in less then a second'
-        Top = 232
-        Width = 98
+        Top = 224
+        Width = 110
         Caption = 'Fast simulation'
         Checked = True
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 4
+        TabOrder = 3
       end
-      object Label27: TLabel
-        Left = 16
-        Height = 75
-        Top = 8
-        Width = 1600
+      object message1: TLabel
+        Left = 0
+        Height = 120
+        Top = 0
+        Width = 1000
         AutoSize = False
-        Caption = 'Important for Windows. This is an Alpaca camera. If your imaging program can not connect to Alpaca and it doesn''t use the ASCOM camera chooser  then use'#13#10' the ASCOM chooser below for creating a new dynamic driver (once).'#13#10#13#10'Select in your imaging program "Camera Sky Simulator ALPACA (Alpaca) && Guide Camera Sky Simulator ALPACA (Alpaca)". '#13#10'Both camera are accessible as an Alpaca device or in Windows only as a COM service.'
+        Caption = 'Important for Windows. This is an Alpaca camera. If your imaging program can not connect to Alpaca you will need ASCOM 7.0 for a bridge between Alpaca and COM.  If it doesn''t use the ASCOM camera chooser then use the ASCOM chooser below for creating a new dynamic driver/bridge (once).'#13#10'Select in your imaging program "Camera Sky Simulator ALPACA (Alpaca) && Guide Camera Sky Simulator ALPACA (Alpaca)". Both cameras are accessible as an Alpaca device or in Windows with ASCOM 7 as a COM service.'
+        Constraints.MaxHeight = 120
+        Constraints.MaxWidth = 1000
+        Constraints.MinHeight = 120
+        Constraints.MinWidth = 1000
         ParentColor = False
         WordWrap = True
       end
       object Label34: TLabel
         Left = 504
-        Height = 45
+        Height = 57
         Top = 240
         Width = 400
         Caption = 'Avoid camera binning for speed. The binning is implemented in the communication and not in the simulation. This allows independent binning factors for the camera and guide camera.'
@@ -649,7 +643,7 @@ object Form1: TForm1
       end
       object Label18: TLabel
         Left = 504
-        Height = 15
+        Height = 19
         Top = 200
         Width = 400
         Caption = 'To create darks select in tab Image source option "No stars".'
@@ -660,48 +654,91 @@ object Form1: TForm1
       end
       object GroupBox_camera_chooser1: TGroupBox
         Left = 16
-        Height = 169
-        Top = 288
-        Width = 768
+        Height = 192
+        Top = 304
+        Width = 756
+        AutoSize = True
         Caption = 'Create a dynamic driver between COM and Alpaca'
-        ClientHeight = 149
-        ClientWidth = 764
-        TabOrder = 5
+        ClientHeight = 168
+        ClientWidth = 752
+        TabOrder = 4
         object Label35: TLabel
-          Left = 8
-          Height = 144
-          Top = 8
+          Left = 0
+          Height = 168
+          Top = 0
           Width = 752
           AutoSize = False
           Caption = 'Use the button below to invoke the ASCOM camera chooser and create a dynamic driver between COM and ALPACA. This is only once required. In the ASCOM camera chooser click on the Alpaca tab and enable discovery. Then select in the camera chooser * New ALPACA device Camera.. and click ok. Same for  * New ALPACA device Guide Camera... and click ok.  Then in your imaging program you can access the Alpaca cameras via the standard  COM interface.'#13#10#13#10'Select in your imaging program "Camera Sky Simulator ALPACA (Alpaca)"and/or "Guide Camera Sky Simulator ALPACA (Alpaca)".'
           WordWrap = True
         end
         object Button1: TButton
-          Left = 256
-          Height = 25
-          Top = 112
-          Width = 155
+          Left = 248
+          Height = 29
+          Top = 136
+          Width = 175
           AutoSize = True
           Caption = 'ASCOM camera chooser'
           TabOrder = 0
           OnClick = Button1Click
         end
       end
+      object Label27: TLabel
+        Left = 329
+        Height = 19
+        Top = 168
+        Width = 81
+        Caption = 'Pixel size[μm]'
+      end
+      object Label39: TLabel
+        Left = 328
+        Height = 19
+        Top = 200
+        Width = 106
+        Caption = 'Focal length[mm]'
+      end
+      object pixelsizemicrometer1: TEdit
+        Left = 240
+        Height = 27
+        Hint = 'Sensor pixel size in micro meter'
+        Top = 168
+        Width = 80
+        ParentColor = True
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 5
+        Text = '5'
+        OnExit = pixelsizemicrometer1Exit
+      end
+      object focallength1: TEdit
+        Left = 240
+        Height = 27
+        Hint = 'Telescope focal length in mm. If greyed then set focal length in ASCOM driver'
+        Top = 200
+        Width = 80
+        ParentColor = True
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 6
+        Text = '560'
+        OnChange = focallength1Change
+        OnExit = focallength1Exit
+      end
     end
     object tab_mount1: TTabSheet
       Hint = 'The sky'
       Caption = 'Mount'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       ImageIndex = 3
       OnContextPopup = tab_mount1ContextPopup
       ParentShowHint = False
       ShowHint = True
       object connect_mount1: TBitBtn
         Left = 16
-        Height = 30
-        Top = 426
-        Width = 184
+        Height = 29
+        Top = 440
+        Width = 167
+        AutoSize = True
         Caption = 'Connect Ascom mount'
         OnClick = connect_mount1Click
         ParentFont = False
@@ -709,61 +746,62 @@ object Form1: TForm1
       end
       object mount1: TLabel
         Left = 544
-        Height = 15
+        Height = 19
         Top = 160
-        Width = 124
+        Width = 147
         Caption = 'Mount encoder [J2000]:'
         ParentColor = False
       end
       object ra1: TLabel
         Left = 704
-        Height = 15
+        Height = 19
         Top = 160
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
       end
       object dec1: TLabel
         Left = 704
-        Height = 15
+        Height = 19
         Top = 181
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
       end
       object mount_ascom1: TRadioButton
         Left = 16
-        Height = 19
+        Height = 23
         Top = 8
-        Width = 858
+        Width = 991
         Caption = 'Ascom interface to external mount. The mount will be an external simulator or a real mount. Select in your imaging program the same mount as for the button.'
         Checked = True
         TabOrder = 1
         TabStop = True
+        OnChange = mount_alpaca1Change
       end
       object mount_alpaca1: TRadioButton
         Left = 16
-        Height = 19
+        Height = 23
         Top = 32
-        Width = 606
+        Width = 691
         Caption = 'Alpaca interface to internal simulated mount.  Select in your imaging program "mount_sky_simulator (Alpaca)".'
         TabOrder = 2
         OnChange = mount_alpaca1Change
       end
       object looking_at1: TLabel
         Left = 544
-        Height = 15
+        Height = 19
         Top = 208
-        Width = 98
+        Width = 117
         Caption = 'Looking at [J2000]:'
         ParentColor = False
       end
       object telescope_position2000_ra1: TLabel
         Left = 704
-        Height = 15
+        Height = 19
         Hint = 'Looking at α position and error. Note the simulation can not make make steps smaller then one pixel.'
         Top = 208
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
         ParentShowHint = False
@@ -771,10 +809,10 @@ object Form1: TForm1
       end
       object telescope_position2000_dec1: TLabel
         Left = 704
-        Height = 15
+        Height = 19
         Hint = 'Looking at δ  position and error. Note the simulation can not make make steps smaller then one pixel.'
         Top = 228
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
         ParentShowHint = False
@@ -782,27 +820,27 @@ object Form1: TForm1
       end
       object pointing1: TLabel
         Left = 704
-        Height = 15
+        Height = 19
         Hint = 'Which side of the meridian the mount is pointing at'
         Top = 120
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
       end
       object Label19: TLabel
         Left = 544
-        Height = 15
+        Height = 19
         Top = 120
-        Width = 110
+        Width = 125
         Caption = 'Flipped for direction:'
         ParentColor = False
       end
       object DecPulseReverses1: TCheckBox
         Left = 216
-        Height = 19
+        Height = 23
         Hint = 'Mount North/South (δ) pulse guiding is swapped after meridian flip. Normal situtation. Same applies for camera'
         Top = 56
-        Width = 192
+        Width = 220
         Caption = 'δ pulse guiding reverses after flip'
         Checked = True
         ParentShowHint = False
@@ -813,10 +851,10 @@ object Form1: TForm1
       end
       object NSswapped1: TCheckBox
         Left = 216
-        Height = 19
+        Height = 23
         Hint = 'North South  (δ) pulse guiding swapped'
         Top = 80
-        Width = 161
+        Width = 184
         Caption = 'δ  pulse guiding swapped ↕'
         ParentShowHint = False
         ShowHint = True
@@ -825,11 +863,11 @@ object Form1: TForm1
       end
       object mount_type1: TComboBox
         Left = 16
-        Height = 23
+        Height = 27
         Hint = 'Labels in the artificial image'
         Top = 72
         Width = 184
-        ItemHeight = 15
+        ItemHeight = 19
         ItemIndex = 1
         Items.Strings = (
           'Fork mount'
@@ -846,21 +884,21 @@ object Form1: TForm1
       end
       object groupbox_mount_errors1: TGroupBox
         Left = 16
-        Height = 200
+        Height = 216
         Top = 216
-        Width = 464
+        Width = 480
         Caption = 'Additional mount errors (for artificial image only)'
-        ClientHeight = 180
-        ClientWidth = 460
+        ClientHeight = 192
+        ClientWidth = 476
         TabOrder = 6
         object mount_noise1: TComboBox
           Left = 120
-          Height = 23
+          Height = 27
           Hint = 'Noise due to mouse movement and seeing'
           Top = 8
           Width = 320
           DropDownCount = 40
-          ItemHeight = 15
+          ItemHeight = 19
           ItemIndex = 0
           Items.Strings = (
             'None'
@@ -876,12 +914,12 @@ object Form1: TForm1
         end
         object mount_periodic_error1: TComboBox
           Left = 120
-          Height = 23
+          Height = 27
           Hint = 'Mount period error'
           Top = 48
           Width = 320
           DropDownCount = 40
-          ItemHeight = 15
+          ItemHeight = 19
           ItemIndex = 0
           Items.Strings = (
             'None'
@@ -902,38 +940,38 @@ object Form1: TForm1
         end
         object backlash_mount1: TCheckBox
           Left = 24
-          Height = 19
+          Height = 23
           Top = 88
-          Width = 154
+          Width = 175
           Caption = 'Backlash 100 milliseconds'
           TabOrder = 2
         end
         object Label8: TLabel
           Left = 24
-          Height = 15
+          Height = 19
           Top = 13
-          Width = 30
+          Width = 34
           Caption = 'Noise'
           ParentColor = False
         end
         object Label28: TLabel
           Left = 24
-          Height = 15
+          Height = 19
           Top = 48
-          Width = 71
+          Width = 81
           Caption = 'Periodic error'
           ParentColor = False
         end
         object groupbox_mount_offset1: TGroupBox
           Left = 264
-          Height = 87
+          Height = 91
           Top = 88
-          Width = 153
+          Width = 171
           AutoSize = True
           BorderSpacing.InnerBorder = 5
           Caption = 'Mount incidental offset'
           ClientHeight = 67
-          ClientWidth = 149
+          ClientWidth = 167
           TabOrder = 3
           object buttonEast1: TButton
             Left = 0
@@ -986,35 +1024,35 @@ object Form1: TForm1
         end
         object labelerrorRA1: TLabel
           Left = 24
-          Height = 15
+          Height = 19
           Top = 136
-          Width = 38
+          Width = 46
           Caption = 'Error α:'
           ParentColor = False
         end
         object labelerrorDEC1: TLabel
           Left = 24
-          Height = 15
+          Height = 19
           Top = 160
-          Width = 38
+          Width = 45
           Caption = 'Error δ:'
           ParentColor = False
         end
         object seeingRA1: TLabel
           Left = 80
-          Height = 15
+          Height = 19
           Hint = 'The seeing and period errors introduced.'
           Top = 136
-          Width = 15
+          Width = 18
           Caption = '---'
           ParentColor = False
         end
         object seeingDEC1: TLabel
           Left = 80
-          Height = 15
+          Height = 19
           Hint = 'The seeing and period errors introduced.'
           Top = 160
-          Width = 15
+          Width = 18
           Caption = '---'
           ParentColor = False
         end
@@ -1032,7 +1070,7 @@ object Form1: TForm1
         ParentBackground = False
         ParentColor = False
         ParentShowHint = False
-        PopupMenu = popupmenu_sky1
+        PopupMenu = popupmenu_map1
         TabOrder = 7
         OnMouseLeave = panel_sky1MouseLeave
         OnMouseMove = panel_sky1MouseMove
@@ -1042,7 +1080,8 @@ object Form1: TForm1
           Height = 10
           Top = 53
           Width = 10
-          Brush.Color = clDefault
+          Brush.Color = clNone
+          Brush.Style = bsClear
           ParentShowHint = False
           Pen.Color = clRed
           Pen.Width = 2
@@ -1051,79 +1090,88 @@ object Form1: TForm1
           ShowHint = True
           Visible = False
         end
+        object park_label1: TLabel
+          Left = 136
+          Height = 19
+          Top = 40
+          Width = 101
+          Caption = 'Mount is parked'
+          Enabled = False
+          Visible = False
+        end
       end
       object Label9: TLabel
         Left = 544
-        Height = 15
+        Height = 19
         Top = 256
-        Width = 6
+        Width = 8
         Caption = '0'
         ParentColor = False
       end
       object Label29: TLabel
         Left = 904
-        Height = 15
+        Height = 19
         Top = 256
-        Width = 12
+        Width = 16
         Caption = '24'
         ParentColor = False
       end
       object Label30: TLabel
         Left = 528
-        Height = 15
+        Height = 19
         Top = 264
-        Width = 12
+        Width = 16
         Caption = '90'
         ParentColor = False
       end
       object Label31: TLabel
         Left = 523
-        Height = 15
+        Height = 19
         Top = 446
-        Width = 17
+        Width = 22
         Caption = '-90'
         ParentColor = False
       end
       object mouse_position1: TLabel
         Left = 688
-        Height = 15
+        Height = 19
         Top = 256
-        Width = 63
+        Width = 81
         Caption = '12:00. 90:00 '
         ParentColor = False
       end
       object groupbox_polar_alignment_error1: TGroupBox
         Left = 16
-        Height = 112
+        Height = 110
         Top = 104
-        Width = 464
+        Width = 480
         Caption = 'Polar alignment error'
-        ClientHeight = 92
-        ClientWidth = 460
+        ClientHeight = 86
+        ClientWidth = 476
         TabOrder = 8
         object Label_azimuth1: TLabel
-          Left = 232
-          Height = 15
-          Top = 64
-          Width = 100
+          Left = 240
+          Height = 19
+          Top = 59
+          Width = 116
           Caption = 'Azimuth ↺ error[''] '
           Enabled = False
           ParentColor = False
         end
         object Label_elevation1: TLabel
-          Left = 232
-          Height = 15
-          Top = 36
-          Width = 90
+          Left = 240
+          Height = 19
+          Top = 31
+          Width = 104
           Caption = 'Elevation error[''] '
           Enabled = False
           ParentColor = False
         end
         object latitude1: TEdit
-          Left = 360
-          Height = 23
+          Left = 368
+          Height = 27
           Hint = 'Latitude of the observer'
-          Top = 36
+          Top = 31
           Width = 48
           Enabled = False
           ParentColor = True
@@ -1134,10 +1182,10 @@ object Form1: TForm1
           OnExit = latitude1Exit
         end
         object longitude1: TEdit
-          Left = 360
-          Height = 23
+          Left = 368
+          Height = 27
           Hint = 'Longitude of the observer. For west enter negative values. For east enter positive values.'
-          Top = 64
+          Top = 59
           Width = 48
           Enabled = False
           ParentColor = True
@@ -1148,39 +1196,39 @@ object Form1: TForm1
           OnExit = longitude1Exit
         end
         object Label_longitude1: TLabel
-          Left = 416
-          Height = 15
-          Top = 64
-          Width = 24
+          Left = 424
+          Height = 19
+          Top = 59
+          Width = 27
           Caption = 'long'
           Enabled = False
           ParentColor = False
         end
         object Label_latitude1: TLabel
-          Left = 416
-          Height = 15
-          Top = 36
-          Width = 13
+          Left = 424
+          Height = 19
+          Top = 31
+          Width = 15
           Caption = 'lat'
           Enabled = False
           ParentColor = False
         end
         object slew_to_test_position1: TButton
-          Left = 8
-          Height = 25
+          Left = 0
+          Height = 29
           Hint = 'Equatorial mount. weight down, one degree from celestial pole'
-          Top = 36
-          Width = 141
+          Top = 31
+          Width = 159
           AutoSize = True
           Caption = 'Slew to celestial north'
           TabOrder = 2
           OnClick = slew_to_test_position1Click
         end
         object elevation_error1: TFloatSpinEdit
-          Left = 160
-          Height = 23
+          Left = 168
+          Height = 27
           Hint = 'Elevation (latitude) error of the mount in arc minutes.'
-          Top = 36
+          Top = 31
           Width = 65
           DecimalPlaces = 1
           Enabled = False
@@ -1191,10 +1239,10 @@ object Form1: TForm1
           TabOrder = 3
         end
         object azimuth_error1: TFloatSpinEdit
-          Left = 160
-          Height = 23
+          Left = 168
+          Height = 27
           Hint = 'Azimuth error of the mount in arc minutes.'
-          Top = 64
+          Top = 59
           Width = 65
           DecimalPlaces = 1
           Enabled = False
@@ -1205,46 +1253,46 @@ object Form1: TForm1
           TabOrder = 4
         end
         object polar_alignment_error1: TCheckBox
-          Left = 8
-          Height = 19
+          Left = 0
+          Height = 23
           Hint = 'Polar alignment error mount'
-          Top = 5
-          Width = 169
+          Top = 0
+          Width = 193
           Caption = 'Polar alignment error mount'
           TabOrder = 5
           OnChange = polar_alignment_error1Change
         end
         object polar_error_describtion1: TLabel
-          Left = 232
-          Height = 15
-          Top = 8
-          Width = 15
+          Left = 224
+          Height = 19
+          Top = 3
+          Width = 18
           Caption = '---'
           ParentColor = False
         end
       end
       object ra_jnow1: TLabel
         Left = 872
-        Height = 15
+        Height = 19
         Top = 160
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
       end
       object dec_jnow1: TLabel
         Left = 872
-        Height = 15
+        Height = 19
         Top = 181
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
       end
       object telescope_positionJnow_ra1: TLabel
         Left = 872
-        Height = 15
+        Height = 19
         Hint = 'Looking at α position and error. Note the simulation can not make steps smaller then one pixel.'
         Top = 208
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
         ParentShowHint = False
@@ -1252,10 +1300,10 @@ object Form1: TForm1
       end
       object telescope_positionJnow_dec1: TLabel
         Left = 872
-        Height = 15
+        Height = 19
         Hint = 'Looking at α position and error. Note the simulation can not make make steps smaller then one pixel.'
         Top = 228
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
         ParentShowHint = False
@@ -1263,28 +1311,28 @@ object Form1: TForm1
       end
       object Label11: TLabel
         Left = 832
-        Height = 15
+        Height = 19
         Top = 160
-        Width = 27
+        Width = 31
         Caption = 'Jnow'
         ParentColor = False
       end
       object Label32: TLabel
         Left = 832
-        Height = 15
+        Height = 19
         Top = 208
-        Width = 27
+        Width = 31
         Caption = 'Jnow'
         ParentColor = False
       end
       object equinox_communication1: TComboBox
         Left = 832
-        Height = 23
+        Height = 27
         Hint = 'Equinox of the communication with the mount. Fixed for external mounts'
         Top = 64
         Width = 80
         Enabled = False
-        ItemHeight = 15
+        ItemHeight = 19
         ItemIndex = 0
         Items.Strings = (
           'Jnow'
@@ -1301,17 +1349,24 @@ object Form1: TForm1
       end
       object Label33: TLabel
         Left = 544
-        Height = 15
+        Height = 19
         Top = 64
-        Width = 240
+        Width = 274
         Caption = 'Mount communication in coordinate system:'
         ParentColor = False
+      end
+      object ra_rate1: TLabel
+        Left = 832
+        Height = 19
+        Top = 120
+        Width = 46
+        Caption = 'Ra rate:'
       end
     end
     object tab_focuser1: TTabSheet
       Caption = 'Focuser'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       ImageIndex = 3
       object connect_focuser1: TBitBtn
         Left = 16
@@ -1325,34 +1380,34 @@ object Form1: TForm1
       end
       object Label14: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 112
-        Width = 102
+        Width = 114
         Caption = 'Position indication:'
         ParentColor = False
       end
       object Label13: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 144
-        Width = 71
+        Width = 81
         Caption = 'Real position:'
         ParentColor = False
       end
       object focusfactor1: TLabel
         Left = 136
-        Height = 15
+        Height = 19
         Top = 182
-        Width = 20
+        Width = 24
         Caption = '----'
         ParentColor = False
       end
       object focuser_position1: TLabel
         Left = 136
-        Height = 15
+        Height = 19
         Hint = 'The position indicated'
         Top = 112
-        Width = 43
+        Width = 49
         Caption = 'position'
         ParentColor = False
         ParentShowHint = False
@@ -1360,10 +1415,10 @@ object Form1: TForm1
       end
       object real_position1: TLabel
         Left = 136
-        Height = 15
+        Height = 19
         Hint = 'The actual position'
         Top = 144
-        Width = 43
+        Width = 49
         Caption = 'position'
         ParentColor = False
         ParentShowHint = False
@@ -1371,10 +1426,10 @@ object Form1: TForm1
       end
       object arrowleft1: TLabel
         Left = 240
-        Height = 15
+        Height = 19
         Hint = 'Difference between indication and real focuser position as caused by backlash.'
         Top = 112
-        Width = 11
+        Width = 12
         Caption = '🢁'
         ParentColor = False
         ParentFont = False
@@ -1383,7 +1438,7 @@ object Form1: TForm1
       end
       object focus_at1: TEdit
         Left = 136
-        Height = 23
+        Height = 27
         Hint = 'Best focus position for image.'
         Top = 72
         Width = 72
@@ -1396,15 +1451,15 @@ object Form1: TForm1
       end
       object Label6: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 72
-        Width = 47
+        Width = 54
         Caption = 'Focus at:'
         ParentColor = False
       end
       object focus_range1: TEdit
         Left = 360
-        Height = 23
+        Height = 27
         Hint = 'Focus range. If the focuser is this value from the focus, then the  HFD will be 10.'
         Top = 72
         Width = 80
@@ -1417,23 +1472,23 @@ object Form1: TForm1
       end
       object focuser_position2: TLabel
         Left = 296
-        Height = 15
+        Height = 19
         Top = 72
-        Width = 41
+        Width = 49
         Caption = 'range ±'
         ParentColor = False
       end
       object focuser_position3: TLabel
         Left = 448
-        Height = 15
+        Height = 19
         Top = 72
-        Width = 60
+        Width = 75
         Caption = '≜ HFD ± 10'
         ParentColor = False
       end
       object backlash1: TEdit
         Left = 360
-        Height = 23
+        Height = 27
         Hint = 'Backlash of the focuser. Set to zero to switch off.'
         Top = 112
         Width = 80
@@ -1446,17 +1501,17 @@ object Form1: TForm1
       end
       object focuser_position6: TLabel
         Left = 296
-        Height = 15
+        Height = 19
         Top = 112
-        Width = 49
+        Width = 55
         Caption = 'Backlash:'
         ParentColor = False
       end
       object focuser_ascom1: TRadioButton
         Left = 16
-        Height = 19
+        Height = 23
         Top = 8
-        Width = 769
+        Width = 886
         Caption = 'Ascom interface. The focuser will be an external simulator or a real focuser. Select in your imaging program the same focuser as for the button.'
         Checked = True
         TabOrder = 4
@@ -1464,32 +1519,32 @@ object Form1: TForm1
       end
       object focuser_alpaca1: TRadioButton
         Left = 16
-        Height = 19
+        Height = 23
         Top = 32
-        Width = 722
+        Width = 823
         Caption = 'Alpaca interface. The focuser will be simulated inside this program.  Select in your imaging program "focuser_sky_simulator (Alpaca)".'
         TabOrder = 5
         OnChange = focuser_alpaca1Change
       end
       object Label20: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 182
-        Width = 68
+        Width = 77
         Caption = 'Focus factor:'
         ParentColor = False
       end
     end
     object tab_rotator1: TTabSheet
       Caption = 'Rotator'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       ImageIndex = 3
       object rotator_ascom1: TRadioButton
         Left = 16
-        Height = 19
+        Height = 23
         Top = 8
-        Width = 107
+        Width = 118
         Caption = 'Ascom interface.'
         Checked = True
         TabOrder = 0
@@ -1497,19 +1552,19 @@ object Form1: TForm1
       end
       object rotator_alpaca1: TRadioButton
         Left = 16
-        Height = 19
+        Height = 23
         Top = 32
-        Width = 370
+        Width = 421
         Caption = 'Alpaca interface. The focuser will be simulated inside this program.'
         TabOrder = 1
         OnChange = rotator_alpaca1Change
       end
       object rotator_position1: TLabel
         Left = 144
-        Height = 15
+        Height = 19
         Hint = 'Rotator position'
         Top = 72
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
         ParentShowHint = False
@@ -1517,10 +1572,10 @@ object Form1: TForm1
       end
       object rotator_setpoint1: TLabel
         Left = 144
-        Height = 15
+        Height = 19
         Hint = 'Rotator setpoint'
         Top = 96
-        Width = 15
+        Width = 18
         Caption = '---'
         ParentColor = False
         ParentShowHint = False
@@ -1528,26 +1583,26 @@ object Form1: TForm1
       end
       object rotator_reverse1: TCheckBox
         Left = 240
-        Height = 19
+        Height = 23
         Hint = 'Rotator reverse action'
         Top = 72
-        Width = 58
+        Width = 65
         Caption = 'Reverse'
         TabOrder = 2
       end
       object Label21: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 72
-        Width = 91
+        Width = 106
         Caption = 'Rotator position: '
         ParentColor = False
       end
       object Label22: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 96
-        Width = 85
+        Width = 100
         Caption = 'Rotator setpoint'
         ParentColor = False
       end
@@ -1562,10 +1617,254 @@ object Form1: TForm1
         TabOrder = 3
       end
     end
+    object tab_filterwheel1: TTabSheet
+      Caption = 'Filter wheel'
+      ClientHeight = 510
+      ClientWidth = 1345
+      ImageIndex = 3
+      object Label37: TLabel
+        Left = 224
+        Height = 19
+        Top = 64
+        Width = 203
+        Caption = 'Focus offset (rarely implemented)'
+      end
+      object Label38: TLabel
+        Left = 96
+        Height = 19
+        Top = 64
+        Width = 68
+        Caption = 'Filter name'
+      end
+      object offset1: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 88
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        Text = '0'
+      end
+      object offset2: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 120
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 1
+        Text = '0'
+      end
+      object offset3: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 152
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 2
+        Text = '0'
+      end
+      object offset4: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 184
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 3
+        Text = '0'
+      end
+      object offset5: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 216
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 4
+        Text = '0'
+      end
+      object offset6: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 248
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 5
+        Text = '0'
+      end
+      object offset7: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 280
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 6
+        Text = '0'
+      end
+      object filter_1: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 88
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 7
+        Text = 'Luminance'
+      end
+      object filter_2: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 120
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 8
+        Text = 'Red'
+      end
+      object filter_3: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 152
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 9
+        Text = 'Green'
+      end
+      object filter_4: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 184
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 10
+        Text = 'Blue'
+      end
+      object filter_5: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 216
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 11
+        Text = 'H-alpha'
+      end
+      object filter_6: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 248
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 12
+        Text = 'SII'
+      end
+      object filter_7: TEdit
+        Left = 96
+        Height = 27
+        Hint = 'Enter here the filter name'
+        Top = 280
+        Width = 112
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 13
+        Text = 'O3'
+      end
+      object UpDown_1: TUpDown
+        Left = 294
+        Height = 27
+        Top = 88
+        Width = 17
+        Associate = offset1
+        Min = 0
+        Position = 0
+        TabOrder = 14
+      end
+      object UpDown_2: TUpDown
+        Left = 294
+        Height = 27
+        Top = 120
+        Width = 17
+        Associate = offset2
+        Min = 0
+        Position = 0
+        TabOrder = 15
+      end
+      object UpDown_3: TUpDown
+        Left = 294
+        Height = 27
+        Top = 152
+        Width = 17
+        Associate = offset3
+        Min = 0
+        Position = 0
+        TabOrder = 16
+      end
+      object UpDown_4: TUpDown
+        Left = 294
+        Height = 27
+        Top = 184
+        Width = 17
+        Associate = offset4
+        Min = 0
+        Position = 0
+        TabOrder = 17
+      end
+      object UpDown_5: TUpDown
+        Left = 294
+        Height = 27
+        Top = 216
+        Width = 17
+        Associate = offset5
+        Min = 0
+        Position = 0
+        TabOrder = 18
+      end
+      object UpDown_6: TUpDown
+        Left = 294
+        Height = 27
+        Top = 248
+        Width = 17
+        Associate = offset6
+        Min = 0
+        Position = 0
+        TabOrder = 19
+      end
+      object UpDown_7: TUpDown
+        Left = 294
+        Height = 27
+        Top = 280
+        Width = 17
+        Associate = offset7
+        Min = 0
+        Position = 0
+        TabOrder = 20
+      end
+    end
     object tab_Image1: TTabSheet
       Caption = 'Image'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       object Image1: TImage
         Left = -4
         Height = 456
@@ -1578,44 +1877,45 @@ object Form1: TForm1
         OnMouseUp = Image1MouseUp
         OnMouseWheelDown = Image1MouseWheelDown
         OnMouseWheelUp = Image1MouseWheelUp
-        PopupMenu = PopupMenu_map1
+        PopupMenu = PopupMenu_image1
         Proportional = True
         Stretch = True
       end
       object Label26: TLabel
         Left = 560
-        Height = 15
+        Height = 19
         Top = 0
-        Width = 240
+        Width = 278
         Caption = 'See popup menu to manually save this image'
         ParentColor = False
       end
     end
     object tab_alpaca1: TTabSheet
       Caption = 'Alpaca'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       object alpaca_groupBox1: TGroupBox
         Left = 48
-        Height = 43
-        Top = 16
-        Width = 1200
+        Height = 51
+        Top = 8
+        Width = 1013
+        AutoSize = True
         Caption = 'Alpaca server details'
-        ClientHeight = 23
-        ClientWidth = 1196
+        ClientHeight = 27
+        ClientWidth = 1009
         TabOrder = 0
         object Label16: TLabel
           Left = 0
-          Height = 15
+          Height = 19
           Top = 4
-          Width = 35
+          Width = 39
           Alignment = taRightJustify
           Caption = 'http://'
           ParentColor = False
         end
         object alpaca_adress1: TEdit
           Left = 64
-          Height = 23
+          Height = 27
           Hint = 'Alpaca server address'
           Top = 0
           Width = 696
@@ -1627,10 +1927,10 @@ object Form1: TForm1
         end
         object alpaca_port_number1: TLabel
           Left = 816
-          Height = 15
+          Height = 19
           Hint = '7624 is the standard port number for a INDI server'
           Top = 0
-          Width = 70
+          Width = 80
           Alignment = taRightJustify
           Caption = 'Port number:'
           ParentColor = False
@@ -1639,7 +1939,7 @@ object Form1: TForm1
         end
         object alpaca_port1: TEdit
           Left = 912
-          Height = 23
+          Height = 27
           Hint = 'Alpaca port number. Default is 11111.'
           Top = 0
           Width = 97
@@ -1652,9 +1952,9 @@ object Form1: TForm1
       end
       object Memo1: TMemo
         Left = -4
-        Height = 391
+        Height = 423
         Top = 88
-        Width = 992
+        Width = 1353
         Anchors = [akTop, akLeft, akRight, akBottom]
         Lines.Strings = (
           'Alpaca log'
@@ -1665,34 +1965,34 @@ object Form1: TForm1
       end
       object Server_Info: TLabel
         Left = 16
-        Height = 15
+        Height = 19
         Top = 64
-        Width = 58
+        Width = 68
         Caption = 'Server_Info'
         ParentColor = False
       end
       object Discovery_Info: TLabel
         Left = 264
-        Height = 15
+        Height = 19
         Top = 65
-        Width = 77
+        Width = 89
         Caption = 'Discovery_Info'
         ParentColor = False
       end
       object activate_log1: TCheckBox
         Left = 536
-        Height = 19
+        Height = 23
         Top = 61
-        Width = 120
+        Width = 134
         Caption = 'Activate Alpaca log'
         TabOrder = 2
       end
       object activate_filelog1: TCheckBox
         Left = 720
-        Height = 19
+        Height = 23
         Hint = 'Write alpaca_log.txt to your document folder.'
         Top = 61
-        Width = 141
+        Width = 158
         Caption = 'Write file alpaca_log.txt'
         ParentShowHint = False
         ShowHint = True
@@ -1700,10 +2000,10 @@ object Form1: TForm1
       end
       object clear_log_button1: TButton
         Left = 1104
-        Height = 25
+        Height = 29
         Hint = 'Clears log and log file.'
         Top = 61
-        Width = 73
+        Width = 80
         AutoSize = True
         Caption = 'Clear log'
         ParentShowHint = False
@@ -1711,9 +2011,9 @@ object Form1: TForm1
         TabOrder = 4
         OnClick = clear_log_button1Click
       end
-      object filter1: TEdit
+      object filter_alpaca_text1: TEdit
         Left = 1008
-        Height = 23
+        Height = 27
         Hint = 'Filter the message below with this text. Case sensitive'
         Top = 61
         Width = 80
@@ -1724,22 +2024,22 @@ object Form1: TForm1
       end
       object Label17: TLabel
         Left = 912
-        Height = 15
+        Height = 19
         Top = 64
-        Width = 69
+        Width = 80
         Caption = 'Filter on text:'
         ParentColor = False
       end
     end
     object tab_log1: TTabSheet
       Caption = 'Log'
-      ClientHeight = 478
-      ClientWidth = 984
+      ClientHeight = 510
+      ClientWidth = 1345
       object Memo2: TMemo
         Left = 0
-        Height = 478
+        Height = 510
         Top = 0
-        Width = 984
+        Width = 1345
         Align = alClient
         ParentColor = True
         ScrollBars = ssAutoBoth
@@ -1750,11 +2050,11 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Height = 40
-    Top = 506
-    Width = 992
+    Top = 542
+    Width = 1353
     Align = alBottom
     ClientHeight = 40
-    ClientWidth = 992
+    ClientWidth = 1353
     Constraints.MaxHeight = 40
     TabOrder = 2
     object start_button1: TButton
@@ -1771,9 +2071,9 @@ object Form1: TForm1
     end
     object imagecounter1: TLabel
       Left = 368
-      Height = 15
+      Height = 19
       Top = 8
-      Width = 20
+      Width = 24
       Caption = '----'
       ParentColor = False
       WordWrap = True
@@ -1812,17 +2112,17 @@ object Form1: TForm1
     end
   end
   object SelectDirectoryDialog1: TSelectDirectoryDialog
-    Left = 760
-    Top = 456
+    Left = 992
+    Top = 432
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 656
-    Top = 456
+    Left = 992
+    Top = 320
   end
   object PopupMenu_memo1: TPopupMenu
-    Left = 696
-    Top = 456
+    Left = 992
+    Top = 384
     object Menufind1: TMenuItem
       Caption = 'Find'
       ShortCut = 16454
@@ -1847,8 +2147,9 @@ object Form1: TForm1
     end
   end
   object ImageList_colors: TImageList
-    Left = 616
-    Top = 456
+    Scaled = True
+    Left = 992
+    Top = 256
     Bitmap = {
       4C7A070000001000000010000000760000000000000078DAEDD6410AC0200C44
       D1DC5C8FE6CD52372E6A29B50ED4623EE1ADE25430523473330021E56C0082E2
@@ -1857,10 +2158,10 @@ object Form1: TForm1
       853C79F27A5E71004D941C0D
     }
   end
-  object PopupMenu_map1: TPopupMenu
-    OnPopup = PopupMenu_map1Popup
-    Left = 848
-    Top = 408
+  object PopupMenu_image1: TPopupMenu
+    OnPopup = PopupMenu_image1Popup
+    Left = 992
+    Top = 144
     object slew_to_mouse_pos_image1: TMenuItem
       Caption = 'Slew to mouse position'
       OnClick = slew_to_mouse_pos_image1Click
@@ -1916,12 +2217,13 @@ object Form1: TForm1
   end
   object SaveDialog1: TSaveDialog
     FileName = 'sky_image'
-    Left = 576
-    Top = 456
+    Left = 992
+    Top = 200
   end
-  object popupmenu_sky1: TPopupMenu
-    Left = 848
-    Top = 352
+  object popupmenu_map1: TPopupMenu
+    OnPopup = popupmenu_map1Popup
+    Left = 992
+    Top = 80
     object menu_slew_to1: TMenuItem
       Caption = 'Slew to this position'
       OnClick = menu_slew_to1Click
@@ -1934,6 +2236,19 @@ object Form1: TForm1
     object slew_to_jnow1: TMenuItem
       Caption = 'Specify new mount JNow position (α, δ)'
       OnClick = mount_goto1Click
+    end
+    object Separator8: TMenuItem
+      Caption = '-'
+    end
+    object parked1: TMenuItem
+      Caption = 'Park/Unpark'
+      Hint = 'Park/unpark the telescope'
+      OnClick = parked1Click
+    end
+    object tracking1: TMenuItem
+      Caption = 'Tracking'
+      Hint = 'Set tracking on/off'
+      OnClick = tracking1Click
     end
     object Separator5: TMenuItem
       Caption = '-'
@@ -1956,7 +2271,7 @@ object Form1: TForm1
     end
   end
   object OpenDialog1: TOpenDialog
-    Left = 808
-    Top = 456
+    Left = 992
+    Top = 480
   end
 end

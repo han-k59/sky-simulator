@@ -45,8 +45,8 @@ type
       function  binx: integer; virtual; abstract;
       function  biny: integer; virtual; abstract;
       function  readoutmode: integer; virtual; abstract;
-      function  pixelsizex: integer; virtual; abstract;
-      function  pixelsizey: integer; virtual; abstract;
+      function  pixelsizex: double; virtual; abstract;
+      function  pixelsizey: double; virtual; abstract;
       function  sensorname: string; virtual; abstract;
       function  maxadu: integer; virtual; abstract;
       function  bayeroffsetX: integer; virtual; abstract;
@@ -220,12 +220,12 @@ begin
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='pixelsizex' then begin
-    i:=pixelsizex;
-    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    x:=pixelsizex;
+    result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='pixelsizey' then begin
-    i:=pixelsizeY;
-    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    x:=pixelsizeY;
+    result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='sensorname' then begin
     value:=sensorname;

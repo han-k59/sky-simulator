@@ -1133,11 +1133,11 @@ begin
   height2:=strtoint(form1.height_pixels1.text);{height}
   width2:=strtoint(form1.width_pixels1.text);{width}
 
-  height_arcmin:=strtofloat(form1.height1.text);
+  height_arcmin:=strtofloat2(form1.height_arcmin1.text);
 
   width_arcmin:=height_arcmin*width2/height2;
 
-  form1.width1.caption:=inttostr(round(width_arcmin));
+//  form1.width1.caption:=inttostr(round(width_arcmin));
   form1.image1.picture.Bitmap.Width:=width2;
   form1.image1.picture.Bitmap.Height:=height2;
 
@@ -2230,6 +2230,7 @@ var
    xLine :  PByteArray;
    min_val : double;
 begin
+  if img_array=nil then exit;
   w:=form1.image1.picture.Bitmap.Width;
   h:=form1.image1.picture.Bitmap.Height;
 

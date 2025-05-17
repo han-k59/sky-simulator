@@ -48,10 +48,11 @@ var
     {24}('PLTSOLVD=                    T / Astrometric solution by Sky Simulator          '),
     {25}('SWCREATE=  Sky Simulator for Ascom and Alpaca                                   '),
     {26}('COMMENT                                                                         '),
-    {27}('COMMENT                                                                         '),
-    {28}('COMMENT                                                                         '),
-    {29}('COMMENT                                                                         '),
+    {27}('XPIXSZ  =                  0.0 / [um] Pixel Size X                              '),
+    {28}('YPIXSZ  =                  0.0 / [um] Pixel Size Y                              '),
+    {29}('FOCALLEN=                    0 / [mm] Telescope focal length                    '),
     {30}('END                                                                             '));
+
 
 procedure setvalue(index : integer; value: single);
 var
@@ -59,7 +60,7 @@ var
   s2,s : string;
 begin
   s2:=head[index];
-  for i:=11 to 30 do s2[i]:=' ';//clear contains especially when integers change to floats
+  for i:=11 to 30 do s2[i]:=' ';//clear contains. Especially when integers change to floats
   if frac(value)=0 then
     str(round(value),s) //integers
   else
@@ -135,11 +136,13 @@ begin
         head[27]:='BAYERPAT= '+char(39)+'BGGR'+char(39)+'               / Bayer color pattern'; //will be extended to 80 chars later
 
     head[28]:='ROWORDER= '+char(39)+'BOTTOM-UP'+char(39)+'          / Bottom row image is the first row in the file.'; //will be extended to 80 chars later
+    head[29]:='COMMENT ';//will be extended to 80 chars later
   end
   else
   begin
-    head[27]:='COMMENT ';//will be extended to 80 chars later
-    head[28]:='COMMENT ';//will be extended to 80 chars later
+    setvalue(27,strtofloat2(form1.pixelsizemicrometer1.text));
+    setvalue(28,strtofloat2(form1.pixelsizemicrometer1.text));
+    setvalue(29,strtoint(form1.focallength1.text));
   end;
 
 
@@ -257,11 +260,13 @@ begin
         head[27]:='BAYERPAT= '+char(39)+'BGGR'+char(39)+'               / Bayer color pattern'; //will be extended to 80 chars later
 
     head[28]:='ROWORDER= '+char(39)+'BOTTOM-UP'+char(39)+'          / Bottom row image is the first row in the file.'; //will be extended to 80 chars later
+    head[29]:='COMMENT ';//will be extended to 80 chars later
   end
   else
   begin
-    head[27]:='COMMENT ';//will be extended to 80 chars later
-    head[28]:='COMMENT ';//will be extended to 80 chars later
+    setvalue(27,strtofloat2(form1.pixelsizemicrometer1.text));
+    setvalue(28,strtofloat2(form1.pixelsizemicrometer1.text));
+    setvalue(29,strtoint(form1.focallength1.text));
   end;
 
 

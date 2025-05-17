@@ -7,13 +7,13 @@ uses
   cthreads,
   {$ENDIF}//{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, sky_simulator_main, laz_synapse  { you can add units after this };
+  Forms, sky_simulator_main,
+sky_simulator_unit_save_image;
 
 {$R *.res}
 
 begin
   RequireDerivedFormResource:=True;
-  Application.Title:='sky_simulator';
   Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TForm1, Form1);

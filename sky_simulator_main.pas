@@ -42,9 +42,9 @@ uses
   ExtCtrls, ComCtrls, Buttons,
   math,{for sincos}
   lcltype, {Trgbtriple}
-  Variants, clipbrd, Spin, sky_annotation,
+  Variants, clipbrd, Spin, Grids, sky_annotation,
   sky_simulator_unit_save_image,
-  cu_alpacaserver, cu_alpacadevice, alpaca_mount_protocol, alpaca_camera_protocol,alpaca_guidecamera_protocol,alpaca_focuser_protocol,alpaca_rotator_protocol, Types;
+  cu_alpacaserver, cu_alpacadevice, alpaca_mount_protocol, alpaca_camera_protocol,alpaca_guidecamera_protocol,alpaca_focuser_protocol,alpaca_filterwheel_protocol,alpaca_rotator_protocol, Types;
 
 
 type
@@ -63,13 +63,39 @@ type
     Button1: TButton;
     file_from_disk_selected1: TRadioButton;
     GroupBox_camera_chooser1: TGroupBox;
+    parked1: TMenuItem;
+    Separator8: TMenuItem;
+    tracking1: TMenuItem;
+    pixelsizemicrometer1: TEdit;
     j2000_to_Jnow1: TMenuItem;
     Label18: TLabel;
     Label25: TLabel;
+    Label27: TLabel;
     Label34: TLabel;
     Label35: TLabel;
     File_from_disk2: TLabel;
     Label36: TLabel;
+    Label37: TLabel;
+    Label38: TLabel;
+    Label39: TLabel;
+    message1: TLabel;
+    park_label1: TLabel;
+    focallength1: TEdit;
+    ra_rate1: TLabel;
+    offset1: TEdit;
+    offset2: TEdit;
+    offset3: TEdit;
+    offset4: TEdit;
+    offset5: TEdit;
+    offset6: TEdit;
+    offset7: TEdit;
+    filter_1: TEdit;
+    filter_2: TEdit;
+    filter_3: TEdit;
+    filter_4: TEdit;
+    filter_5: TEdit;
+    filter_6: TEdit;
+    filter_7: TEdit;
     labelerrorRA1: TLabel;
     labelerrorDEC1: TLabel;
     manipulations1: TComboBox;
@@ -98,6 +124,7 @@ type
     dec_jnow1: TLabel;
     ra_jnow1: TLabel;
     slew_to_test_position1: TButton;
+    tab_filterwheel1: TTabSheet;
     tab_alpaca1: TTabSheet;
     Angle2: TEdit;
     arrowleft1: TLabel;
@@ -108,7 +135,6 @@ type
     buttonNorth1: TButton;
     buttonSouth1: TButton;
     buttonWest1: TButton;
-    calculator1: TButton;
     connect_focuser1: TBitBtn;
     connect_mount1: TBitBtn;
     connect_rotator1: TBitBtn;
@@ -138,7 +164,7 @@ type
     GroupBox1: TGroupBox;
     groupbox_mount_errors1: TGroupBox;
     groupbox_mount_offset1: TGroupBox;
-    height1: TEdit;
+    height_arcmin1: TEdit;
     height_pixels1: TEdit;
     hotpixels1: TComboBox;
     imagecounter1: TLabel;
@@ -161,7 +187,6 @@ type
     Label23: TLabel;
     Label24: TLabel;
     Label26: TLabel;
-    Label27: TLabel;
     Label28: TLabel;
     Label29: TLabel;
     Label30: TLabel;
@@ -175,7 +200,7 @@ type
     mouse_position1: TLabel;
     Label8: TLabel;
     Label9: TLabel;
-    popupmenu_sky1: TPopupMenu;
+    popupmenu_map1: TPopupMenu;
     telescope_cursor1: TShape;
     mount_noise1: TComboBox;
     mount_periodic_error1: TComboBox;
@@ -196,7 +221,7 @@ type
     mount_type1: TComboBox;
     NSswapped1: TCheckBox;
     Panel1: TPanel;
-    filter1: TEdit;
+    filter_alpaca_text1: TEdit;
     Label17: TLabel;
     Memo2: TMemo;
     menucopy1: TMenuItem;
@@ -205,7 +230,7 @@ type
     MenuItem23: TMenuItem;
     plotted_info1: TComboBox;
     pointing1: TLabel;
-    PopupMenu_map1: TPopupMenu;
+    PopupMenu_image1: TPopupMenu;
     PopupMenu_memo1: TPopupMenu;
     ra1: TLabel;
     real_position1: TLabel;
@@ -251,7 +276,14 @@ type
     telescope_positionJnow_dec1: TLabel;
     Timer1: TTimer;
     UpDown1: TUpDown;
-    width1: TLabel;
+    UpDown_1: TUpDown;
+    UpDown_2: TUpDown;
+    UpDown_3: TUpDown;
+    UpDown_4: TUpDown;
+    UpDown_5: TUpDown;
+    UpDown_6: TUpDown;
+    UpDown_7: TUpDown;
+    width_arcmin1: TLabel;
     width_pixels1: TEdit;
     procedure Angle2Change(Sender: TObject);
     procedure azimuth_error1Change(Sender: TObject);
@@ -265,15 +297,20 @@ type
     procedure elevation_error1Change(Sender: TObject);
     procedure equinox_communication1Change(Sender: TObject);
     procedure fliptext1Change(Sender: TObject);
+    procedure focallength1Change(Sender: TObject);
+    procedure focallength1Exit(Sender: TObject);
     procedure j2000_to_Jnow1Click(Sender: TObject);
     procedure jnow_to_j2000_1Click(Sender: TObject);
+    procedure parked1Click(Sender: TObject);
+    procedure tracking1Click(Sender: TObject);
+    procedure pixelsizemicrometer1Exit(Sender: TObject);
     procedure polar_alignment_mode1Change(Sender: TObject);
+    procedure popupmenu_map1Popup(Sender: TObject);
     procedure slew_to_test_position1Click(Sender: TObject);
     procedure buttonEast1Click(Sender: TObject);
     procedure buttonNorth1Click(Sender: TObject);
     procedure buttonSouth1Click(Sender: TObject);
     procedure buttonWest1Click(Sender: TObject);
-    procedure calculator1Click(Sender: TObject);
     procedure clear_log_button1Click(Sender: TObject);
     procedure connect_rotator1Click(Sender: TObject);
     procedure elevation_error1Exit(Sender: TObject);
@@ -290,7 +327,7 @@ type
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure height1Exit(Sender: TObject);
+    procedure height_arcmin1Exit(Sender: TObject);
     procedure height_pixels1Exit(Sender: TObject);
     procedure hotpixels1Change(Sender: TObject);
     procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
@@ -327,7 +364,7 @@ type
     procedure mount_type1Change(Sender: TObject);
     procedure plotted_info1Change(Sender: TObject);
     procedure polar_alignment_error1Change(Sender: TObject);
-    procedure PopupMenu_map1Popup(Sender: TObject);
+    procedure PopupMenu_image1Popup(Sender: TObject);
     procedure rotator_alpaca1Change(Sender: TObject);
     procedure savesettings1Click(Sender: TObject);
     procedure select_all1Click(Sender: TObject);
@@ -355,6 +392,7 @@ type
     MyGuideCam   : T_Alpaca_GuideCam;
     MyFocuser    : T_Alpaca_Focuser;
     MyRotator    : T_Alpaca_Rotator;
+    MyFilterwheel : T_Alpaca_Filterwheel;
     procedure ShowError(var msg:string);{for Alpaca}
     procedure ShowMsg(var msg:string);{for Alpaca}
     procedure PortMsg(var msg:string);{for Alpaca}
@@ -374,6 +412,7 @@ var
   sidereal_time: double=0;
   documents_path : string='';
   application_path:string='';
+
 const
   pi_=PI; {for debugger}
   graylevel=1000; //for annotation text
@@ -384,6 +423,8 @@ const
   procedure memo2_message(s: string);{message to memo2}
   procedure calc_sidereal_time(longitude: double);{local sidereal time}
   procedure precession5(jd_start, jd_end, ra_in, dec_in: double; out ra_out,dec_out: double); {Rigorious method,  Meeus formulas 20.2, 20.3,20.4 }
+  function strtofloat2(s:string): double;{works with either dot or komma as decimal separator}
+  function floattostrFdot(const x:double; width2,decimals1 :word): string;
 
 type
    Timg = array of array of word;
@@ -476,7 +517,7 @@ var
 begin
   if activate_log1.checked then
   begin
-    filter:=filter1.text;
+    filter:=filter_alpaca_text1.text;
     trim(filter);
     if length(filter)>1 then
       if pos(filter,msg)=0 then exit;
@@ -513,10 +554,8 @@ begin
   Discovery_Info.Caption:='Discovery running on port '+msg;
 end;
 
-procedure start_alpaca(cam,foc,mount,rot: boolean);
+procedure start_alpaca(cam,foc,mount,rot,whe: boolean);
 begin
-  if ((cam=false) and (foc=false) and  (mount=false)) then exit; {no need for server}
-
   with form1 do
   begin
     if AlpacaServer<>nil then exit; {already started}
@@ -539,11 +578,11 @@ begin
     begin
        MyMount:=T_Alpaca_Mount.Create(nil);
        AlpacaServer.AddDevice(telescope,MyMount);
-       {$ifdef mswindows}
-       tab_mount1.imageindex:=2 //blue
-      {$else}
-       tab_mount1.imageindex:=4 //play gray icon
-      {$endif}
+     //  {$ifdef mswindows}
+     //  tab_mount1.imageindex:=2 //blue
+     // {$else}
+     //  tab_mount1.imageindex:=4 //play gray icon
+     // {$endif}
     end;
     if cam then
     begin
@@ -551,31 +590,21 @@ begin
       AlpacaServer.AddDevice(camera,MyCam);
       MyGuideCam:=T_Alpaca_GuideCam.Create(nil);
       AlpacaServer.AddDevice(camera,MyGuideCam);
-      {$ifdef mswindows}
-      tab_camera1.imageindex:=2 //blue
-     {$else}
-      tab_camera1.imageindex:=4 //play gray icon
-     {$endif}
     end;
     if foc then
     begin
       MyFocuser:=T_Alpaca_focuser.Create(nil);
       AlpacaServer.AddDevice(focuser,MyFocuser);
-      {$ifdef mswindows}
-      tab_focuser1.imageindex:=2 //blue
-     {$else}
-      tab_focuser1.imageindex:=4 //play gray icon
-     {$endif}
     end;
     if rot then
     begin
       MyRotator:=T_Alpaca_rotator.Create(nil);
       AlpacaServer.AddDevice(rotator,MyRotator);
-      {$ifdef mswindows}
-      tab_rotator1.imageindex:=2 //blue
-     {$else}
-      tab_rotator1.imageindex:=4 //play gray icon
-     {$endif}
+    end;
+    if Whe then
+    begin
+      MyFilterWheel:=T_Alpaca_filterwheel.Create(nil);
+      AlpacaServer.AddDevice(filterwheel,MyFilterwheel);
     end;
 
 
@@ -747,9 +776,13 @@ begin
     dum:=initstring.Values['latitude']; if dum<>'' then form1.latitude1.text:=dum;
     dum:=initstring.Values['longtude']; if dum<>'' then form1.longitude1.text:=dum;
 
-    dum:=initstring.Values['height']; if dum<>'' then form1.height1.text:=dum;
+    dum:=initstring.Values['height']; if dum<>'' then form1.height_arcmin1.text:=dum;
     dum:=initstring.Values['width_pixels']; if dum<>'' then form1.width_pixels1.text:=dum;
     dum:=initstring.Values['height_pixels']; if dum<>'' then form1.height_pixels1.text:=dum;
+
+    dum:=initstring.Values['px_size']; if dum<>'' then form1.pixelsizemicrometer1.text:=dum;
+    dum:=initstring.Values['focal_length']; if dum<>'' then form1.focallength1.text:=dum;
+
     dum:=initstring.Values['star_database']; if dum<>'' then form1.star_database1.text:=dum;
     dum:=initstring.Values['f-ratio']; if dum<>'' then form1.focal_ratio1.text:=dum;
 
@@ -782,6 +815,20 @@ begin
 
     form1.polar_alignment_error1.checked:=get_boolean('polar_alignment',false);
 
+    dum:=initstring.Values['filter1']; if dum<>'' then form1.filter_1.text:=dum;
+    dum:=initstring.Values['filter2']; if dum<>'' then form1.filter_2.text:=dum;
+    dum:=initstring.Values['filter3']; if dum<>'' then form1.filter_3.text:=dum;
+    dum:=initstring.Values['filter4']; if dum<>'' then form1.filter_4.text:=dum;
+    dum:=initstring.Values['filter5']; if dum<>'' then form1.filter_5.text:=dum;
+    dum:=initstring.Values['filter6']; if dum<>'' then form1.filter_6.text:=dum;
+    dum:=initstring.Values['filter7']; if dum<>'' then form1.filter_7.text:=dum;
+    dum:=initstring.Values['offset1']; if dum<>'' then form1.offset1.text:=dum;
+    dum:=initstring.Values['offset2']; if dum<>'' then form1.offset2.text:=dum;
+    dum:=initstring.Values['offset3']; if dum<>'' then form1.offset3.text:=dum;
+    dum:=initstring.Values['offset4']; if dum<>'' then form1.offset4.text:=dum;
+    dum:=initstring.Values['offset5']; if dum<>'' then form1.offset5.text:=dum;
+    dum:=initstring.Values['offset6']; if dum<>'' then form1.offset6.text:=dum;
+    dum:=initstring.Values['offset7']; if dum<>'' then form1.offset7.text:=dum;
   end;
 
   initstring.free;
@@ -831,9 +878,12 @@ begin
     initstring.Values['latitude']:=form1.latitude1.text;
     initstring.Values['longtude']:=form1.longitude1.text;
 
-    initstring.Values['height']:=form1.height1.text;
+    initstring.Values['height']:=form1.height_arcmin1.text;
     initstring.Values['width_pixels']:=form1.width_pixels1.text;
     initstring.Values['height_pixels']:=form1.height_pixels1.text;
+    initstring.Values['px_size']:=form1.pixelsizemicrometer1.text;
+    initstring.Values['focal_length']:=form1.focallength1.text;
+
     initstring.Values['star_database']:=form1.star_database1.text;
     initstring.Values['f-ratio']:=form1.focal_ratio1.text;
 
@@ -861,6 +911,23 @@ begin
     initstring.Values['manipulations']:=inttostr(form1.manipulations1.itemindex);
 
     initstring.Values['polar_alignment']:=BoolStr[ form1.polar_alignment_error1.checked];
+
+    initstring.Values['filter1']:=form1.filter_1.text;
+    initstring.Values['filter2']:=form1.filter_2.text;
+    initstring.Values['filter3']:=form1.filter_3.text;
+    initstring.Values['filter4']:=form1.filter_4.text;
+    initstring.Values['filter5']:=form1.filter_5.text;
+    initstring.Values['filter6']:=form1.filter_6.text;
+    initstring.Values['filter7']:=form1.filter_7.text;
+
+    initstring.Values['offset1']:=form1.offset1.text;
+    initstring.Values['offset2']:=form1.offset2.text;
+    initstring.Values['offset3']:=form1.offset3.text;
+    initstring.Values['offset4']:=form1.offset4.text;
+    initstring.Values['offset5']:=form1.offset5.text;
+    initstring.Values['offset6']:=form1.offset6.text;
+    initstring.Values['offset7']:=form1.offset7.text;
+
 
   with initstring do
   begin
@@ -1097,23 +1164,23 @@ var
   message   : string;
 begin
 
-  height_arcmin:=strtofloat(form1.height1.text);
+  height_arcmin:=strtofloat(form1.height_arcmin1.text);
+  width_arcmin:=strtofloat(form1.width_arcmin1.caption);
+
+  pixelY:=strtoint(form1.height_pixels1.text);{height}
+  pixelX:=strtoint(form1.width_pixels1.text);{height}
 
   memo2_message('DSS image download started.');
 
   if form1.skyview_selected1.checked then
   begin
     pixelY:=strtoint(form1.height_pixels1.text);{height}
-    pixelX:=strtoint(form1.width_pixels1.text);{height}
-    form1.width1.caption:=inttostr(round(height_arcmin*pixelX/pixelY));
-
-    width_arcmin:=height_arcmin*1.3333333333333;
     internetlink:= form1.internetskyview1.text;
 
-    internetlink:=internetlink+'&VCOORD='+floattostrFdot(ra0*180/pi,0,4)+','+floattostrFdot(dec0*180/pi,0,4)+
+    internetlink:=internetlink+'&VCOORD='+floattostrFdot(ra1*180/pi,0,4)+','+floattostrFdot(dec1*180/pi,0,4)+
       '&PIXELX='+inttostr(pixelx)+
       '&PIXELY='+inttostr(pixely)+
-      '&SFACTR='+floattostrFdot(minmax(abs(width_arcmin),0.3,360*60)/60,0,4);{not limitations but skyview stops at around 140 degrees}
+      '&SFACTR='+floattostrFdot(minmax(MAX(width_arcmin,height_arcmin),0.3,360*60)/60,0,4);{not limitations but skyview stops at around 140 degrees}
 
     form1.internetskyview1.hint:=internetlink;
 
@@ -1123,20 +1190,10 @@ begin
   else
   begin {eso}
     internetlink:= form1.internetESO1.text;   //  &ra=83.6072&dec=22.0533&x=46.6&y=36.4
-
-    height_arcmin:=minmax(height_arcmin,0.3,60);
-    width_arcmin:=height_arcmin*1.3333333333333;
-    internetlink:=internetlink+'&ra='+floattostrFdot(ra0*180/pi,0,4)+'&dec='+floattostrFdot(dec0*180/pi,0,4)+'&x='+floattostrFdot(width_arcmin,0,1)+'&y='+floattostrFdot(height_arcmin,0,1);
+    internetlink:=internetlink+'&ra='+floattostrFdot(ra1*180/pi,0,4)+'&dec='+floattostrFdot(dec1*180/pi,0,4)+'&x='+floattostrFdot(width_arcmin,0,1)+'&y='+floattostrFdot(height_arcmin,0,1);
 
     form1.internetESO1.hint:=internetlink;
-
-    form1.height1.text:=floattostr(height_arcmin);{maximum 60 arcmin}
     destfile:=documents_path+'image.tmpgif'; {gif file !!!} //fix for linux
-    form1.scale1.Caption:='1.7';
-    pixelX:=round(width_arcmin*60/1.7);
-    pixelY:=round(height_arcmin*60/1.7);
-    form1.width_pixels1.text:=inttostr(pixelX);
-    form1.height_pixels1.text:=inttostr(pixelY);
   end;
 
   application.processmessages; {in linux allow closing popup menu}
@@ -1265,9 +1322,9 @@ begin
     for x := 0 to w-1 do
     begin
       if siz=3 then
-        img_array[y,x]:=10*xLine^[x*3+2] {do only red, increase level to 255*10=2550 [0..65535]}
+        img_array[y,x]:=10*xLine^[x*3+2] {do only filter_2, increase level to 255*10=2550 [0..65535]}
       else {size=4}
-        img_array[y,x]:=10*xLine^[x*4+2];{do only red}
+        img_array[y,x]:=10*xLine^[x*4+2];{do only filter_2}
     end;
   end;
 end;
@@ -1297,7 +1354,7 @@ begin
           xLine := dss_bitmap.ScanLine[y];
           for x := 0 to w -1 do
           begin
-            img_array[y,x]:=(xLine^[x*4]+xLine^[x*4+1]+xLine^[x*4+2]);{Note THE ESO IMAGES DO NOT CONTAINS BLUE, ONLY RED AND GREEN}
+            img_array[y,x]:=(xLine^[x*4]+xLine^[x*4+1]+xLine^[x*4+2]);{Note THE ESO IMAGES DO NOT CONTAINS BLUE, ONLY filter_2 AND GREEN}
           end;
         end;
       end
@@ -1350,7 +1407,7 @@ begin
         for x := 0 to w -1 do
         begin //Convert colour to OSC RGGB Bayer pattern
           if ((odd(x)=true ) and (odd(y)=true )) then
-            img_array[y,x]:=xLine^[x*4] //red
+            img_array[y,x]:=xLine^[x*4] //filter_2
           else
           if ((odd(x)=false) and (odd(y)=false)) then
             img_array[y,x]:=xLine^[x*4+2] //blue
@@ -1372,7 +1429,7 @@ begin
         for x := 0 to w -1 do
         begin //Convert colour to OSC RGGB Bayer pattern
           if ((odd(x)=true ) and (odd(y)=true )) then
-            img_array[y,x]:=xLine^[x*3] //red
+            img_array[y,x]:=xLine^[x*3] //filter_2
           else
           if ((odd(x)=false) and (odd(y)=false)) then
             img_array[y,x]:=xLine^[x*3+2] //blue
@@ -1394,7 +1451,7 @@ begin
         for x := 0 to w -1 do
         begin //Convert colour to OSC RGGB Bayer pattern
           if ((odd(x)=true ) and (odd(y)=true )) then
-            img_array[y,x]:=xLineW^[x*3] //red
+            img_array[y,x]:=xLineW^[x*3] //filter_2
           else
           if ((odd(x)=false) and (odd(y)=false)) then
             img_array[y,x]:=xLineW^[x*3+2] //blue
@@ -1485,8 +1542,8 @@ end;
 
 procedure plot_sky_map;
 var
-  ra,dec,azimuth,x,y,oldx,halftextw : integer;
-  ra_jnow1,dec2,lat,long            : double;
+  ra,dec,azimuth,x,y,oldx,halftextw,ra_step,dec_step,ww,hh : integer;
+  ra_jnow1,dec2                     : double;
 
   procedure draw_line;
   begin
@@ -1508,16 +1565,21 @@ begin
     pen.color := clgray;
     pen.style:=psdot;
 
+    hh:=form1.panel_sky1.height-5;
+    ww:=form1.panel_sky1.width-5;
+    ra_step:=ww div 8;
+    dec_step:=hh div 6;
+
     for ra:=0 to 8 do
     begin
-      moveto(ra*45,0);
-      lineto(ra*45,180);
+      moveto(ra*ra_step{45},0);
+      lineto(ra*ra_step{45},hh);
     end;
 
     for dec:=0 to 6 do
     begin
-      moveto(0,dec*30);
-      lineto(360,dec*30);
+      moveto(0,dec*dec_step);
+      lineto(ww-5,dec*dec_step);
     end;
 
 
@@ -1532,8 +1594,8 @@ begin
     for azimuth:=0 to 24 do
     begin
       az_ra2(azimuth*15*pi/180 ,0{alt},latitude,0{longitude},sidereal_time,{out} ra_jnow1,dec2);//conversion az,alt to ra,dec, longitude is POSITIVE when west. At south azimuth is 180
-      x:=round(ra_jnow1*180/pi);
-      y:=round(90-(dec2*180/pi));
+      x:=round((ww/360)*ra_jnow1*180/pi);
+      y:=round((hh/180)*(90-(dec2*180/pi)));
       if azimuth=0 then
       begin
         textout(x- halftextw,y,'N');
@@ -1568,20 +1630,101 @@ begin
 end;
 
 
+procedure slew_ascom_telescope(ra5,dec5 :double);
+begin
+  if (ascom_mount.connected) then {allow export}
+  begin
+    try {parked ?}
+      if ascom_mount.AtPark then
+      begin
+         Showmessage('Error! Mount parked !');
+         exit;
+      end;
+      except
+        on E: Exception do
+        begin
+          application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
+        end;
+    end;{park test}
+    try {export}
+
+    ascom_mount.tracking:=true; //required for slewing;
+    if Ascom_mount_capability=2 then  ascom_mount.SlewToCoordinatesAsync(ra5, dec5)
+    else
+    if Ascom_mount_capability=1 then  ascom_mount.SlewToCoordinates(ra5, dec5)
+    else;
+    {nothing}
+    except
+      on E: Exception do
+      begin
+        sysutils.beep();
+        application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
+      end;
+   end;
+ end;
+end;
+
+
+procedure telescope_abortslew;
+var
+  mount : T_Alpaca_Mount;
+begin
+   if form1.mount_alpaca1.checked then
+  begin
+     mount := T_Alpaca_Mount.Create(nil);
+    try
+       Mount.abortslew;
+     finally
+       mount.Free;
+    end;
+  end
+  else
+  begin
+    {$ifdef mswindows}
+
+    if (ascom_mount.connected) then {allow export}
+    begin
+      try
+        ascom_mount.AbortSlew;
+      except
+         on E: Exception do
+         begin
+           beep(1000,200);
+           application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
+         end;
+      end;
+    end;
+    {$else} {unix}
+    {$endif}
+  end;
+end;
+
+
 procedure mount_goto(ra,dec: double);
 var
   ok : boolean;
   mount : T_Alpaca_Mount;
 begin
-  mount := T_Alpaca_Mount.Create(nil);
-  try
-    Mount.slewtocoordinates(fnmodulo(Ra,24), Dec, ok);
-  finally
-    mount.Free;
-  end;
-  if ok=false then
-    application.messagebox(pchar('Error'),pchar('Range error!'),MB_ICONWARNING+MB_OK);
+  if form1.mount_alpaca1.checked then
+  begin
+    if is_parked<>0 then
+    begin
+      Showmessage('Can not slew. Alpaca Mount is parked !');
+      exit;
+    end;
+    mount := T_Alpaca_Mount.Create(nil);
+    try
+      Mount.slewtocoordinates(fnmodulo(Ra,24), Dec, ok);
+    finally
+      mount.Free;
+    end;
+    if ok=false then
+      application.messagebox(pchar('Error'),pchar('Range error!'),MB_ICONWARNING+MB_OK);
+  end
+  else
+    slew_ascom_telescope(fnmodulo(Ra,24), Dec);
 end;
+
 
 
 var
@@ -1610,6 +1753,83 @@ begin
 end;
 
 
+procedure update_fov(ch : string ); //complicated logic to adaot to DSS download
+begin
+  with form1 do
+  begin
+    pixelsizemicrometer:=strtofloat2(pixelsizemicrometer1.caption);//always update since this procedure is called after loading settings
+    height_arcmin:=strtofloat2(height_arcmin1.caption);
+    width2:=strtoint(form1.width_pixels1.text);{width}
+    height2:=strtoint(height_pixels1.caption);
+
+    if eso_selected1.checked then
+    begin
+      height_arcmin:=minmax(height_arcmin,0.3,60);//limitation
+      width_arcmin:=round(1.3333333333333333333*height_arcmin);
+      height2:=round(height_arcmin*60/1.7);
+      width2:=round(width_arcmin*60/1.7);
+    end;
+
+    focal_length_telescope:=(strtofloat2(focallength1.caption)/1000);//In meter. Always update since this procedure is called after loading settings
+
+    if ((ch='hp') or (ch='ps') or (ch='fl')) then //change in height in pixel, pixel size
+    begin
+      height_arcmin:=(height2*pixelsizemicrometer/focal_length_telescope)*60*(180/1E6)/pi;
+      height_arcmin1.caption:=floattostrf(height_arcmin, fffixed, 0, 0); {calculate image height in arc minutes}
+    end;
+    if ch='ha' then //change in height arcmin
+    begin
+      if focallength1.enabled then //not dicated by ascom driver
+      begin
+        focal_length_telescope:=(height2*pixelsizemicrometer/height_arcmin)*60*(180/1E6)/pi; //focal length in meter
+        focallength1.caption:=floattostrf(focal_length_telescope*1000, fffixed, 0, 0);  //focal length in mm
+      end
+      else
+      begin //focal length dictated by ascom mount. Adapt pixel size instead
+        pixelsizemicrometer:=focal_length_telescope*height_arcmin/(height2*60*(180/1E6)/pi);
+        pixelsizemicrometer1.caption:=floattostrf(pixelsizemicrometer, fffixed, 0, 1);
+      end;
+    end;
+
+    scale1.Caption:=floattostrF(height_arcmin*60/height2,ffFixed,4,2);
+
+    height_arcmin1.caption:=inttostr(round(height_arcmin));
+    width_arcmin1.caption:=inttostr(round(height_arcmin*width2/height2));
+
+    width_pixels1.text:=inttostr(width2);
+    height_pixels1.text:=inttostr(height2);
+
+  end;
+end;
+
+
+procedure TForm1.pixelsizemicrometer1Exit(Sender: TObject);
+begin
+  update_fov('ps');
+  update_required:=true;
+end;
+
+
+procedure TForm1.focallength1Exit(Sender: TObject);
+begin
+  update_fov('fl');
+  update_required:=true;
+end;
+
+procedure TForm1.height_arcmin1Exit(Sender: TObject);
+begin
+  update_fov('ha');
+  update_required:=true;
+end;
+
+
+procedure TForm1.height_pixels1Exit(Sender: TObject);
+begin
+  update_fov('hp');
+  update_required:=true;
+end;
+
+
 
 procedure simulate_sky;
 const
@@ -1621,8 +1841,8 @@ const
    cnt2         : integer=0;
 var
     eqs, blur_factor,noise_index,periodic_error_index,old,backlash,focus_backlash                       : integer;
-    hfd,seperation,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient : double;
-    mount_slewing      : boolean;
+    hfd,seperation,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy : double;
+    mount_slewing, focal_length_ascom_driver_implemented      : boolean;
     Save_Cursor:TCursor;
     mess       : string;
 
@@ -1643,9 +1863,13 @@ begin
     application.processmessages;
     if esc_pressed then exit;
 
-
     if artificial_selected1.checked then
-      allowederror:=(0.03/(60*60))*pi/180 {allowed mount error 0.03 arc sec}
+    begin
+      if mount_alpaca1.checked then  //internal mount. More stable
+        allowederror:=(0.03/(60*60))*pi/180 {allowed mount error 0.03 arc sec}
+      else
+        allowederror:=(0.1/(60*60))*pi/180 {GS server with HEQ5, allowed mount error 0.1 arc sec}
+    end
     else
     allowederror:=(1/(60))*pi/180; {allowed mount error one arc minute}
 
@@ -1666,33 +1890,89 @@ begin
         else
           equinox_communication:=1;//jnow
 
+        ra_rate1.caption:='α_rate: '+floattostrF(3600*theaxisrates[0],fffixed,0,6)+'"/sec';
+
         ra_mount_indication:=alpaca_ra*pi/12;//read directly from the mount. Is in Jnow
         dec_mount_indication:=alpaca_dec*pi/180;
+
+        ra_az2(ra_mount_indication,dec_mount_indication, latitude+elevation_error,0,sidereal_time{local incl longitude} {out}, alpaca_azimuth,alpaca_altitude);{conversion ra & dec to altitude, azimuth, longitude is POSITIVE when west. At south azimuth is 180 }
+
         precession5(jd, 2451545,ra_mount_indication,dec_mount_indication,ra_mount_indication_2000,dec_mount_indication_2000);//position to J2000 coordinate system
         if equinox_communication=2 then //communication in J2000
           equinox_telescope:=2000 //communication in
         else
           equinox_telescope:=0; //communication in jnow
 
+        if is_parked=0 then
+        begin
+           if alpaca_tracking=false then
+           begin
+             park_label1.visible:=true;
+             park_label1.caption:='Tracking off';
+           end
+           else
+           begin
+             park_label1.visible:=false
+           end;
+        end
+        else
+        begin
+          park_label1.visible:=true;
+          if is_parked=1 then park_label1.caption:='Slewing to park position';
+          if is_parked=2 then park_label1.caption:='Mount parked';
+        end;
+
+
         equinox_communication1.enabled:=true;//can be set for Alpaca simulator
         mount_slewing:=alpaca_mount_slewing;
         equatorial_mount:=(mount_type1.itemindex=1);
         DecPulseReverses:=DecPulseReverses1.checked;
         if NSswapped1.checked then NSswapped:=-1 else NSswapped:=1;
+
         //Alpaca side_of_pier is done later after processing time, location and so on
       end
       else
-      begin  //ascom
+      begin  //ascom ascom_mount_connected
+        park_label1.visible:=false;// not used for COM
         equinox_communication1.enabled:=false;//fixed
         try
           ra_mount_indication:=ascom_mount.RightAscension*pi/12; {equinox date}
           dec_mount_indication:=ascom_mount.declination*pi/180;
-          side_of_pier:=ascom_mount.sideofpier;
-         // park1.checked:=ascom_mount.AtPark; {update menu telescope parked?}
-         // tracking1.Checked:=ascom_mount.Tracking;{tracking ?}
-         // home1.Checked:=ascom_mount.AtHome;{home ?}
+
+
+          if ascom_mount.atpark then
+          begin
+            park_label1.visible:=true;
+            park_label1.caption:='Mount parked';
+          end
+          else
+          if ascom_mount.tracking=false then
+          begin
+            park_label1.visible:=true;
+            park_label1.caption:='Tracking off';
+          end
+          else
+          begin
+            park_label1.visible:=false
+          end;
+
+          focal_length_telescope:=0.333;
+          focal_length_ascom_driver_implemented:=true;
+          try
+            focal_length_telescope:=ascom_mount.focallength;
+          except
+            focal_length_ascom_driver_implemented:=false;
+            focallength1.enabled:=false;
+
+          end;
+          focallength1.enabled:=focal_length_ascom_driver_implemented=false;
+          focallength1.caption:=floattostrf(focal_length_telescope*1000, fffixed, 0, 0);//all is updated in focallength1Change
+
+          try side_of_pier:=ascom_mount.sideofpier except end;
+
         except
         end;
+
         try    {check if Ascom can specify equinox used}
            eqs:=ascom_mount.EquatorialSystem;
         except
@@ -1742,8 +2022,8 @@ begin
       ra_jnow1.Caption:=prepare_ra(ra_mount_indication);
       dec_jnow1.Caption:=prepare_dec(dec_mount_indication);
 
-      telescope_cursor1.left:=round(ra_mount_indication_2000*180/pi) - telescope_cursor1.width div 2;
-      telescope_cursor1.top:=round(90-dec_mount_indication_2000*180/pi)- telescope_cursor1.height div 2;;
+      telescope_cursor1.left:=round(ra_mount_indication_2000*(form1.panel_sky1.width-5)*0.5/pi) - telescope_cursor1.width div 2;
+      telescope_cursor1.top:=round( ((form1.panel_sky1.height-5)/180)*(90-dec_mount_indication_2000*180/pi))- telescope_cursor1.height div 2;;
 
       try
       if ((ascom_rotator_connected) or (rotator_alpaca1.Checked)) then  {allow import rotator}
@@ -1784,6 +2064,16 @@ begin
           memo2_message('Rotator reached new position.');
         end;
       end;
+
+      //filterwheel
+      filter_1.font.Bold:=alpaca_wheel_position=0;
+      filter_2.font.Bold:=alpaca_wheel_position=1;
+      filter_3.font.Bold:=alpaca_wheel_position=2;
+      filter_4.font.Bold:=alpaca_wheel_position=3;
+      filter_5.font.Bold:=alpaca_wheel_position=4;
+      filter_6.font.Bold:=alpaca_wheel_position=5;
+      filter_7.font.Bold:=alpaca_wheel_position=6;
+
       except
       end;
 
@@ -2079,8 +2369,6 @@ begin
               focusfactor1.caption:='Out of focus.  HFD: '+ floattostrF(HFD,ffFixed,0,1)
               else focusfactor1.caption:='In focus.';
 
-            scale1.Caption:=floattostrF(height_arcmin*60/height2,ffFixed,4,2);
-
             inc(imagecounter);
             imagecounter1.caption:='Images created: '+inttostr(imagecounter);
           end;//artificial image
@@ -2204,14 +2492,58 @@ begin
   if form1.start_button1.font.style=[fsbold] then begin esc_pressed:=true;exit;end;
   form1.start_button1.font.style:=[fsbold];
 
+  if pos('-',form1.latitude1.text)<>0 then
+       dec_encoder:=-abs(dec_encoder);//set internal mount postion at celestial pole
+
   if ((mount_alpaca1.checked=false) and (ascom_mount_connected=false)) then form1.connect_mount1Click(nil);
   if ((focuser_alpaca1.checked=false) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);
   if ((rotator_alpaca1.checked=false) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);
 
-  start_alpaca(true {camera},form1.focuser_alpaca1.checked,form1.mount_alpaca1.checked,rotator_alpaca1.checked);
+
+  start_alpaca(true {camera},form1.focuser_alpaca1.checked,form1.mount_alpaca1.checked,rotator_alpaca1.checked,true {wheel});
+
+  if  mount_alpaca1.checked=false then
+  begin
+    if ascom_mount_connected then tab_mount1.imageindex:=1 {green} else tab_mount1.imageindex:=4;// grey
+  end
+  else
+  {$ifdef mswindows}
+   tab_mount1.imageindex:=2; //blue
+  {$else}
+   tab_mount1.imageindex:=4; //play gray icon
+  {$endif}
+
+  if focuser_alpaca1.checked=false then
+  begin
+    if ascom_focuser_connected then tab_focuser1.imageindex:=1 {green} else tab_focuser1.imageindex:=4;// grey
+  end
+  else
+  {$ifdef mswindows}
+   tab_focuser1.imageindex:=2; //blue
+  {$else}
+   tab_focuser1.imageindex:=4; //play gray icon
+  {$endif}
+
+  if  rotator_alpaca1.checked=false then
+  begin
+    if ascom_rotator_connected then tab_rotator1.imageindex:=1 {green} else tab_rotator1.imageindex:=4;// grey
+  end
+  else
+  {$ifdef mswindows}
+  tab_rotator1.imageindex:=2; //blue
+  {$else}
+  tab_rotator1.imageindex:=4; //play gray icon
+  {$endif}
+
+  {$ifdef mswindows}
+  tab_camera1.imageindex:=2; //blue
+  tab_filterwheel1.imageindex:=2; //blue
+  {$else}
+  tab_camera1.imageindex:=4; //play gray icon
+  tab_filterwheel1.imageindex:=4; //play gray icon
+  {$endif}
 
   form1.start_button1.caption:='Simulation running. (Hit ESC to stop)';
-  tab_camera1.imageindex:=2;//Blue
 
   simulate_sky;//run simulation
   form1.start_button1.font.style:=[];
@@ -2376,6 +2708,16 @@ begin
   update_required:=true;
 end;
 
+procedure TForm1.focallength1Change(Sender: TObject);
+begin
+  // https://forum.lazarus.freepascal.org/index.php?topic=61256.0
+  If ((Sender is TEdit) and (TEdit(Sender).Modified=true)) then
+    Exit;
+  update_fov('fl');
+  TEdit(Sender).Modified := False;
+end;
+
+
 procedure convert_string_to_ra_dec(gotopos:string;out thera,thedec: double);
 
 var
@@ -2453,6 +2795,80 @@ begin
    application.messagebox(pchar(prepare_ra(theRA)+',  '+prepare_dec(theDec)),pchar('J2000'),MB_OK); {show error from driver error, for example below horizon}
 end;
 
+procedure TForm1.parked1Click(Sender: TObject);
+var
+  mount : T_Alpaca_Mount;
+begin
+  if form1.mount_alpaca1.checked then
+  begin
+    mount := T_Alpaca_Mount.Create(nil);
+    try
+      if is_parked=2 then
+      mount.unpark
+      else
+      Mount.park;
+
+    finally
+      mount.Free;
+    end;
+  end
+  else
+  begin
+    if ascom_mount_connected then
+    try
+      if ascom_mount.atpark
+        then ascom_mount.unPark
+      else
+      ascom_mount.Park;
+    except
+       Showmessage('Error SetPark!');
+    end;
+  end;
+end;
+
+procedure TForm1.tracking1Click(Sender: TObject);
+var
+  mount : T_Alpaca_Mount;
+begin
+   if form1.mount_alpaca1.checked then
+   begin
+     if is_parked<>0 then
+     begin
+       Showmessage('Can not set tracking. Alpaca Mount is parked !');
+       exit;
+     end;
+     mount := T_Alpaca_Mount.Create(nil);
+     try
+       Mount.settracking(true);
+     finally
+       mount.Free;
+     end;
+   end
+   else
+  //   slew_ascom_telescope(fnmodulo(Ra,24), Dec);
+
+  begin
+    if ascom_mount_connected then
+    try {parked ?}
+      if ascom_mount.AtPark then
+      begin
+         Showmessage('Error! Mount parked !');
+         exit;
+      end;
+      except
+        on E: Exception do
+        begin
+          application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
+        end;
+    end;{park test}
+    try
+      ascom_mount.Tracking:=ascom_mount.Tracking=false;
+      except
+        Showmessage('Error tracking!');
+      end;
+  end;
+
+end;
 
 
 procedure enable_controls(polerr,equatmount :boolean);{for polar alignment error}
@@ -2479,6 +2895,30 @@ begin
   enable_controls(polar_alignment_error, mount_type1.itemindex=1);{polar alignment error or equatorial mount}
 end;
 
+procedure TForm1.popupmenu_map1Popup(Sender: TObject);
+begin
+ if form1.mount_alpaca1.checked then
+ begin
+   tracking1.checked:=alpaca_tracking;
+   parked1.checked:=(is_parked=2);
+ end
+ else
+ begin
+    if ascom_mount_connected then
+    begin
+      try
+      tracking1.checked:=ascom_mount.Tracking;
+      parked1.checked:=ascom_mount.atpark;
+      except
+      end;
+    end
+    else
+    begin
+      tracking1.checked:=false;
+      parked1.checked:=false;
+    end;
+  end;
+end;
 
 procedure TForm1.buttonEast1Click(Sender: TObject);
 begin
@@ -2498,38 +2938,6 @@ end;
 procedure TForm1.buttonWest1Click(Sender: TObject);
 begin
   pushbuttonRA:=pushbuttonRA - ((1/3600)*pi/180);
-end;
-
-
-procedure TForm1.calculator1Click(Sender: TObject);
-var
- height_info : string;
- fl,pixsize,height2 : double;
-begin
-  if InputQuery('Calculate field of view (height)', 'Focal length telescope [mm]?', fl_info)=false then exit;
-  if fl_info='' then exit;
-  fl:=strtofloat(fl_info);
-
-  if InputQuery('Calculate field of view (height)', 'Pixel size[μm]?', crpix_info)=false then exit;
-  if crpix_info='' then exit;
-  pixsize:=strtofloat(crpix_info);
-
-  height_info:=height_pixels1.caption;
-  if InputQuery('Calculate field of view (height)', 'Image height[pixels]?', height_info)=false then exit;
-  if height_info='' then exit;
-
-  height_pixels1.caption:=height_info;
-
-  height2:=strtofloat(height_info);
-
-  height1.caption:=floattostrf((height2*pixsize/fl)*60*(180/1000)/pi, ffgeneral, 3, 3); {calculate image height in arc seconds}
-
-  calculator1.hint:='Calculate the field of view (height) from focal length and pixel size.'+#10+#10+
-                    'Last calculation input values:'+#10+#10+
-                    'Focal length: '+floattostrF(fl,FFFixed,0,0)+' mm'+#10+
-                    'Pixel size:   '+floattostrF(pixsize,FFFixed,0,2)+' μm';
-
-  update_required:=true;
 end;
 
 
@@ -2589,7 +2997,7 @@ begin
         connect_rotator1.font.color:=cldefault;
         connect_rotator1.caption:='Error rotator';
         connect_rotator1.font.style:=[];
-        tab_rotator1.imageindex:=0;//red
+        tab_rotator1.imageindex:=0;//filter_2
         Showmessage('Error ASCOM driver "'+ascom_rotator_driver+'" not found!');
       end;
     end; {end setup ASCOM}
@@ -2684,6 +3092,8 @@ begin
   if load_settings(user_path+'sky_simulator.cfg')=false then
     if DirectoryExists(user_path)=false then createdir(user_path);{create c:\users\yourname\appdata\local\sky_simulator}
 
+  update_fov('');//update scale after loading settings
+
   focuser_position:=strtoint(form1.focus_at1.text);
   real_focuser_position:=focuser_position;
   oldreal_position:=focuser_position;
@@ -2702,18 +3112,7 @@ begin
 
   groupbox_polar_alignment_error1.enabled:=artificial_selected1.checked;
   groupbox_mount_errors1.enabled:=artificial_selected1.checked;
-end;
 
-
-procedure TForm1.height1Exit(Sender: TObject);
-begin
-  update_required:=true;
-end;
-
-
-procedure TForm1.height_pixels1Exit(Sender: TObject);
-begin
-  update_required:=true;
 end;
 
 procedure TForm1.hotpixels1Change(Sender: TObject);
@@ -2905,113 +3304,30 @@ begin
 end;
 
 
-procedure slew_ascom_telescope(ra5,dec5 :double);
-begin
-  if (ascom_mount.connected) then {allow export}
-  begin
-    try {parked ?}
-      if ascom_mount.AtPark then
-      begin
-         Showmessage('Error! Mount parked !');
-         exit;
-      end;
-      except
-        on E: Exception do
-        begin
-          application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
-        end;
-    end;{park test}
-    try {export}
-    if Ascom_mount_capability=2 then  ascom_mount.SlewToCoordinatesAsync(ra5, dec5)
-    else
-    if Ascom_mount_capability=1 then  ascom_mount.SlewToCoordinates(ra5, dec5)
-    else;
-    {nothing}
-    except
-      on E: Exception do
-      begin
-        sysutils.beep();
-        application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
-      end;
-   end;
- end;
-end;
-
-
-procedure telescope_abortslew;
-var
-  mount : T_Alpaca_Mount;
-begin
-   if form1.mount_alpaca1.checked then
-  begin
-     mount := T_Alpaca_Mount.Create(nil);
-    try
-       Mount.abortslew;
-     finally
-       mount.Free;
-    end;
-  end
-  else
-  begin
-    {$ifdef mswindows}
-
-    if (ascom_mount.connected) then {allow export}
-    begin
-      try
-        ascom_mount.AbortSlew;
-      except
-         on E: Exception do
-         begin
-           beep(1000,200);
-           application.messagebox(pchar(E.Message),'ASCOM returns following error:',MB_ICONWARNING+MB_OK); {show error from driver error, for example below horizon}
-         end;
-      end;
-    end;
-    {$else} {unix}
-    {$endif}
-  end;
-
-end;
-
-
 procedure TForm1.abort_slew1Click(Sender: TObject);
 begin
   telescope_abortslew;
 end;
 
 
-
-procedure slewto_mouse_position;
-var
-  mount : T_Alpaca_Mount;
-  ok : boolean;
-begin
-  if form1.mount_alpaca1.checked then
-  begin
-    mount := T_Alpaca_Mount.Create(nil);
-    try
-      Mount.slewtocoordinates(panel_sky1RA,panel_sky1DEC, ok);
-    finally
-      mount.Free;
-    end;
-    if ok=false then
-      application.messagebox(pchar('Error'),pchar('Range error!'),MB_ICONWARNING+MB_OK);
-  end
-  else
-    slew_ascom_telescope(panel_sky1RA,panel_sky1DEC);
-end;
-
-
-
 procedure TForm1.menu_slew_to1Click(Sender: TObject);
 begin
-  slewto_mouse_position;
+   mount_goto(panel_sky1RA,panel_sky1DEC);
 end;
 
 
 procedure TForm1.slew_to_mouse_pos_image1Click(Sender: TObject);
+var
+  thera, thedec : double;
 begin
-  slewto_mouse_position;
+  if equinox_communication<>2 then //<> J2000
+  begin
+    precession5(2451545, jd ,panel_sky1RA*pi/12,panel_sky1DEC*pi/180,thera,thedec); //J2000 to Jnow
+    thera:=thera*12/pi;//convert to hours
+    theDec:=theDec*180/pi;//convert to degrees
+  end;
+
+  mount_goto(thera,thedec);
 end;
 
 
@@ -3020,11 +3336,15 @@ begin
   mouse_position1.caption:='';//blank
 end;
 
-procedure TForm1.panel_sky1MouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
+procedure TForm1.panel_sky1MouseMove(Sender: TObject; Shift: TShiftState; X,  Y: Integer);
+var
+  ww,hh : integer;
 begin
-  panel_sky1RA:=x/15;//in hours for popupmenu.
-  panel_sky1DEC:=(90-y);//degrees
+  hh:=form1.panel_sky1.height-5;
+  ww:=form1.panel_sky1.width-5;
+
+  panel_sky1RA:=(360/ww)*x/15;//in hours for popupmenu.
+  panel_sky1DEC:=(90-y*(180/hh));//degrees
   mouse_position1.caption:= prepare_ra(panel_sky1RA*pi/12)+',  '+prepare_dec(panel_sky1DEC*pi/180);
 end;
 
@@ -3147,6 +3467,8 @@ var
 begin
   alpacaMode:=mount_alpaca1.checked;
 
+  focallength1.enabled:=alpacaMode;//else take focal length form mount driver
+
   if alpacaMode=false then
   begin
     if ascom_mount_connected=false then form1.connect_mount1Click(nil);
@@ -3157,6 +3479,7 @@ begin
   DecPulseReverses1.visible:=alpacaMode;
   NSswapped1.visible:=alpacaMode;
   equinox_communication1.enabled:=alpacaMode;
+  focallength1.enabled:=alpacaMode;
   update_required:=true;
 end;
 
@@ -3186,7 +3509,7 @@ begin
 end;
 
 
-procedure TForm1.PopupMenu_map1Popup(Sender: TObject);
+procedure TForm1.PopupMenu_image1Popup(Sender: TObject);
 begin
   mount_goto1.enabled:=mount_alpaca1.checked;//only in alpca mode
 end;
@@ -3323,10 +3646,10 @@ begin
       ascom_mount := CreateOleObject(ascom_mount_driver); {See at the end of this file the Ascom fix 2018, """"SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]); """"}
       ascom_mount.connected:=true;
       //if sender<>nil then Showmessage(ascom_mount.Description+#13+#10+#13+#10+ascom_mount.DriverInfo);{show this only when called from popup menu}
-      ascom_mount.Tracking:=true;{set tracking on}
+      wait(1000);
       connect_mount1.caption:=ascom_mount_driver;
       connect_mount1.font.style:=[fsbold,fsunderline];
-      tab_mount1.imageindex:=1;//green
+//      tab_mount1.imageindex:=1;//green
 
 
       ascom_mount_connected:=true;
@@ -3372,7 +3695,7 @@ procedure TForm1.skyview_selected1Change(Sender: TObject);
 begin
   form1.width_pixels1.enabled:=((eso_selected1.checked=false) and (file_from_disk_selected1.checked=false));
   form1.height_pixels1.enabled:=((eso_selected1.checked=false) and(file_from_disk_selected1.checked=false)) ;
-  form1.height1.enabled:=file_from_disk_selected1.checked=false;
+  form1.height_arcmin1.enabled:=file_from_disk_selected1.checked=false;
 
   deletefile(pchar(documents_path+'image.tmp'));{could be gif or jpeg. Delete to prevent errors} //fix for linux
 
@@ -3390,6 +3713,7 @@ begin
  else
    bayer_change_warning1.Font.color:=cldefault;
 end;
+
 
 procedure TForm1.tab_mount1ContextPopup(Sender: TObject; MousePos: TPoint;
   var Handled: Boolean);
