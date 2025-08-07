@@ -20,6 +20,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+2025. Small updates for LastExposureStartTime by Han Kleijn
 }
 
 interface
@@ -94,6 +96,8 @@ type
       function  heatSinkTemperature: double; virtual; abstract;
       function  exposureresolution: double; virtual; abstract; {get}
       function  lastexposureduration: double; virtual; abstract;
+      function  lastexposureStartTime: string; virtual; abstract;
+
       function  percentcompleted: integer; virtual; abstract;
 
 
@@ -172,11 +176,8 @@ begin
     lst.Free;
   end
   else if ((method='gains') or (method='offsets')) then begin
-//    lst:=TStringList.Create;
-//    lst.Clear;
     set_not_implemented;
-//    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-//    lst.Free;
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='readoutmodes' then begin  //Must be implemented if CanFastReadout is false, must throw a PropertyNotImplementedException if CanFastReadout is true.
     lst:=TStringList.Create;
@@ -192,7 +193,8 @@ begin
   end
   else if ((method='offsetmin') or (method='offsetmax') or (method='offset') or (method='subexposureduration')) then begin {get integers not implemented}
     set_not_implemented;
-    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+//    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='cameraxsize' then begin
     i:=cameraXsize;
@@ -229,14 +231,6 @@ begin
   end
   else if method='sensorname' then begin
     value:=sensorname;
-    result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-  end
-  else if method='sensorname' then begin
-    value:=sensorname;
-    result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-  end
-  else if method='lastexposurestarttime' then begin {get string not implemented}
-    set_not_implemented;
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='bayeroffsetx' then begin
@@ -310,7 +304,8 @@ begin
   end
   else if method='fastreadout' then begin
     set_not_implemented;
-    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+//    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
     else if method='ccdtemperature' then begin
     x:=ccdtemperature;
@@ -360,6 +355,11 @@ begin
     x:=lastexposureduration;
     if x<0 then begin FErrorNumber:=ERR_INVALID_VALUE; FErrorMessage:='No exposure was taken';  end;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='lastexposurestarttime' then begin {get string not implemented}
+    set_not_implemented;
+//    result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='percentcompleted' then begin
     x:=percentcompleted;

@@ -59,6 +59,7 @@ type
     alpaca_port_number1: TLabel;
     azimuth_error1: TFloatSpinEdit;
     bayer_change_warning1: TLabel;
+    CheckBox_focal_length_driver1: TCheckBox;
     file_form_disk1: TBitBtn;
     Button1: TButton;
     file_from_disk_selected1: TRadioButton;
@@ -762,9 +763,9 @@ begin
     form1.flipv1.checked:=get_boolean('flipV',false);
     form1.flipH1.checked:=get_boolean('flipH',false);
 
-    form1.mount_alpaca1.checked:=get_boolean('mount_alpaca',false);
-    form1.focuser_alpaca1.checked:=get_boolean('focuser_alpaca',false);
-    form1.rotator_alpaca1.checked:=get_boolean('rotator_alpaca',false);
+    form1.mount_alpaca1.checked:=get_boolean('mount_alpaca',true);
+    form1.focuser_alpaca1.checked:=get_boolean('focuser_alpaca',true);
+    form1.rotator_alpaca1.checked:=get_boolean('rotator_alpaca',true);
     form1.DecPulseReverses1.checked:=get_boolean('decreverses',true);
     form1.NSswapped1.checked:=get_boolean('NSswapped',false);
 
@@ -782,6 +783,8 @@ begin
 
     dum:=initstring.Values['px_size']; if dum<>'' then form1.pixelsizemicrometer1.text:=dum;
     dum:=initstring.Values['focal_length']; if dum<>'' then form1.focallength1.text:=dum;
+    form1.checkBox_focal_length_driver1.checked:=get_boolean('fl_driver',false);
+
 
     dum:=initstring.Values['star_database']; if dum<>'' then form1.star_database1.text:=dum;
     dum:=initstring.Values['f-ratio']; if dum<>'' then form1.focal_ratio1.text:=dum;
@@ -883,6 +886,7 @@ begin
     initstring.Values['height_pixels']:=form1.height_pixels1.text;
     initstring.Values['px_size']:=form1.pixelsizemicrometer1.text;
     initstring.Values['focal_length']:=form1.focallength1.text;
+    initstring.Values['fl_driver']:=BoolStr[ form1.checkBox_focal_length_driver1.checked];
 
     initstring.Values['star_database']:=form1.star_database1.text;
     initstring.Values['f-ratio']:=form1.focal_ratio1.text;
@@ -1705,6 +1709,11 @@ var
   ok : boolean;
   mount : T_Alpaca_Mount;
 begin
+  if form1.start_button1.font.style<>[fsbold] then
+  begin
+    application.messagebox(pchar('Start the simulation first.'),pchar('Abort!'),MB_OK);
+     exit;
+  end;
   if form1.mount_alpaca1.checked then
   begin
     if is_parked<>0 then
@@ -1956,17 +1965,22 @@ begin
             park_label1.visible:=false
           end;
 
-          focal_length_telescope:=0.333;
-          focal_length_ascom_driver_implemented:=true;
-          try
-            focal_length_telescope:=ascom_mount.focallength;
-          except
-            focal_length_ascom_driver_implemented:=false;
-            focallength1.enabled:=false;
+          if CheckBox_focal_length_driver1.checked then
+          begin
+            focal_length_telescope:=0.333;
+            focal_length_ascom_driver_implemented:=true;
+            try
+              focal_length_telescope:=ascom_mount.focallength;
+            except
+              focal_length_ascom_driver_implemented:=false;
+              focallength1.enabled:=false;
 
-          end;
-          focallength1.enabled:=focal_length_ascom_driver_implemented=false;
-          focallength1.caption:=floattostrf(focal_length_telescope*1000, fffixed, 0, 0);//all is updated in focallength1Change
+            end;
+            focallength1.enabled:=focal_length_ascom_driver_implemented=false;
+            focallength1.caption:=floattostrf(focal_length_telescope*1000, fffixed, 0, 0);//all is updated in focallength1Change
+          end
+          else
+            focallength1.enabled:=true;
 
           try side_of_pier:=ascom_mount.sideofpier except end;
 
@@ -3312,7 +3326,7 @@ end;
 
 procedure TForm1.menu_slew_to1Click(Sender: TObject);
 begin
-   mount_goto(panel_sky1RA,panel_sky1DEC);
+  mount_goto(panel_sky1RA,panel_sky1DEC);
 end;
 
 
@@ -3479,7 +3493,9 @@ begin
   DecPulseReverses1.visible:=alpacaMode;
   NSswapped1.visible:=alpacaMode;
   equinox_communication1.enabled:=alpacaMode;
-  focallength1.enabled:=alpacaMode;
+  focallength1.enabled:=((alpacaMode) or (CheckBox_focal_length_driver1.checked=false));
+  CheckBox_focal_length_driver1.enabled:=(alpacaMode=false);
+
   update_required:=true;
 end;
 

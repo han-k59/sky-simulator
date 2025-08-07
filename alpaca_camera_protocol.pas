@@ -57,6 +57,8 @@ var
   read_out_mode: integer=0;//doesn't do anything normal1 or normal2
   bin_maximum: integer=2;//could be set at one if DSS images are used
   last_exposureduration:double=-1;
+  last_exposureStartTime:string='2000-01-01T12:00:00.000';           // UTC start date/time in the FITS-standard / ISO-8601 CCYY-MM-DDThh:mm:ss[.sss…] format.
+
   Percent_Completed: integer=0; {%}
   sensor_type: integer=0;
   { 0 = Monochrome,
@@ -80,6 +82,7 @@ var
         4 CameraDownload Downloading data to PC
         5 CameraError Camera error condition serious enough to prevent further operations (connection fail, etc.).
      }
+
 
 const
   gain_max=1000;
@@ -147,6 +150,7 @@ type
       function  heatsinktemperature: double;  override;
       function  exposureresolution: double;  override;
       function  lastexposureduration: double;  override;
+      function  lastexposureStartTime : string; override;
       function  percentcompleted: integer;  override;
 
       function  sensortype: integer;  override;
@@ -480,6 +484,12 @@ begin
   result:=last_exposureduration;
 end;
 
+function  T_Alpaca_cam.lastexposureStartTime: string;
+begin
+  result:=last_exposureStartTime;
+end;
+
+
 function  T_Alpaca_cam.percentcompleted: integer;
 begin
   result:=Percent_Completed;
@@ -513,8 +523,9 @@ end;
 procedure T_Alpaca_cam.startexposure(x: double; out errortype : integer);
 begin
   {startexposure}
-  camera_exposure:=max(0,x);
+  last_exposurestarttime:=utc_date_time;// In simulation the image is already created if the mount moves. So use startexposure to set a valid starttime. Current date&time in the FITS-standard / ISO-8601 CCYY-MM-DDThh:mm:ss[.sss…] format.
 
+  camera_exposure:=max(0,x);
   errortype:=0;
   if abs(camera_exposure-x)>0.00001 {check one} then
     errortype:=1; {invalid range}

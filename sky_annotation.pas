@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 interface
 
 uses
-   forms,Classes, SysUtils,strutils, math,graphics, Controls {for tcursor},lcltype {Trgbtriple} ;
+   forms,Classes, SysUtils,strutils, math,graphics, Controls {for tcursor},lcltype {Trgbtriple}, LazSysUtils; {nowUtc}
 
 type
   image_array = array of array of single;
@@ -37,6 +37,7 @@ procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylev
 procedure sensor_to_celestial(fitsx,fitsy : double; out ra,dec :double); //(x,y) -> (RA,DEC)
 procedure az_ra2(az,alt,lat,long,t:double;out ra,de: double);{conversion az,alt to ra,dec, longitude is POSITIVE when west. At south azimuth is 180}
 procedure ra_az2(ra,dec,lat,long,t:double;out azimuth2,altitude2: double);{conversion ra & dec to altitude, azimuth, longitude is POSITIVE when west. At south azimuth is 180 }
+function  utc_date_time: string;// Current date&time in the FITS-standard / ISO-8601 CCYY-MM-DDThh:mm:ss[.sss…] format.
 
 
 var
@@ -1041,6 +1042,24 @@ begin
   end;
 end;
 
+
+function  utc_date_time : string;// Current date&time in the FITS-standard / ISO-8601 CCYY-MM-DDThh:mm:ss[.sss…] format.
+var
+  yy,mm,dd :word;
+  hour,min, ss,ms: Word;
+  dt         :tdatetime;
+  function fl(i:integer):string;
+  begin
+    result:=inttostr(i);
+    if length(result)<=1 then result:='0'+result;
+  end;
+
+begin
+  dt:=LazSysUtils.NowUTC;
+  DeCodeDate(dt,YY,MM,DD);
+  DecodeTime(dt,hour,min,ss,ms);
+  result:=inttostr(YY)+'-'+fl(MM)+'-'+fl(DD)+'T'+fl(hour)+':'+fl(min)+':'+fl(ss);////2000-01-01T12:00:00.1234567  no 'Z' added
+end;
 
 
 procedure ra_az2(ra,dec,lat,long,t:double;out azimuth2,altitude2: double);{conversion ra & dec to altitude, azimuth, longitude is POSITIVE when west. At south azimuth is 180 }

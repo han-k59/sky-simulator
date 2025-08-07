@@ -51,7 +51,7 @@ object Form1: TForm1
         Height = 25
         Top = 112
         Width = 116
-        Caption = 'About v3.0.4b'
+        Caption = 'About v3.0.5'
         TabOrder = 1
         OnClick = about1Click
       end
@@ -722,6 +722,15 @@ object Form1: TForm1
         Text = '560'
         OnChange = focallength1Change
         OnExit = focallength1Exit
+      end
+      object CheckBox_focal_length_driver1: TCheckBox
+        Left = 240
+        Height = 23
+        Hint = 'If checked then take focal length from mount driver. (if available)'
+        Top = 232
+        Width = 209
+        Caption = 'Focal length from mount driver'
+        TabOrder = 7
       end
     end
     object tab_mount1: TTabSheet
