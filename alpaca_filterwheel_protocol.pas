@@ -176,21 +176,19 @@ begin
 end;
 
 
-function  T_Alpaca_filterwheel.focusoffsets: Tfocusoffsets;
-var offs: array[0..6] of integer=(0,0,0,0,0,0,0);
+function  T_Alpaca_filterwheel.focusoffsets: Tfocusoffsets;//array of integer;
 begin
+  setlength(result,7);
   with form1 do
   begin
-    offs[0]:=updown_1.position;
-    offs[1]:=updown_2.position;
-    offs[2]:=updown_3.position;
-    offs[3]:=updown_4.position;
-    offs[4]:=updown_5.position;
-    offs[5]:=updown_6.position;
-    offs[6]:=updown_7.position;
+    result[0]:=updown_1.position;
+    result[1]:=updown_2.position;
+    result[2]:=updown_3.position;
+    result[3]:=updown_4.position;
+    result[4]:=updown_5.position;
+    result[5]:=updown_6.position;
+    result[6]:=updown_7.position;
   end;
-
-  result:=offs;
 end;
 
 

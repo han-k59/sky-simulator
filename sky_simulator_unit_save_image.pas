@@ -179,7 +179,7 @@ begin
     for j:=0 to width5-1 do
     begin
       if flip_H=true then m:=width5-1-j else m:=j;
-      thecolor.red:=min(65535,round(img_array[k,m]));
+      thecolor.red:=min(65535,round(img_array[k,m]+random*2 {add some noise}));
       thecolor.green:=thecolor.red;
       thecolor.blue:=thecolor.red;
       thecolor.alpha:=65535;
@@ -297,7 +297,7 @@ begin
       begin
         for j:=0 to width5-1 do
         begin
-          dum:=max(0,min(65535,round(img_array[i,j]))) - bzero;{limit data between 0 and 65535 and shift it to -32768.. 32767}
+          dum:=max(0,min(65535,round(img_array[i,j]+random*2 {add some noise} ))) - bzero;{limit data between 0 and 65535 and shift it to -32768.. 32767}
           { value  - bzero              result  shortint    word
            ($0000  - $8000) and $FFFF = $8000 (-32768       32768 )  note  $0000 - $8000 ==>  $FFFF8000. Highest bits are skipped
            ($0001  - $8000) and $FFFF = $8001 (-32767       32769 )  note  $0001 - $8000 ==>  $FFFF8001. Highest bits are skipped

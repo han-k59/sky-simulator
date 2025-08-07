@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <BuildModes Active="Default"/>
-    <Units Count="9">
+    <Units Count="11">
       <Unit0>
         <Filename Value="sky_simulator.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="151" Y="12"/>
         <UsageCount Value="23"/>
-        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="sky_simulator_main.pas"/>
@@ -18,8 +17,9 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="1628"/>
-        <CursorPos X="27" Y="1644"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="246"/>
+        <CursorPos X="32" Y="255"/>
         <UsageCount Value="23"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -27,51 +27,44 @@
       <Unit2>
         <Filename Value="sky_simulator_unit_download.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="5" Y="38"/>
         <UsageCount Value="23"/>
-        <Loaded Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="sky_annotation.pas"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="651"/>
         <CursorPos Y="675"/>
         <UsageCount Value="11"/>
-        <Loaded Value="True"/>
       </Unit3>
       <Unit4>
         <Filename Value="cu_tcpserver.pas"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="395"/>
         <CursorPos X="40" Y="401"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit4>
       <Unit5>
         <Filename Value="sky_simulator_unit_290.pas"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="705"/>
         <CursorPos Y="718"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit5>
       <Unit6>
         <Filename Value="cu_alpacacamera.pas"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="132"/>
         <CursorPos Y="240"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="cu_alpacaserver.pas"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="261"/>
         <CursorPos Y="275"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit7>
       <Unit8>
         <Filename Value="../fpcupdeluxe/fpcupdeluxe/lazarus/lcl/interfaces/gtk2/gtk2widgetset.inc"/>
@@ -80,128 +73,48 @@
         <CursorPos X="68" Y="1978"/>
         <UsageCount Value="10"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="alpaca_filterwheel_protocol.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="176"/>
+        <CursorPos Y="178"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="alpaca_mount_protocol.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="847"/>
+        <CursorPos X="22" Y="853"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit10>
     </Units>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="5" HistoryIndex="4">
       <Position1>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="231" TopLine="213"/>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="1640" Column="5" TopLine="1629"/>
       </Position1>
       <Position2>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="2235" TopLine="2233"/>
       </Position2>
       <Position3>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="231" TopLine="213"/>
+        <Filename Value="sky_simulator_main.pas"/>
+        <Caret Line="259" Column="53" TopLine="246"/>
       </Position3>
       <Position4>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
+        <Filename Value="alpaca_filterwheel_protocol.pas"/>
+        <Caret Line="179" Column="60" TopLine="175"/>
       </Position4>
       <Position5>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="231" TopLine="213"/>
+        <Filename Value="alpaca_filterwheel_protocol.pas"/>
+        <Caret Line="178" TopLine="176"/>
       </Position5>
-      <Position6>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position6>
-      <Position7>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="232" TopLine="213"/>
-      </Position7>
-      <Position8>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position8>
-      <Position9>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="232" TopLine="213"/>
-      </Position9>
-      <Position10>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position10>
-      <Position11>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="233" TopLine="213"/>
-      </Position11>
-      <Position12>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position12>
-      <Position13>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="233" TopLine="213"/>
-      </Position13>
-      <Position14>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position14>
-      <Position15>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="233" TopLine="213"/>
-      </Position15>
-      <Position16>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position16>
-      <Position17>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="234" TopLine="213"/>
-      </Position17>
-      <Position18>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position18>
-      <Position19>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="234" TopLine="213"/>
-      </Position19>
-      <Position20>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position20>
-      <Position21>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="234" TopLine="213"/>
-      </Position21>
-      <Position22>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position22>
-      <Position23>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="235" TopLine="213"/>
-      </Position23>
-      <Position24>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position24>
-      <Position25>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="229" TopLine="213"/>
-      </Position25>
-      <Position26>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="236" TopLine="213"/>
-      </Position26>
-      <Position27>
-        <Filename Value="cu_alpacaserver.pas"/>
-        <Caret Line="275" TopLine="261"/>
-      </Position27>
-      <Position28>
-        <Filename Value="cu_tcpserver.pas"/>
-        <Caret Line="460" TopLine="445"/>
-      </Position28>
-      <Position29>
-        <Filename Value="cu_tcpserver.pas"/>
-        <Caret Line="254" Column="64" TopLine="241"/>
-      </Position29>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes Count="0" ActiveMode=""/>
+      <Modes ActiveMode=""/>
     </RunParams>
   </ProjectSession>
 </CONFIG>

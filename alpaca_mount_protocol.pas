@@ -289,9 +289,10 @@ begin
 
   if angular_distance_mount>=0 then sideofpier_alpaca:=1 else sideofpier_alpaca:=0; // 0=pierEast(pointing West), 1=pierWest(Pointing East), -1=pierUnknown
 
+
   if abs(abs(angular_distance_mount)-12)<=0.000003 then
      result:=false; //Exactly at north. Meridian crossing will no longer occur. Mount will stop briefly at North. Simplified simulation
- // memo2_message(floattostr(ra_encoder)+' ,  '+floattostr(dec_encoder)+',  ' + floattostr((abs(angular_distance_mount)-12)) );
+
 end;
 
 
@@ -315,9 +316,9 @@ begin
     begin //go first to celestial pole to avoid crossing meridian
       ra_target:=inc_angle((meridian)*15,180)/15;
       if pos('-',form1.latitude1.text)=0 then
-        dec_target:=90 //go near to celestial pole for flip
+        dec_target:=85 //go near to celestial pole for flip. Use 85 to see RA movement on the map
       else
-        dec_target:=-90; //go near to celestial pole for flip
+        dec_target:=-85; //go near to celestial pole for flip. Use 85 to see RA movement on the map
 
     end
     else
@@ -326,14 +327,9 @@ begin
       dec_target:=alpaca_dec_target;
     end;
 
-    //memo2_message('dec_target:'+floattostr(dec_target) );
+    deltaRa:=inc_angle((ra_target-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees. Factor 15 for hours to degrees}
 
-    deltaRa:=inc_angle((ra_target-alpaca_ra)*15,0); {calculate ra distance in degrees in range -180..+180 degrees}
-
-    if abs(dec_encoder)<90 then
-      stepRA:=min(abs(deltaRA),10) {degrees, slew speed ten degree per second}
-    else
-       stepRA:=abs(deltaRA); //flip RA at celestial pole
+    stepRA:=min(abs(deltaRA),20); {degrees, slew speed twenty degree per second}
 
     if deltaRA<0 then
       ra_encoder:=inc_angle(ra_encoder,-stepRa)    //decrement
@@ -341,7 +337,7 @@ begin
       ra_encoder:=inc_angle(ra_encoder,+stepRa);   //increment
 
     deltaDec:=dec_target-alpaca_Dec;{calculate dec distance}
-    stepDec:=min(abs(deltaDec),10); {slew speed ten degree per second}
+    stepDec:=min(abs(deltaDec),20); {slew speed twenty degree per second}
     if deltaDec<0 then
       dec_encoder:=inc_angle(dec_encoder,-stepDec)
     else
@@ -859,10 +855,11 @@ begin
 end;
 
 function  T_Alpaca_Mount.trackingrates: TTrackingRates;
-const
-  rates: array[0..2] of integer=(0,1,2);
 begin
-  result:=rates;
+  setlength(result,3);
+  result[0]:=0;
+  result[1]:=1;
+  result[2]:=2;
   {Integer value corresponding to one of the standard drive rates.
 
   Sidereal tracking rate (15.041 arcseconds per second).
