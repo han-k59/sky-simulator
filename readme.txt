@@ -1,39 +1,54 @@
-Sky simulator for ASCOM & Alpaca is a program for simulating an astronomical camera on a computer controlled telescope. The camera will show images of the night sky based on the telescope pointing direction.  The images are created artificially or are from the online deep sky survey. The images can be defocused/ blurred by the focuser position.
+Sky simulator for ASCOM & Alpaca is a program for simulating an astronomical camera on a computer
+controlled telescope. The camera will show images of the night sky based on the telescope pointing direction. 
+The images are created artificially or are from the online deep sky survey. The images can be defocused/ blurred
+by the focuser position.
 
 Setup instructions are available here: https://sky-simulator.sourceforge.io/
 
-In the image acquisition programs CCDCiel/NINA/APT/SGP you should select the folowing ASCOM simulators
+In the image acquisition programs CCDCiel/NINA/APT/SGP you should select the following ASCOM or Alpaca simulators
 
 Camera:
- "Sky Simulator"
+   Important for Windows. In the ASCOM camera selector click on the Alpaca tab and enable discovery. Then you can
+   access the Alpaca camera via the standard COM interface. Select in your imaging program "Camera Sky Simulator
+   ALPACA (Alpaca) && Guide Camera Sky Simulator ALPACA (Alpaca)". Both camera are accessible as an Alpaca device
+   or in Windows only as a COM service.
 
 Focuser:
- "Simulator" or your own focuser.
+  Select "Simulator" or your own focuser or Focuser Sky Simulator for Alpaca (Alpaca).
 
 Mount:
-"Telescope Simulator for .NET".  or your own mount
+  Select either the Mount Sky Simulator for Alpaca (Alpaca), "Telescope Simulator for .NET".  or your own mount.
+
 
 The program will create or download images and feed the camera simulator with these.
 
-First  start the simulation program. Click on Start simulation. Then a first image.png will be created in default folder documents. Then select in the image acquisition program for the camera  the option "Sky simulator". Click on properties and select for image file the file image.png in folder documents. Select in the simulation program and image acquisition program the same focuser and mount. For full simulation select the focuser and mount as shown above. But you can also select a real mount or focuser.
+As soon the mount moves to a new position or the focuser position changes a new image will be created. Keep the defocus range small.
 
-As soon the mount moves to a new position or the focuser position changes a new image will be created. 
-
-Keep image size small something like 1200 x1000 pixels. For the artifical sky the exposure time should be a few seconds minimum. For the DSS images download the exposure time should be longer.
-
-With this simulator you can test the focuser routine, centering using plate solving, guiding of PHD2 and sequences.
-
-If the Alpaca mount is used, the mount flipping and reverse declination can be tested.
+With this simulator you can test centering using plate, solving and sequences, focuser routine and guiding.
 
 For feedback and comments use the forum at SourceForge (https://sourceforge.net/p/sky-simulator/discussion/) or make a ticket.
 
-For a small field-of-view setting a seperate star database down to magnitude 16 packed in a zip file is provided (G16). Also the G17 star database down to magitude 17 of the HNSKY program could be used.
+For a small field-of-view setting a seperate larger star database down to magnitude 16 packed in a zip file is provided (G16).
+Also the G17 star database down to magitude 17 of the HNSKY program could be used.
 
 # Han
 
 
-History of the Sky Simulator for ASCOM
+History of the Sky Simulator for ASCOM and Alpaca
 
+2025-08-07,  Version 3.0.5a implemented Alpaca lastexposurestartime. Compiled it for Linux only.
+2025-07-14,  Version 3.0.5 Added a checkmark focal length setting. Added some noise to FITS and TIFF output images
+2025-05-15,  Version 3.0.4b Fixed several small things. 
+2025-01-21,  Version 3.0.2 Added an option to use a single image as an input. Fixed continous logging "out of focus" when in focus. 
+2024-12-15,  Version 3.0.1 Added a button for "Ascom camera chooser" to allow adding a dynamic driver for ALPACA acces via com. E.g. for PHD2
+2024-11-28,  Version 3.0.0b Fix for connecting camera using ASCOM 7.
+2024-11-25,  Version 3.0.0a Fix for MaximDL connecting to the camera. Fixed setting readoutmode.
+2024-11-08,  Version 3.0.0 Several corrections.
+2024-11-06,  Version 3.0.0 RC9. Allowed 2x2 camera binning. Fixed some problems for Bayer patterns.
+2024-09-21,  Version 3.0.0 RC6. Major update. Many changes around polar alignment en popup menus.
+2024-08-26,  Version 3.0.0 RC2. Minor changes in sky map.
+2024-08-24,  Version 3.0.0 RC1. Large overhaul. The only simulated camera available is the internal one accesible via Alpaca or ASCCOM COM. Improved simulation of dithering.
+2024-08-01,  Version 2.1.2. Minor update in the ALPCA mount simulation. Added a limit the mount pulse speed correction of 7.5"/sec or as set pulse speed.
 2024-06-07,  Version 2.1.1. Some optimisations. Added a popup menu to save the created image directly to FITS or AstroFITS including astrometrical solution.
 2024-02-20,  Version 2.1.0a. Menu optimisation. Show better why artificial sky is forced.
 2024-02-17,  Version 2.1.0. Menu reorganisation. Put each equimpment simulation in a seperate tab.
