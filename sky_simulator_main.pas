@@ -473,8 +473,14 @@ procedure memo2_message(s: string);{message to memo2}
 begin
   form1.statusbar1.simpletext:=s;
   form1.memo2.lines.add(TimeToStr(time)+'  '+s); {fill memo2 with tab_log1}
-end;
 
+  {$IFDEF unix}
+  // scroll down:
+    form1.Memo2.SelStart := Length(form1.Memo2.Text);//2025
+    form1.Memo2.SelLength := 0;
+  {$ELSE }
+  {$ENDIF}
+end;
 
 
 procedure TForm1.ShowError(var msg:string); {Alpaca}
@@ -681,6 +687,96 @@ begin
 end;
 {$ENDIF}
 
+Function Minmax(x,min2,max2:double):double;{Limit x to min and max}
+var
+  y: double;
+begin
+  if x<min2 then y:=min2
+  else
+  begin
+    if x>max2 then y:=max2
+    else y:=x;
+  end;
+  minmax:=y;
+end;
+
+
+procedure update_fov(ch : string ); //complicated logic to adaot to DSS download
+begin
+  with form1 do
+  begin
+    pixelsizemicrometer:=strtofloat2(pixelsizemicrometer1.caption);//always update since this procedure is called after loading settings
+    height_arcmin:=strtofloat2(height_arcmin1.caption);
+    width2:=strtoint(form1.width_pixels1.text);{width}
+    height2:=strtoint(height_pixels1.caption);
+
+    if eso_selected1.checked then
+    begin
+      height_arcmin:=minmax(height_arcmin,0.3,60);//limitation
+      width_arcmin:=round(1.3333333333333333333*height_arcmin);
+      height2:=round(height_arcmin*60/1.7);
+      width2:=round(width_arcmin*60/1.7);
+    end;
+
+    focal_length_telescope:=(strtofloat2(focallength1.caption)/1000);//In meter. Always update since this procedure is called after loading settings
+
+    if ((ch='hp') or (ch='ps') or (ch='fl')) then //change in height in pixel, pixel size
+    begin
+      height_arcmin:=(height2*pixelsizemicrometer/focal_length_telescope)*60*(180/1E6)/pi;
+      height_arcmin1.caption:=floattostrf(height_arcmin, fffixed, 0, 0); {calculate image height in arc minutes}
+    end;
+    if ch='ha' then //change in height arcmin
+    begin
+      if focallength1.enabled then //not dicated by ascom driver
+      begin
+        focal_length_telescope:=(height2*pixelsizemicrometer/height_arcmin)*60*(180/1E6)/pi; //focal length in meter
+        focallength1.caption:=floattostrf(focal_length_telescope*1000, fffixed, 0, 0);  //focal length in mm
+      end
+      else
+      begin //focal length dictated by ascom mount. Adapt pixel size instead
+        pixelsizemicrometer:=focal_length_telescope*height_arcmin/(height2*60*(180/1E6)/pi);
+        pixelsizemicrometer1.caption:=floattostrf(pixelsizemicrometer, fffixed, 0, 1);
+      end;
+    end;
+
+    scale1.Caption:=floattostrF(height_arcmin*60/height2,ffFixed,4,2);
+
+    height_arcmin1.caption:=inttostr(round(height_arcmin));
+    width_arcmin1.caption:=inttostr(round(height_arcmin*width2/height2));
+
+    width_pixels1.text:=inttostr(width2);
+    height_pixels1.text:=inttostr(height2);
+
+  end;
+end;
+
+
+procedure TForm1.pixelsizemicrometer1Exit(Sender: TObject);
+begin
+  update_fov('ps');
+  update_required:=true;
+end;
+
+
+procedure TForm1.focallength1Exit(Sender: TObject);
+begin
+  update_fov('fl');
+  update_required:=true;
+end;
+
+procedure TForm1.height_arcmin1Exit(Sender: TObject);
+begin
+  update_fov('ha');
+  update_required:=true;
+end;
+
+
+procedure TForm1.height_pixels1Exit(Sender: TObject);
+begin
+  update_fov('hp');
+  update_required:=true;
+end;
+
 
 function load_settings(lpath: string)  : boolean;
 var
@@ -777,14 +873,12 @@ begin
     dum:=initstring.Values['latitude']; if dum<>'' then form1.latitude1.text:=dum;
     dum:=initstring.Values['longtude']; if dum<>'' then form1.longitude1.text:=dum;
 
-    dum:=initstring.Values['height']; if dum<>'' then form1.height_arcmin1.text:=dum;
     dum:=initstring.Values['width_pixels']; if dum<>'' then form1.width_pixels1.text:=dum;
     dum:=initstring.Values['height_pixels']; if dum<>'' then form1.height_pixels1.text:=dum;
 
     dum:=initstring.Values['px_size']; if dum<>'' then form1.pixelsizemicrometer1.text:=dum;
     dum:=initstring.Values['focal_length']; if dum<>'' then form1.focallength1.text:=dum;
     form1.checkBox_focal_length_driver1.checked:=get_boolean('fl_driver',false);
-
 
     dum:=initstring.Values['star_database']; if dum<>'' then form1.star_database1.text:=dum;
     dum:=initstring.Values['f-ratio']; if dum<>'' then form1.focal_ratio1.text:=dum;
@@ -881,7 +975,6 @@ begin
     initstring.Values['latitude']:=form1.latitude1.text;
     initstring.Values['longtude']:=form1.longitude1.text;
 
-    initstring.Values['height']:=form1.height_arcmin1.text;
     initstring.Values['width_pixels']:=form1.width_pixels1.text;
     initstring.Values['height_pixels']:=form1.height_pixels1.text;
     initstring.Values['px_size']:=form1.pixelsizemicrometer1.text;
@@ -1097,20 +1190,6 @@ begin
   DeCodeDate(dt,YY,MM,DD);
   DecodeTime(dt,hour,min,ss,ms);
   jd:=julian_calc(yy,mm,dd,hour,min,ss+ms/1000);{calculate julian day}
-end;
-
-
-Function Minmax(x,min2,max2:double):double;{Limit x to min and max}
-var
-  y: double;
-begin
-  if x<min2 then y:=min2
-  else
-  begin
-    if x>max2 then y:=max2
-    else y:=x;
-  end;
-  minmax:=y;
 end;
 
 
@@ -1762,94 +1841,16 @@ begin
 end;
 
 
-procedure update_fov(ch : string ); //complicated logic to adaot to DSS download
-begin
-  with form1 do
-  begin
-    pixelsizemicrometer:=strtofloat2(pixelsizemicrometer1.caption);//always update since this procedure is called after loading settings
-    height_arcmin:=strtofloat2(height_arcmin1.caption);
-    width2:=strtoint(form1.width_pixels1.text);{width}
-    height2:=strtoint(height_pixels1.caption);
-
-    if eso_selected1.checked then
-    begin
-      height_arcmin:=minmax(height_arcmin,0.3,60);//limitation
-      width_arcmin:=round(1.3333333333333333333*height_arcmin);
-      height2:=round(height_arcmin*60/1.7);
-      width2:=round(width_arcmin*60/1.7);
-    end;
-
-    focal_length_telescope:=(strtofloat2(focallength1.caption)/1000);//In meter. Always update since this procedure is called after loading settings
-
-    if ((ch='hp') or (ch='ps') or (ch='fl')) then //change in height in pixel, pixel size
-    begin
-      height_arcmin:=(height2*pixelsizemicrometer/focal_length_telescope)*60*(180/1E6)/pi;
-      height_arcmin1.caption:=floattostrf(height_arcmin, fffixed, 0, 0); {calculate image height in arc minutes}
-    end;
-    if ch='ha' then //change in height arcmin
-    begin
-      if focallength1.enabled then //not dicated by ascom driver
-      begin
-        focal_length_telescope:=(height2*pixelsizemicrometer/height_arcmin)*60*(180/1E6)/pi; //focal length in meter
-        focallength1.caption:=floattostrf(focal_length_telescope*1000, fffixed, 0, 0);  //focal length in mm
-      end
-      else
-      begin //focal length dictated by ascom mount. Adapt pixel size instead
-        pixelsizemicrometer:=focal_length_telescope*height_arcmin/(height2*60*(180/1E6)/pi);
-        pixelsizemicrometer1.caption:=floattostrf(pixelsizemicrometer, fffixed, 0, 1);
-      end;
-    end;
-
-    scale1.Caption:=floattostrF(height_arcmin*60/height2,ffFixed,4,2);
-
-    height_arcmin1.caption:=inttostr(round(height_arcmin));
-    width_arcmin1.caption:=inttostr(round(height_arcmin*width2/height2));
-
-    width_pixels1.text:=inttostr(width2);
-    height_pixels1.text:=inttostr(height2);
-
-  end;
-end;
-
-
-procedure TForm1.pixelsizemicrometer1Exit(Sender: TObject);
-begin
-  update_fov('ps');
-  update_required:=true;
-end;
-
-
-procedure TForm1.focallength1Exit(Sender: TObject);
-begin
-  update_fov('fl');
-  update_required:=true;
-end;
-
-procedure TForm1.height_arcmin1Exit(Sender: TObject);
-begin
-  update_fov('ha');
-  update_required:=true;
-end;
-
-
-procedure TForm1.height_pixels1Exit(Sender: TObject);
-begin
-  update_fov('hp');
-  update_required:=true;
-end;
-
-
-
 procedure simulate_sky;
 const
    equinox_telescope  : integer = 0;
    slewtime     : integer=0;
    rotcounter   : integer=0;{unstable rotator}
-   foccounter   : integer=0;{unstable focuser}
+//   foccounter   : integer=0;{unstable focuser}
    cnt          : integer=0;
    cnt2         : integer=0;
 var
-    eqs, blur_factor,noise_index,periodic_error_index,old,backlash,focus_backlash                       : integer;
+    eqs, blur_factor,noise_index,periodic_error_index,oldpos,backlash,focus_backlash                       : integer;
     hfd,seperation,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy : double;
     mount_slewing, focal_length_ascom_driver_implemented      : boolean;
     Save_Cursor:TCursor;
@@ -2095,38 +2096,33 @@ begin
       try
       if ((ascom_focuser_connected) or (focuser_alpaca1.Checked)) then {allow import focuser}
       begin
-        oldreal_position:=real_focuser_position;
         backlash:=strtoint(backlash1.text) div 2;
 
-        old:= focuser_position;
+        oldpos:= focuser_position;
 
         if focuser_alpaca1.Checked=false then {ascom}
           focuser_position:=ascom_focuser.position
         else {alpaca}
           focuser_position:=alpaca_foc_position;
 
-        if focuser_position>old then begin focus_backlash:=-min(focuser_position-real_focuser_position,backlash); arrowleft1.caption:='🢁'+inttostr(focus_backlash); end
+        if focuser_position>oldpos then begin focus_backlash:=-min(focuser_position-real_focuser_position,backlash); arrowleft1.caption:='🢁'+inttostr(focus_backlash); end
         else
-        if focuser_position<old then begin focus_backlash:=+min(real_focuser_position-focuser_position,backlash);arrowleft1.caption:='🢃'+inttostr(focus_backlash); end;
+        if focuser_position<oldpos then begin focus_backlash:=+min(real_focuser_position-focuser_position,backlash);arrowleft1.caption:='🢃'+inttostr(focus_backlash); end;
         real_focuser_position:=focuser_position+focus_backlash;
 
         real_position1.Caption:=inttostr(real_focuser_position);
         focuser_position1.Caption:=inttostr(round(focuser_position));
 
-        if oldreal_position=real_focuser_position then {stable focus}
+        if oldreal_position<>real_focuser_position then {stable focus}
         begin
           //log_to_file(documents_path+'\simulator_log.txt',DateTimeToStr(Now)+',     Indication,'+inttostr(round(focuser_position))+',    real_pos,'+inttostr(real_focuser_position)+',   hfd,'+floattostrFdot(hfd_calc(real_focuser_position,strtoint(focus_at1.text){perfectfocusposition},2.35,2.35*strtoint(focus_range1.text)/10),0,2));
-           inc(foccounter);
-           if foccounter=10 then {long enough stable focus, time for an update}
-           begin
-             update_required:=true;
-             memo2_message('Focuser reached new position.');
-           end
-        end
-        else
-        foccounter:=0;{unstable focus position}
+          update_required:=true;
+          oldreal_position:=real_focuser_position;
+          memo2_message('Focuser reached new position.');
+        end;
 
-        if old<>focuser_position then {unequal positions}
+
+        if oldpos<>focuser_position then {unequal positions}
         begin
           real_position1.Caption:=inttostr(real_focuser_position);
           focuser_position1.Caption:=inttostr(round(focuser_position));
@@ -2462,8 +2458,6 @@ begin
         end;
 
         update_required:=false;
-        foccounter:=999;{stable situation. Already 999 cycles no change}
-        rotcounter:=999;{stable situation. Already 999 cycles no change}
         with form1 do
         memo2_message('Image ready for download. J2000 '+telescope_position2000_ra1.caption+',  '+telescope_position2000_dec1.caption+ '   JNow '+telescope_positionJnow_ra1.caption+',  '+telescope_positionJnow_dec1.caption );
 
@@ -3106,7 +3100,7 @@ begin
   if load_settings(user_path+'sky_simulator.cfg')=false then
     if DirectoryExists(user_path)=false then createdir(user_path);{create c:\users\yourname\appdata\local\sky_simulator}
 
-  update_fov('');//update scale after loading settings
+  update_fov('fl');//calculate the height in arcmin
 
   focuser_position:=strtoint(form1.focus_at1.text);
   real_focuser_position:=focuser_position;
