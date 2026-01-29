@@ -36,6 +36,9 @@ Also the G17 star database down to magitude 17 of the HNSKY program could be use
 
 History of the Sky Simulator for ASCOM and Alpaca
 
+2026-01-29,  Version 3.0.7, adapted to the latest Ascom/Alpaca standard. Provided an ASCOM chooser for all devices for creating a bridge ASCOM to ALPACA
+2026-01-27,  Version 3.0.6a, added new Ascom 7 method connect/disconnect for Alpaca
+2026-01-15,  Version 3.0.6, expanded the mount error options.
 2025-08-07,  Version 3.0.5a implemented Alpaca lastexposurestartime. Compiled it for Linux only.
 2025-07-14,  Version 3.0.5 Added a checkmark focal length setting. Added some noise to FITS and TIFF output images
 2025-05-15,  Version 3.0.4b Fixed several small things. 
@@ -75,7 +78,7 @@ History of the Sky Simulator for ASCOM and Alpaca
 2022-04-30,  Version 2.0.0ß27,  Very minor change in server.
 2022-04-29,  Version 2.0.0ß26,  Fixed a problem if Alpaca packages are coming very fast behind each other.
 2022-04-22,  Version 2.0.0ß25,  Modified Alpaca server for persistent connections. So for HTTP 1.1
-2022-04-15,  Version 2.0.0ß22,23,24  Worked on alpaca conformity.
+2022-04-15,  Version 2.0.0ß22,23,24  Worked on Alpaca conformity.
 2022-04-12,  Version 2.0.0ß21, Added more Alpaca methods and exceptions.
 2022-04-10,  Version 2.0.0ß20, Fixed some Alpaca methods
 2022-04-07,  Implemented two more Alpaca camera methods. Improved image stretch for image tab.
@@ -101,7 +104,7 @@ History of the Sky Simulator for ASCOM and Alpaca
 2021-11-03,  Version 0.9.02b. Added auto scroll bars if window is made smaller.
 2021-10-05,  Version 0.9.02. Fixed some server problems.
 2021-10-05,  Version 0.9.01. Fixed some problems. Release of the first Linux and MacOS versions using Alpaca protocol only.
-2021-10-05,  Version 0.9.00. Added Alpa interface. Reorganised the menus. Added polar alignment error. Added Linux version.
+2021-10-05,  Version 0.9.00. Added Alpaca interface. Reorganised the menus. Added polar alignment error. Added Linux version.
 2021-08-26,  Version 0.1.28. Replaced the colour star database by a monochrome version. This will allow better recognition of star saturation in the final monochrome camera image. Improved the star shape for close double stars.
 2021-08-26,  Version 0.1.27. Some cosmetic improvements.
 2021-04-19,  Version 0.1.26. Fixed a last minute bug of 0.1.25

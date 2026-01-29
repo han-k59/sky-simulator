@@ -2,8 +2,11 @@ unit cu_alpacafocuser;
 
 {$mode objfpc}{$H+}
 {
-Copyright (C) 2020 Patrick Chevalley
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2020 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -24,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 interface
 
-uses  cu_alpacadevice, Classes, SysUtils;
+uses  cu_alpacadevice, Classes, SysUtils,
+      sky_annotation;{for utc_date_time}
 
 type
 
@@ -81,6 +85,10 @@ begin
   ok:=false; i:=0; {setlength(axr,0);} value:='';
   if method='connected' then begin
     ok:=Connected;
+    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='connecting' then begin //new
+    ok:=false;//always return.  No connection delay with the simulator so always reply False.
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='description' then begin
@@ -144,6 +152,11 @@ begin
     x:=stepsize;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else if method='devicestate' then begin
+    lst:=DeviceState;
+    result:=FormatJSONStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
+  end
   else begin
     result:='GET - Unknown device method: '+method;
     status:=400;
@@ -187,6 +200,14 @@ begin
     if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
       value:=CommandString(p1,ok);
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='connect' then begin //new
+    SetConnected(true);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='disconnect' then begin //new
+    SetConnected(false);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='connected' then begin
     if GetParamBool(params,'Connected',ok) then

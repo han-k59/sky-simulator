@@ -2,8 +2,11 @@ unit cu_alpacarotator;
 
 {$mode objfpc}{$H+}
 {
-Copyright (C) 2020 Patrick Chevalley
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2020 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -24,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 interface
 
-uses  cu_alpacadevice, Classes, SysUtils;
+uses  cu_alpacadevice, Classes, SysUtils,
+      sky_annotation;{for utc_date_time}
 
 type
 
@@ -46,7 +50,6 @@ type
       function  MechanicalPosition: double; virtual; abstract;
 
       function  stepsize: double; virtual; abstract;
-//      function  maxstep: integer; virtual; abstract;
       function  temperature: double; virtual; abstract;
       function  reverse: boolean; virtual; abstract;
       function  canreverse: boolean; virtual; abstract;
@@ -92,6 +95,10 @@ begin
     ok:=Connected;
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else if method='connecting' then begin //new
+    ok:=false;//always return.  No connection delay with the simulator so always reply False.
+    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
   else if method='description' then begin
     value:=Description;
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -111,11 +118,6 @@ begin
   else if method='name' then begin
     value:=Name;
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-  end
-  else if method='supportedactions' then begin
-    lst:=SupportedActions;
-    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-    lst.Free;
   end
   else if method='absolute' then begin
     ok:=fabsolute;
@@ -152,6 +154,16 @@ begin
   else if method='canreverse' then begin
     ok:=canreverse;
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='devicestate' then begin
+    lst:=DeviceState;
+    result:=FormatJSONStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
+  end
+  else if method='supportedactions' then begin
+    lst:=SupportedActions;
+    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
   end
   else begin
     result:='GET - Unknown device method: '+method;
@@ -197,6 +209,14 @@ begin
     if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
       value:=CommandString(p1,ok);
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='connect' then begin //new
+    SetConnected(true);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='disconnect' then begin //new
+    SetConnected(false);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='connected' then begin
     if GetParamBool(params,'connected',ok) then

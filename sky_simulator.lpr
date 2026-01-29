@@ -8,7 +8,7 @@ uses
   {$ENDIF}//{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, sky_simulator_main,
-sky_simulator_unit_save_image;
+  sky_simulator_unit_save_image;
 
 {$R *.res}
 

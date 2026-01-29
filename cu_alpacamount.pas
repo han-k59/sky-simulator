@@ -2,8 +2,11 @@ unit cu_alpacamount;
 
 {$mode objfpc}{$H+}
 {
-Copyright (C) 2020 Patrick Chevalley
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2020 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -38,10 +41,7 @@ type
       function  ProcessPutRequest(req,arg: string; ServerTransactionID:LongWord; out status: integer):string; override;
       function  ProcessSetup(req: string; out status: integer):string; override;
       function  GetSetupPage: string; virtual; abstract;
-      function  alignmentmode: integer; virtual; abstract;
       function  altitude: double; virtual; abstract;
-      function  aperturearea: double; virtual; abstract;
-      function  aperturediameter: double; virtual; abstract;
       function  athome: boolean; virtual; abstract;
       function  atpark: boolean; virtual; abstract;
       function  azimuth: double; virtual; abstract;
@@ -64,8 +64,8 @@ type
       function  declination: double; virtual; abstract;
       function  declinationrate: double; virtual; abstract;
       procedure setdeclinationrate(value: double); virtual; abstract;
-      function  doesrefraction: boolean; virtual; abstract;
-      procedure setdoesrefraction(value: boolean); virtual; abstract;
+//      function  doesrefraction: boolean; virtual; abstract;
+//      procedure setdoesrefraction(value: boolean); virtual; abstract;
       function  equatorialsystem: integer; virtual; abstract;
       function  focallength: double; virtual; abstract;
       function  guideratedeclination: double; virtual; abstract;
@@ -100,28 +100,20 @@ type
       procedure settrackingrate(value: integer); virtual; abstract;
       function  trackingrates: TTrackingRates; virtual; abstract;
       function  utcdate: string; virtual; abstract;
-      procedure setutcdate(value: string); virtual; abstract;
       procedure abortslew; virtual; abstract;
       function  axisrates(axis:integer): TAxisRates; virtual; abstract;
       function  canmoveaxis(axis:integer): boolean; virtual; abstract;
-
-      procedure axis_rates; virtual; abstract;
-      function  destinationsideofpier(ra,dec: double):integer; virtual; abstract;
-      procedure findhome; virtual; abstract;
       procedure moveaxis(axis:integer;rate:double); virtual; abstract;
       procedure park; virtual; abstract;
       procedure pulseguide(direction,duration: integer); virtual; abstract;
-      procedure setpark; virtual; abstract;
-      procedure slewtoaltaz(az,alt: double); virtual; abstract;
-      procedure slewtoaltazasync(az,alt: double); virtual; abstract;
       procedure slewtocoordinates(ra,dec: double; out ok:boolean); virtual; abstract;
       procedure slewtocoordinatesasync(ra,dec: double; out ok:boolean); virtual; abstract;
       procedure slewtotarget; virtual; abstract;
       procedure slewtotargetasync; virtual; abstract;
-      procedure synctoaltaz(az,alt: double); virtual; abstract;
       procedure synctocoordinates(ra,dec: double; out ok: boolean ); virtual; abstract;
       procedure synctotarget; virtual; abstract;
       procedure unpark; virtual; abstract;
+
 
   end;
 
@@ -160,6 +152,10 @@ begin
     ok:=Connected;
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else if method='connecting' then begin //new
+    ok:=false;//always return.  No connection delay with the simulator so always reply False.
+    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
   else if method='description' then begin
     value:=Description;
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -185,9 +181,10 @@ begin
     result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
     lst.Free;
   end
-  else if method='alignmentmode' then begin
-    i:=alignmentmode;
-    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  else if method='devicestate' then begin
+    lst:=DeviceState;
+    result:=FormatJSONStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
   end
   else if method='equatorialsystem' then begin
     i:=equatorialsystem;
@@ -210,21 +207,17 @@ begin
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='destinationsideofpier' then begin
-    if GetParamFloat(params,'RightAscension',ra) and GetParamFloat(params,'Declination',dec) then
-      i:=destinationsideofpier(ra,dec);
-    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='altitude' then begin
     x:=altitude;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='aperturearea' then begin
-    x:=aperturearea;
-    result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='aperturediameter' then begin
-    x:=aperturediameter;
-    result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='azimuth' then begin
     x:=azimuth;
@@ -242,8 +235,6 @@ begin
     x:=focallength;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-
-
   else if method='guideratedeclination' then begin
     x:=guideratedeclination;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -252,8 +243,6 @@ begin
     x:=guideraterightascension;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-
-
   else if method='rightascension' then begin
     x:=rightascension;
     result:=FormatFloatResp(x,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -371,8 +360,7 @@ begin
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='doesrefraction' then begin
-    ok:=doesrefraction;
-    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='ispulseguiding' then begin
     ok:=ispulseguiding;
@@ -395,6 +383,9 @@ begin
     if GetParamInt(params,'Axis',i) then
        axr:=axisrates(i);
     result:=FormatAxisRateResp(axr,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='alignmentmode' then begin
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else begin
     result:='GET - Unknown device method: '+method;
@@ -443,20 +434,28 @@ begin
       value:=Action(p1,p2);
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if method='commandblind' then begin
+  else if method='commandblind' then begin //Deprecated, may result in MethodNotImplementedException
     if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
       CommandBlind(p1,ok);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if method='commandbool' then begin
+  else if method='commandbool' then begin //  Deprecated, may result in MethodNotImplementedException
     if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
       bvalue:=CommandBool(p1,ok);
     result:=FormatBoolResp(bvalue,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if method='commandstring' then begin
+  else if method='commandstring' then begin //Deprecated, may result in MethodNotImplementedException
     if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
       value:=CommandString(p1,ok);
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='connect' then begin //new
+    SetConnected(true);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='disconnect' then begin //new
+    SetConnected(false);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='connected' then begin
     if GetParamBool(params,'connected',ok) then
@@ -468,8 +467,7 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='findhome' then begin
-    findhome;
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='park' then begin
     park;
@@ -480,8 +478,7 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='setpark' then begin
-    setpark;
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='slewtotarget' then begin
     slewtotarget;
@@ -496,9 +493,7 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='doesrefraction' then begin
-    if GetParamBool(params,'DoesRefraction',ok) then
-      setdoesrefraction(ok);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='tracking' then begin
     if GetParamBool(params,'Tracking',ok) then
@@ -558,9 +553,7 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='utcdate' then begin
-    if GetParamString(params,'UTCDate',value) then
-      setutcdate(value);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='trackingrate' then begin
     if GetParamInt(params,'TrackingRate',i) then
@@ -588,17 +581,13 @@ begin
       pulseguide(i,j);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if method='slewtoaltaz' then begin
-    if GetParamFloat(params,'Azimuth',x) and GetParamFloat(params,'Altitude',y) then
-      slewtoaltaz(x,y);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  else if method='slewtoaltaz' then begin //Deprecated since version 4: Use SlewToAltAzAsync(). See Deprecation Notice below.
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='slewtoaltazasync' then begin
-    if GetParamFloat(params,'Azimuth',x) and GetParamFloat(params,'Altitude',y) then
-      slewtoaltazasync(x,y);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
-  else if method='slewtocoordinates' then begin
+  else if method='slewtocoordinates' then begin //Deprecated since version 4: Use SlewToCoordinatesAsync().
     if GetParamFloat(params,'RightAscension',x) and GetParamFloat(params,'Declination',y) then
       slewtocoordinates(x,y, ok);
     if ok=false then set_invalid_range2(x,y);
@@ -617,8 +606,13 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='synctoaltaz' then begin
-    if GetParamFloat(params,'Azimuth',x) and GetParamFloat(params,'Altitude',y) then
-      synctoaltaz(x,y);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
+  end
+  else if (
+  (method='synctoaltaz')
+  ) then
+  begin
+    set_not_implemented;
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else begin

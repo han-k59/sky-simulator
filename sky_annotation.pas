@@ -1,6 +1,6 @@
 unit sky_annotation; {deep sky and star annotation & photometry calibation of the image}
 {$mode delphi}
-{Copyright (C) 2018, 2019, 2021  by Han Kleijn, www.hnsky.org
+{Copyright (C) 2018-2026  by Han Kleijn, www.hnsky.org
  email: han.k.. at...hnsky.org
 
 {This program is free software: you can redistribute it and/or modify
@@ -2038,6 +2038,7 @@ begin
          annotation_to_array('HFD: '+floattostrF(HFD,ffFixed,0,1),true{transparant},graylevel,1, 10,20+3*20 {screen coord}, img_array);
     end;{not a dark}
 
+    if HFD>20 then annotation_to_array('Out of focus, check the focuser position.',true{transparant},2*graylevel,3, 100,height2 div 2 {screen coord}, img_array);
 
     if labels=7 then //north-east indicator
     begin

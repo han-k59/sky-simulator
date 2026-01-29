@@ -2,8 +2,11 @@ unit cu_alpacadevice;
 
 {$mode objfpc}{$H+}
 {
-Copyright (C) 2020 Patrick Chevalley
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2020 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -103,6 +106,7 @@ type
       function  FormatRawResp(value:string; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
       function  FormatStringResp(value:string; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
       function  FormatStringListResp(value:TStringList; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
+      function  FormatJSONStringListResp(value:TStringList; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
       function  FormatBoolResp(value:boolean; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
       function  FormatIntResp(value:integer; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
       function  FormatIntArrayResp(value:array of integer; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
@@ -137,6 +141,7 @@ type
       function  InterfaceVersion: integer; virtual; abstract;
       function  Name:string; virtual; abstract;
       function  SupportedActions:TStringList; virtual; abstract;
+      function  Devicestate:TStringList; virtual; abstract;
 
       property  Path: string read FPath write FPath;
       property  SetupPath: string read FSetupPath write FSetupPath;
@@ -342,6 +347,29 @@ begin
          +'"ErrorNumber":'+inttostr(ErrorNumber)+','
          +'"ErrorMessage":"'+ErrorMessage+'"}'
 end;
+
+function  T_AlpacaDevice.FormatJSONstringListResp(value:TStringList; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
+var buf: string;
+    i: integer;
+begin
+  if value.Count=0 then
+    buf:='[]'
+  else begin
+    buf:='[';
+    for i:=0 to value.Count-1 do begin
+      buf:=buf+value[i]+',';
+    end;
+    SetLength(buf,Length(buf)-1);
+    buf:=buf+']';
+  end;
+  result:='{"Value":'
+         +buf+','
+         +'"ClientTransactionID":'+inttostr(ClientTransactionID)+','
+         +'"ServerTransactionID":'+inttostr(ServerTransactionID)+','
+         +'"ErrorNumber":'+inttostr(ErrorNumber)+','
+         +'"ErrorMessage":"'+ErrorMessage+'"}'
+end;
+
 
 function  T_AlpacaDevice.FormatBoolResp(value:boolean; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
 begin

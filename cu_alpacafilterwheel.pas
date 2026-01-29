@@ -2,8 +2,11 @@ unit cu_alpacafilterwheel;
 
 {$mode objfpc}{$H+}
 {
-Copyright (C) 2020 Patrick Chevalley
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2020 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -78,6 +81,11 @@ begin
     ok:=Connected;
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else
+  if method='connecting' then begin //new
+    ok:=false;//always return.  No connection delay with the simulator so always reply False.
+    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
   else if method='description' then begin
     value:=Description;
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -111,6 +119,16 @@ begin
     i:=position;
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else if method='devicestate' then begin
+    lst:=DeviceState;
+    result:=FormatJSONStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
+  end
+  else if method='supportedactions' then begin
+    lst:=SupportedActions;
+    result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
+  end
   else begin
     result:='GET - Unknown device method: '+method;
     status:=400;
@@ -136,24 +154,24 @@ begin
   FErrorMessage:='';
   bvalue:=false; value:='';
   if method='action' then begin
-    if GetParamString(params,'Action',p1) and GetParamString(params,'Parameters',p2) then
-      value:=Action(p1,p2);
-    result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='commandblind' then begin
-    if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
-      CommandBlind(p1,ok);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='commandbool' then begin
-    if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
-      bvalue:=CommandBool(p1,ok);
-    result:=FormatBoolResp(bvalue,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else if method='commandstring' then begin
-    if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
-      value:=CommandString(p1,ok);
-    result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
+  end
+  else if method='connect' then begin //new
+    SetConnected(true);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='disconnect' then begin //new
+    SetConnected(false);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='connected' then begin
     if GetParamBool(params,'Connected',ok) then
@@ -165,7 +183,6 @@ begin
     filterwheel_position(i);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-
   else begin
     result:='PUT - Unknown device method: '+method;
     status:=400;

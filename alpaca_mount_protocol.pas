@@ -3,8 +3,11 @@ unit alpaca_mount_protocol;
 {$mode objfpc}{$H+}
 {$WARN 5024 off : Parameter "$1" not used}
 {
-Copyright (C) 2021 Patrick Chevalley & Han Kleijn
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2021 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -95,10 +98,6 @@ type
       destructor  Destroy; override;
       function  GetGuid: string; override;
       function  GetSetupPage: string; override;
-      function  Action( actionName, actionParameters: string):string; override;
-      procedure CommandBlind( command: string;  raw: boolean = false); override;
-      function  CommandBool(command: string;  raw: boolean = false):boolean; override;
-      function  CommandString(command: string;  raw: boolean = false):string; override;
       function  Connected:boolean; override;
       procedure SetConnected(value:boolean); override;
       function  Description:string; override;
@@ -107,10 +106,8 @@ type
       function  Name:string; override;
       function  InterfaceVersion: integer; override;
       function  SupportedActions:TStringList; override;
-      function  alignmentmode: integer; override;
+      function  Devicestate:TStringList; override;
       function  altitude: double; override;
-      function  aperturearea: double; override;
-      function  aperturediameter: double; override;
       function  athome: boolean; override;
       function  atpark: boolean; override;
       function  azimuth: double; override;
@@ -133,8 +130,6 @@ type
       function  declination: double; override;
       function  declinationrate: double; override;
       procedure setdeclinationrate(value: double); override;
-      function  doesrefraction: boolean; override;
-      procedure setdoesrefraction(value: boolean); override;
       function  equatorialsystem: integer; override;
       function  focallength: double; override;
 
@@ -149,7 +144,6 @@ type
       function  rightascensionrate: double; override;
       procedure setrightascensionrate(value: double); override;
       function  sideofpier: integer; override;
-      procedure setsideofpier(value: integer); override;
       function  siderealtime: double; override;
       function  sitelatitude: double; override;
       procedure setsitelatitude(value: double); override;
@@ -170,24 +164,17 @@ type
       function  trackingrate: integer; override;
       procedure settrackingrate(value: integer); override;
       function  trackingrates: TTrackingRates; override;
-      procedure setutcdate(value: string); override;
       procedure abortslew; override;
       function  axisrates(axis:integer): TAxisRates; override;
 
       function  canmoveaxis(axis:integer): boolean; override;
-      function  destinationsideofpier(ra,dec: double):integer; override;
-      procedure findhome; override;
       procedure moveaxis(axis:integer;rate:double); override;
       procedure park; override;
       procedure pulseguide(direction,duration: integer); override;
-      procedure setpark; override;
-      procedure slewtoaltaz(az,alt: double); override;
-      procedure slewtoaltazasync(az,alt: double); override;
       procedure slewtocoordinates(ra,dec: double; out ok : boolean); override;
       procedure slewtocoordinatesasync(ra,dec: double; out ok : boolean); override;
       procedure slewtotarget; override;
       procedure slewtotargetasync; override;
-      procedure synctoaltaz(az,alt: double); override;
       procedure synctocoordinates(ra,dec: double; out ok:boolean); override;
       procedure synctotarget; override;
       procedure unpark; override;
@@ -413,32 +400,6 @@ begin
   result:=guid;
 end;
 
-function  T_Alpaca_Mount.Action( actionName, actionParameters: string):string;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:='';
-end;
-
-procedure T_Alpaca_Mount.CommandBlind( command: string;  raw: boolean = false);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
-
-function  T_Alpaca_Mount.CommandBool(command: string;  raw: boolean = false):boolean;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=false;
-end;
-
-function  T_Alpaca_Mount.CommandString(command: string;  raw: boolean = false):string;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:='';
-end;
 
 function   T_Alpaca_Mount.GetSetupPage: string;
 begin
@@ -478,7 +439,7 @@ end;
 
 function  T_Alpaca_Mount.InterfaceVersion: integer;
 begin
-  result:=3; // ITelescope version implementation
+  result:=4; // ITelescope version implementation
 end;
 
 function  T_Alpaca_Mount.Name:string;
@@ -491,34 +452,32 @@ begin
   result:=TStringList.Create;
   result.Clear;
   result.add('slewtocoordinates');
-  result.add('Many actions are supported!');
+  result.add('Try the others and see the response.');
 end;
 
-function  T_Alpaca_Mount.alignmentmode: integer;
+
+function  T_Alpaca_Mount.DeviceState:TStringList;
 begin
-  result:=0;
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
+  result:=TStringList.Create;
+  result.Clear;
+  //Altitude, AtHome, AtPark, Azimuth, Declination, IsPulseGuiding, RightAscension. SideOfPier, SiderealTime, Slewing, Tracking, UTCDate, TimeStamp
+  result.add('{"Name":"Declination","Value":'+floattostrFdot(declination,0,8)+'}');
+  result.add('{"Name":"RightAscension","Value":'+floattostrFdot(rightascension,0,8)+'}');
+  result.add('{"Name":"SideOfPier","Value":'+inttostr(SideOfPier)+'}');
+  result.add('{"Name":"Slewing","Value":'+BoolToStr(is_Slewing,'true','false')+'}');
+  result.add('{"Name":"Tracking","Value":'+BoolToStr(Tracking,'true','false')+'}');
+  result.add('{"Name":"AtPark","Value":'+BoolToStr(AtPark,'true','false')+'}');
+  result.add('{"Name":"AtHome","Value":'+BoolToStr(AtHome,'true','false')+'}');
+  result.add('{"Name":"IsPulseGuiding","Value":'+BoolToStr(ispulseguiding,'true','false')+'}');
+  result.add('{"Name":"utcdate","Value":"'+utcdate+'"}'); //string between  " "
 end;
+
 
 function  T_Alpaca_Mount.altitude: double;
 begin
   result:=alpaca_altitude*180/pi;
 end;
 
-function  T_Alpaca_Mount.aperturearea: double;
-begin
- FErrorNumber:=ERR_NOT_IMPLEMENTED;
- FErrorMessage:=MSG_NOT_IMPLEMENTED;
- result:=0;
-end;
-
-function  T_Alpaca_Mount.aperturediameter: double;
-begin
- FErrorNumber:=ERR_NOT_IMPLEMENTED;
- FErrorMessage:=MSG_NOT_IMPLEMENTED;
- result:=0;
-end;
 
 function  T_Alpaca_Mount.athome: boolean;
 begin
@@ -623,7 +582,7 @@ end;
 function  T_Alpaca_Mount.declinationrate: double;
 begin
   result:= theaxisrates[1]*3600;//from [deg/sec] to ["/sec]
-  //memo2_message('Alpaca, get declinate rate["] '+floattostrF(result,FFfixed,0,5));
+//  memo2_message('Alpaca, get declinate rate["] '+floattostrF(result,FFfixed,0,5));
 end;
 
 procedure T_Alpaca_Mount.setdeclinationrate(value: double);
@@ -631,21 +590,9 @@ begin
   if value=0 then exit;//Nina send a zero when setting trackingrates, Temporary fix
 
   theaxisrates[1]:=value/3600;//from ["/sec] to [deg/sec]
-  //memo2_message('Alpaca, set declinate rate["] '+floattostrF(value,FFfixed,0,5));
+//  memo2_message('Alpaca, set declinate rate["] '+floattostrF(value,FFfixed,0,5));
 end;
 
-function  T_Alpaca_Mount.doesrefraction: boolean;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=true;
-end;
-
-procedure T_Alpaca_Mount.setdoesrefraction(value: boolean);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
 
 function  T_Alpaca_Mount.equatorialsystem: integer;
 begin
@@ -726,13 +673,15 @@ end;
 function  T_Alpaca_Mount.sideofpier: integer;
 begin //0 = pierEast, 1 = pierWest, -1= pierUnknown
   result:=sideofpier_alpaca;
+  //new
+  //Piereast  0   Normal pointing state,
+  //pierWest  1,  Through the pole pointing state
+  //pierUnknown  -1   Unknown or indeterminate
+  //In order to support Dome slaving for German equatorial mounts, where it is important to know on which side of the pier the mount is physically located,
+  //ASCOM has adopted the convention that the Normal pointing state pertains when the mount is on the East side of pier, counterweights below the optical assembly,
+  //observing a target in the West at hour angle +3.0 on the celestial equator.
 end;
 
-procedure T_Alpaca_Mount.setsideofpier(value: integer);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
 
 function  T_Alpaca_Mount.siteElevation: double;
 begin
@@ -894,12 +843,6 @@ begin
   result:=inttostr(YY)+'-'+fl(MM)+'-'+fl(DD)+'T'+fl(hour)+':'+fl(min)+':'+fl(ss)+'Z';
 end;
 
-procedure T_Alpaca_Mount.setutcdate(value: string);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
-
 
 procedure T_Alpaca_Mount.abortslew;
 begin
@@ -923,20 +866,6 @@ end;
 function  T_Alpaca_Mount.canmoveaxis(axis:integer): boolean;
 begin
   result:=axis<2; //(axis<=axis);  // 0 = axisPrimary, 1 = axisSecondary, 2 = axisTertiary.
-end;
-
-function  T_Alpaca_Mount.destinationsideofpier(ra,dec: double):integer;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-  result:=0;
-end;
-
-
-procedure T_Alpaca_Mount.findhome;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
 end;
 
 
@@ -970,23 +899,6 @@ begin
 
 end;
 
-procedure T_Alpaca_Mount.setpark;
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
-
-procedure T_Alpaca_Mount.slewtoaltaz(az,alt: double);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
-
-procedure T_Alpaca_Mount.slewtoaltazasync(az,alt: double);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
 
 procedure T_Alpaca_Mount.slewtocoordinates(ra,dec: double; out ok : boolean);
 begin
@@ -1024,11 +936,6 @@ begin
   alpaca_mount_slewing:=true;
 end;
 
-procedure T_Alpaca_Mount.synctoaltaz(az,alt: double);
-begin
-  FErrorNumber:=ERR_NOT_IMPLEMENTED;
-  FErrorMessage:=MSG_NOT_IMPLEMENTED;
-end;
 
 procedure T_Alpaca_Mount.synctocoordinates(ra,dec: double; out ok: boolean);
 begin
@@ -1044,6 +951,7 @@ begin
   ok:=false
 end;
 
+
 procedure T_Alpaca_Mount.synctotarget;
 begin
   precession_to_jnow(alpaca_ra_target2 {temp value},alpaca_ra_target2 {temp value},alpaca_ra_target,alpaca_dec_target);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
@@ -1051,11 +959,13 @@ begin
   dec_corr:=dec_corr+(alpaca_dec_target-alpaca_dec);{degrees}
 end;
 
+
 procedure T_Alpaca_Mount.unpark;
 begin
   is_parked:=0;
   alpaca_tracking:=true;
 end;
+
 
 
 end.

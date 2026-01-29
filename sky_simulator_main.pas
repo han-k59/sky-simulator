@@ -1,7 +1,8 @@
 unit sky_simulator_main; {Sky simulator. This program will update the camera image based on mount position and focuser position.}
 
-{Copyright (C) 2019, 2022 by Han Kleijn, www.hnsky.org
- email: han.k.. at...hnsky.org
+{Copyright (C) 2019, 2026 by Han Kleijn, www.hnsky.org
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,9 +43,10 @@ uses
   ExtCtrls, ComCtrls, Buttons,
   math,{for sincos}
   lcltype, {Trgbtriple}
-  Variants, clipbrd, Spin, Grids, sky_annotation,
-  sky_simulator_unit_save_image,
-  cu_alpacaserver, cu_alpacadevice, alpaca_mount_protocol, alpaca_camera_protocol,alpaca_guidecamera_protocol,alpaca_focuser_protocol,alpaca_filterwheel_protocol,alpaca_rotator_protocol, Types;
+  Variants, clipbrd, Spin, sky_annotation, sky_simulator_unit_save_image,
+  cu_alpacaserver, cu_alpacadevice, alpaca_mount_protocol,
+  alpaca_camera_protocol, alpaca_guidecamera_protocol, alpaca_focuser_protocol,
+  alpaca_filterwheel_protocol, alpaca_rotator_protocol, Types;
 
 
 type
@@ -60,12 +62,35 @@ type
     azimuth_error1: TFloatSpinEdit;
     bayer_change_warning1: TLabel;
     CheckBox_focal_length_driver1: TCheckBox;
+    Label42: TLabel;
+    Label43: TLabel;
+    Label44: TLabel;
+    Label45: TLabel;
+    Label46: TLabel;
+    Label47: TLabel;
+    Label48: TLabel;
+    Label49: TLabel;
+    Label50: TLabel;
+    Label52: TLabel;
+    dec_random_noise_sigma1: TEdit;
+    ascom_type1: TComboBox;
+    ra_periodic_sinusoidal_error_amplitude1: TEdit;
+    ra_random_noise_sigma1: TEdit;
+    dec_periodic_sinusoidal_error_amplitude1: TEdit;
+    dec_periodic_sinusoidal_error_period1: TEdit;
+    dec_square_wave_error_amplitude1: TEdit;
+    ra_square_wave_error_period1: TEdit;
     file_form_disk1: TBitBtn;
-    Button1: TButton;
+    Button_camera1: TButton;
     file_from_disk_selected1: TRadioButton;
     GroupBox_camera_chooser1: TGroupBox;
+    Label40: TLabel;
+    Label41: TLabel;
     parked1: TMenuItem;
+    dec_square_wave_error_period1: TEdit;
     Separator8: TMenuItem;
+    ra_square_wave_error_amplitude1: TEdit;
+    ra_periodic_sinusoidal_error_period1: TEdit;
     tracking1: TMenuItem;
     pixelsizemicrometer1: TEdit;
     j2000_to_Jnow1: TMenuItem;
@@ -188,7 +213,6 @@ type
     Label23: TLabel;
     Label24: TLabel;
     Label26: TLabel;
-    Label28: TLabel;
     Label29: TLabel;
     Label30: TLabel;
     Label31: TLabel;
@@ -203,8 +227,6 @@ type
     Label9: TLabel;
     popupmenu_map1: TPopupMenu;
     telescope_cursor1: TShape;
-    mount_noise1: TComboBox;
-    mount_periodic_error1: TComboBox;
     panel_sky1: TPanel;
     save_as_fits1: TMenuItem;
     save_as_tiff1: TMenuItem;
@@ -294,7 +316,7 @@ type
     procedure backlash1Exit(Sender: TObject);
     procedure about1Click(Sender: TObject);
     procedure file_form_disk1Click(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure Button_camera1Click(Sender: TObject);
     procedure elevation_error1Change(Sender: TObject);
     procedure equinox_communication1Change(Sender: TObject);
     procedure fliptext1Change(Sender: TObject);
@@ -781,7 +803,7 @@ end;
 function load_settings(lpath: string)  : boolean;
 var
   dum : string;
-  i               : integer;
+  i   : integer;
   initstring :tstrings; {settings for save and loading}
 
   Procedure get_float(var float: double;s1 : string); {this give much smaller exe file then using strtofloat}
@@ -899,9 +921,18 @@ begin
     dum:=initstring.Values['input_image']; if dum<>'' then form1.file_from_disk2.caption:=dum;
 
 
+    dum:=initstring.Values['ra_square_wave_error_period']; if dum<>'' then form1.ra_square_wave_error_period1.text:=dum;
+    dum:=initstring.Values['ra_square_wave_error_amplitude']; if dum<>'' then form1.ra_square_wave_error_amplitude1.text:=dum;
+    dum:=initstring.Values['ra_periodic_sinusoidal_error_period']; if dum<>'' then form1.ra_periodic_sinusoidal_error_period1.text:=dum;
+    dum:=initstring.Values['ra_periodic_sinusoidal_error_amplitude']; if dum<>'' then form1.ra_periodic_sinusoidal_error_amplitude1.text:=dum;
+    dum:=initstring.Values['ra_random_noise_sigma']; if dum<>'' then form1.ra_random_noise_sigma1.text:=dum;
 
-    i:=form1.mount_noise1.itemindex;get_int(i,'mount_noise'); form1.mount_noise1.itemindex:=i;
-    i:=form1.mount_periodic_error1.itemindex;get_int(i,'mount_periodic_error'); form1.mount_periodic_error1.itemindex:=i;
+    dum:=initstring.Values['dec_square_wave_error_period']; if dum<>'' then form1.dec_square_wave_error_period1.text:=dum;
+    dum:=initstring.Values['dec_square_wave_error_amplitude']; if dum<>'' then form1.dec_square_wave_error_amplitude1.text:=dum;
+    dum:=initstring.Values['dec_periodic_sinusoidal_error_period']; if dum<>'' then form1.dec_periodic_sinusoidal_error_period1.text:=dum;
+    dum:=initstring.Values['dec_periodic_sinusoidal_error_amplitude']; if dum<>'' then form1.dec_periodic_sinusoidal_error_amplitude1.text:=dum;
+    dum:=initstring.Values['dec_random_noise_sigma']; if dum<>'' then form1.dec_random_noise_sigma1.text:=dum;
+
     i:=form1.plotted_info1.itemindex;get_int(i,'labels'); form1.plotted_info1.itemindex:=i;
     form1.fliptext1.checked:=get_boolean('fliptext',false);
     form1.backlash_mount1.checked:=get_boolean('backlash_mount',false);
@@ -999,8 +1030,17 @@ begin
     initstring.Values['eso_url']:=form1.internetESO1.text;
     initstring.Values['input_image']:=File_from_disk2.caption;
 
-    initstring.Values['mount_noise']:=inttostr(form1.mount_noise1.itemindex);
-    initstring.Values['mount_periodic_error']:=inttostr(form1.mount_periodic_error1.itemindex);
+    initstring.Values['ra_square_wave_error_period']:=form1.ra_square_wave_error_period1.text;
+    initstring.Values['ra_square_wave_error_amplitude']:=form1.ra_square_wave_error_amplitude1.text;
+    initstring.Values['ra_periodic_sinusoidal_error_period']:=form1.ra_periodic_sinusoidal_error_period1.text;
+    initstring.Values['ra_periodic_sinusoidal_error_amplitude']:=form1.ra_periodic_sinusoidal_error_amplitude1.text;
+    initstring.Values['ra_random_noise_sigma']:=form1.ra_random_noise_sigma1.text;
+
+    initstring.Values['dec_square_wave_error_period']:=form1.dec_square_wave_error_period1.text;
+    initstring.Values['dec_square_wave_error_amplitude']:=form1.dec_square_wave_error_amplitude1.text;
+    initstring.Values['dec_periodic_sinusoidal_error_period']:=form1.dec_periodic_sinusoidal_error_period1.text;
+    initstring.Values['dec_periodic_sinusoidal_error_amplitude']:=form1.dec_periodic_sinusoidal_error_amplitude1.text;
+    initstring.Values['dec_random_noise_sigma']:=form1.dec_random_noise_sigma1.text;
 
     initstring.Values['labels']:=inttostr(form1.plotted_info1.itemindex); {0 None, 1 HFD, 2 Info, 3 Objects, 4 All}
     initstring.Values['fliptext']:=BoolStr[ form1.fliptext1.checked];
@@ -1570,9 +1610,7 @@ begin
     end;
 
     img_array2:=nil;
-
     annotation_to_array(inttostr(focuser_position),true{transparant},graylevel,1, 10,10 {screen coord},img_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
-
   except
   end;
 end;
@@ -1591,9 +1629,9 @@ begin
 end;
 
 
-function get_tracking_error(cyclus_time {minutes}:double) : double;{Sinus shaped, range -1..1}
+function get_tracking_error_sinus(cyclus_time {seconds}:double) : double;{Sinus shaped, range -1..1}
 begin
-  result:=frac(time*24*60/cyclus_time); {sawtooth shaped 0..1}
+  result:=frac(time*24*3600/cyclus_time); {sawtooth shaped 0..1}
   result:=sin(result*pi*2); {convert sawtooth to sinus}
 end;
 
@@ -1851,7 +1889,7 @@ const
    cnt2         : integer=0;
 var
     eqs, blur_factor,noise_index,periodic_error_index,oldpos,backlash,focus_backlash                       : integer;
-    hfd,seperation,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy : double;
+    hfd,seperation,seeing_errorRAnoise, seeing_errorDECnoise,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy : double;
     mount_slewing, focal_length_ascom_driver_implemented      : boolean;
     Save_Cursor:TCursor;
     mess       : string;
@@ -2152,67 +2190,35 @@ begin
 
         if artificial_selected1.checked then
         begin
-          //update_required:=true;
-          noise_index:=mount_noise1.itemindex;
+          seeing_errorRA:=strtofloat2(ra_random_noise_sigma1.text);
+          seeing_errorRA:=randg(0,seeing_errorRA)*((1/3600)*pi/180);{Random seeing error in arc sec.}
+          seeing_errorDEC:=strtofloat2(dec_random_noise_sigma1.text);
+          seeing_errorDEC:=randg(0,seeing_errorDec)*((1/3600)*pi/180);{Random seeing error in arc sec.}
 
-          if noise_index=1 then
-          begin
-            seeing_errorRA:=randg(0,0.4)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec.}
-            seeing_errorDEC:=randg(0,0.4)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec}
+
+          seeing_errorRA:=seeing_errorRA + (strtofloat2(ra_periodic_sinusoidal_error_amplitude1.text) * get_tracking_error_sinus(strtofloat2(ra_periodic_sinusoidal_error_period1.text))/3600)*pi/180;  {introduce sinus shaped cyclic error}
+          seeing_errorDEC:=seeing_errorDEC + (strtofloat2(dec_periodic_sinusoidal_error_amplitude1.text) * get_tracking_error_sinus(strtofloat2(dec_periodic_sinusoidal_error_period1.text))/3600)*pi/180;  {introduce sinus shaped cyclic error}
+
+
+          if get_tracking_error_sinus(strtofloat2(ra_square_wave_error_period1.text))>0 then
+          begin //positive part
+            seeing_errorRA:=seeing_errorRA + (strtofloat2(ra_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave RA
           end
           else
-          if noise_index=2 then
-          begin
-            seeing_errorRA:=randg(0,1.0)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec.}
-            seeing_errorDEC:=randg(0,1.0)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec}
+          begin //negative part
+            seeing_errorRA:=seeing_errorRA - (strtofloat2(ra_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave RA
+          end;
+
+          if get_tracking_error_sinus(strtofloat2(dec_square_wave_error_period1.text))>0 then
+          begin //positive part
+            seeing_errorDEC:=seeing_errorDEC + (strtofloat2(dec_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave DEC
           end
           else
-          if noise_index=3 then
-          begin
-            seeing_errorRA:=randg(0,2.0)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec.}
-            seeing_errorDEC:=randg(0,2.0)*((1/3600)*pi/180);{Random seeing error 1.0 arc sec}
+          begin //negative part
+            seeing_errorDEC:=seeing_errorDEC - (strtofloat2(dec_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave DEC
           end;
 
 
-          periodic_error_index:=mount_periodic_error1.itemindex;
-          if periodic_error_index>0 then
-          begin
-            //0 None
-            //1 Tracking error α, 10" square wave 1 min period
-            //2 Tracking error α, 10" square wave 2 min period
-            //3 Tracking error α, 10" square wave 5 min period
-            //4 Tracking error δ, 10" square wave 1 min period
-            //5 Tracking error δ, 10" square wave 2 min period
-            //6 Tracking error δ, 10" square wave 5 min period
-            //7 Tracking error α, 10" sinus wave 5 min period
-            //8 Tracking error α, 20" sinus wave 5 min period
-
-            case periodic_error_index of 1,4: cycletime:=1;
-                                         2,5: cycletime:=2;
-                                         3,6,7,8: cycletime:=2;
-                                      end;
-
-            if get_tracking_error(cycletime {min})*20/3600*pi/180 >0 then
-            begin //positive part
-              if periodic_error_index<=3 then //square ra error
-                 seeing_errorRA:=seeing_errorRA +5*((1/3600)*pi/180) {square wave}
-              else
-                seeing_errorDEC:=seeing_errorDEC+5*((1/3600)*pi/180); {square wave};
-            end
-            else
-            begin //negative part
-              if periodic_error_index<=3 then
-                 seeing_errorRA:=seeing_errorRA -5*((1/3600)*pi/180) {square wave}
-              else
-                seeing_errorDEC:=seeing_errorDEC-5*((1/3600)*pi/180); {square wave};
-            end;
-
-            if periodic_error_index=7 then // Tracking error α, 10" sinus wave 5 min period
-              seeing_errorRA:=seeing_errorRA+get_tracking_error(5 {min})*(5/3600)*pi/180  {introduce 20 arc seconds cyclic error}
-            else
-            if periodic_error_index=8 then // Tracking error α, 20" in 5 min
-              seeing_errorRA:=seeing_errorRA+get_tracking_error(5 {min})*(10/3600)*pi/180;{introduce 20 arc seconds cyclic error}
-          end;
 
           if backlash_mount1.checked then //Mount backslash
           begin
@@ -2645,7 +2651,7 @@ end;
 
 procedure TForm1.about1Click(Sender: TObject);
 begin
-  showmessage('Sky simulator for ASCOM and Alpaca. © 2018-2024 by Han Kleijn, www.hnsky.org. ');
+  showmessage('Sky simulator for ASCOM and Alpaca. © 2018-2026 by Han Kleijn, www.hnsky.org. ');
 end;
 
 procedure TForm1.file_form_disk1Click(Sender: TObject);
@@ -2659,7 +2665,7 @@ begin
  end;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TForm1.Button_camera1Click(Sender: TObject);
 var
   ascom_driver    : widestring =''; //'ASCOM.Simulator.Telescope';
   V: variant;
@@ -2671,26 +2677,15 @@ begin
      exit;
   end;
   try
-  if not VarIsEmpty(ascom_mount) then  {ascom alive?}
-  begin
-    ascom_mount.connected:=false;
-    ascom_mount := Unassigned;
-  end
-  else
-  begin
-    if sender<>nil then {send from popup menu}
-    begin {show this only when called from popup menu}
-      try
-        V := CreateOleObject('ASCOM.Utilities.Chooser'); {for 64 bit applications as suggested in http://www.ap-i.net/mantis/view.php?id=778#bugnotes, "ASCOM." is required!!}
-        except
-        V := CreateOleObject('DriverHelper.Chooser');{This will work for old Ascom and 32 bit windows only. Note this give an error when run in the Delphi environment}
-      end;
-      V.devicetype:=widestring('Camera');
-      ascom_driver:=(V.Choose(ascom_driver));
-      V:=Unassigned;
-    end;{end send from popup menu}
+    try
+      V := CreateOleObject('ASCOM.Utilities.Chooser'); {for 64 bit applications as suggested in http://www.ap-i.net/mantis/view.php?id=778#bugnotes, "ASCOM." is required!!}
+      except
+      V := CreateOleObject('DriverHelper.Chooser');{This will work for old Ascom and 32 bit windows only. Note this give an error when run in the Delphi environment}
+    end;
+    V.devicetype:=widestring(ascom_type1.text);
+    ascom_driver:=(V.Choose(ascom_driver));
+    V:=Unassigned;
     exit;
-  end;
   except {ascom alive}
     Showmessage('Error, No ASCOM detected. Install from http://ascom-standards.org');
   end;

@@ -2,8 +2,11 @@ unit cu_alpacacamera;
 
 {$mode objfpc}{$H+}
 {
-Copyright (C) 2020 Patrick Chevalley
+Copyright (C) 2021-2026 Han Kleijn. Updated for latest Alpaca version
+https://sourceforge.net/projects/sky-simulator
+email: han.k.. at...hnsky.org
 
+Copyright (C) 2020 Patrick Chevalley
 http://www.ap-i.net
 pch@ap-i.net
 
@@ -20,13 +23,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-2025. Small updates for LastExposureStartTime by Han Kleijn
 }
 
 interface
 
 uses  cu_alpacadevice, Classes, SysUtils;
+
+type
+   Timg = array of array of word;
 
 type
 
@@ -58,7 +62,6 @@ type
       function  starty: integer; virtual; abstract;
       function  numx: integer; virtual; abstract;
       function  numy: integer; virtual; abstract;
-      function  coolpower: integer; virtual; abstract;
       function  setccdtemperature: integer; virtual; abstract;
       function  sensortype: integer; virtual; abstract;
 
@@ -67,7 +70,6 @@ type
       procedure setnumx(x: integer); virtual; abstract;
       procedure setnumy(x: integer); virtual; abstract;
       procedure setcooler(x: boolean); virtual; abstract;
-      procedure fastreadout(x: boolean); virtual; abstract;
       procedure setbinX(x: integer; out ok :boolean); virtual; abstract;
       procedure setbinY(x: integer; out ok :boolean); virtual; abstract;
       procedure setreadoutmode(x: integer; out ok :boolean); virtual; abstract;
@@ -82,8 +84,6 @@ type
       function  ispulseguiding: boolean; virtual; abstract;
       function  hasshutter: boolean; virtual; abstract;
       function  imageready: boolean; virtual; abstract;
-      function  fastreadout: boolean; virtual; abstract;{get}
-
       function  ccdtemperature: double; virtual; abstract;
       function  exposuremax: double; virtual; abstract;
       function  exposuremin: double; virtual; abstract;
@@ -150,6 +150,11 @@ begin
     ok:=Connected;
     result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+  else
+  if method='connecting' then begin //new
+    ok:=false;//always return.  No connection delay with the simulator so always reply False.
+    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
   else if method='description' then begin
     value:=Description;
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -193,7 +198,6 @@ begin
   end
   else if ((method='offsetmin') or (method='offsetmax') or (method='offset') or (method='subexposureduration')) then begin {get integers not implemented}
     set_not_implemented;
-//    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='cameraxsize' then begin
@@ -304,7 +308,6 @@ begin
   end
   else if method='fastreadout' then begin
     set_not_implemented;
-//    result:=FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
     else if method='ccdtemperature' then begin
@@ -370,7 +373,7 @@ begin
     if ok=false then begin FErrorNumber:=ERR_INVALID_VALUE; FErrorMessage:='Image is not ready since no startexposure was given';  end;
     result:= FormatIntArrayofArrayResp(img,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if method='imagearrayvariant' then begin {process the same as ethod='imagearray'}
+  else if method='imagearrayvariant' then begin {process the same as method='imagearray'}
     img:=imagearray(ok);
     if ok=false then begin FErrorNumber:=ERR_INVALID_VALUE; FErrorMessage:='Image is not ready since no startexposure was given';  end;
     result:= FormatIntArrayofArrayResp(img,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
@@ -390,6 +393,17 @@ begin
   else if method='canasymmetricbin' then begin
     ok:=canasymmetricbin;
     result:= FormatBoolResp(ok,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='devicestate' then begin
+    lst:=DeviceState;
+    result:=FormatJSONStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    lst.Free;
+  end
+  else if method='coolpower' then begin
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
+  end
+  else if method='fastreadout' then begin
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
   else begin
     result:='GET - Unknown device method: '+method;
@@ -439,12 +453,12 @@ var method,p1,p2,value: string;
       fErrorNumber:=ERR_INVALID_VALUE; {1025}
       FErrorMessage:=MSG_OUT_OF_RANGE+' Set value: '+floattostrF(i,ffGeneral,5,2);
     end;
-
     procedure set_not_implemented;
     begin
       FErrorNumber:=ERR_NOT_IMPLEMENTED;
       FErrorMessage:=MSG_NOT_IMPLEMENTED;
     end;
+
 begin
   if pos('?',req)>0 then
     req:=req+'&'+arg
@@ -475,6 +489,14 @@ begin
     if GetParamString(params,'Command',p1) and GetParamBool(params,'Raw',ok) then
       value:=CommandString(p1,ok);
     result:=FormatStringResp(value,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='connect' then begin //new
+    SetConnected(true);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='disconnect' then begin //new
+    SetConnected(false);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='connected' then begin
     if GetParamBool(params,'Connected',ok) then
@@ -543,8 +565,6 @@ begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
 
-
-
   else if method='startexposure' then begin
     if GetParamFloat(params,'Duration',x)  then startexposure(x,{out} i);
     if i=1 then set_invalid_range(x) else
@@ -569,6 +589,9 @@ begin
     if error<>0 then {out of range}
       set_invalid_range(i);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='fastreadout' then begin
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end
 
   else begin
