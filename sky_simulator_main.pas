@@ -468,9 +468,6 @@ var
   ascom_focuser_connected  : boolean=false;
   ascom_rotator_connected  : boolean=false;
   imagecounter: integer=0;
-  update_required       : boolean=false;
-  fl_info    : string='';{for calculator}
-  crpix_info : string='';{for calculator}
   old_unix_time : longint=0;
 
   down_xy_valid: boolean=false;{required for Linux GTK.}
@@ -834,10 +831,9 @@ var
            else result:=true;
         end;
       end;
-      procedure doreset;
+  procedure doreset;
       begin
         initstring.Free;
-//        form1.path_to_image1.text:=documents_path;{set default path}
         form1.top:=0;{for case the form was not set at the main screen}
         form1.left:=0;
       end;
@@ -1703,12 +1699,13 @@ begin
       lineto(ww-5,dec*dec_step);
     end;
 
-
     pen.color := clred;
     halftextw:=textwidth('N') div 2;
+
     latitude:=strtofloat2(form1.latitude1.text)*pi/180;;
     longitude:=strtofloat2(form1.longitude1.text)*pi/180;
-    calc_jd;{calc julian day from system clock}
+
+    calc_jd; {calc jd}
     calc_sidereal_time(longitude);{local sidereal time}
 
     oldx:=-999;
@@ -1900,13 +1897,10 @@ begin
   pushbuttonRA:=0;
   pushbuttonDEC:=0;
 
-  calc_jd; {calc jd}
-
-//  while esc_pressed=false  do
   with form1 do
   repeat
   begin
-    //if mount_slewing=false then test;
+    calc_jd; {calc jd}
 
     application.processmessages;
     if esc_pressed then exit;
@@ -2151,19 +2145,19 @@ begin
         real_position1.Caption:=inttostr(real_focuser_position);
         focuser_position1.Caption:=inttostr(round(focuser_position));
 
-        if oldreal_position<>real_focuser_position then {stable focus}
+        if oldreal_position<>real_focuser_position then {focus moved}
         begin
           //log_to_file(documents_path+'\simulator_log.txt',DateTimeToStr(Now)+',     Indication,'+inttostr(round(focuser_position))+',    real_pos,'+inttostr(real_focuser_position)+',   hfd,'+floattostrFdot(hfd_calc(real_focuser_position,strtoint(focus_at1.text){perfectfocusposition},2.35,2.35*strtoint(focus_range1.text)/10),0,2));
           update_required:=true;
-          oldreal_position:=real_focuser_position;
-          memo2_message('Focuser reached new position.');
+          memo2_message('Focuser reached new position '+focuser_position1.caption);
         end;
+        oldreal_position:=real_focuser_position;
 
 
         if oldpos<>focuser_position then {unequal positions}
         begin
-          real_position1.Caption:=inttostr(real_focuser_position);
-          focuser_position1.Caption:=inttostr(round(focuser_position));
+          //real_position1.Caption:=inttostr(real_focuser_position);
+          //focuser_position1.Caption:=inttostr(round(focuser_position));
           statusbar1.caption:='Focuser is moving' ;
         end;
       end;
@@ -2262,7 +2256,7 @@ begin
           begin
             latitude:=strtofloat(latitude1.text)*pi/180;;
             longitude:=strtofloat(longitude1.text)*pi/180;
-            calc_sidereal_time(longitude);
+            calc_sidereal_time(longitude);//JD is already calculated by calc_JD
             caption:='Local sidereal time '+copy(prepare_ra(sidereal_time),1,6);
 
             meridian:=sidereal_time*12/pi;//for equatorial mount alpaca. [hours]

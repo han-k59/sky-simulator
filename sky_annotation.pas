@@ -61,6 +61,7 @@ const
   flux_magn_offset       : double=0;{offset between star magnitude and flux. Will be calculated in stars are annotated}
   counter_flux_measured  : integer=0;{how many stars used for flux calibration}
   polar_alignment_error  : boolean=false;
+  update_required        : boolean=false; //place here and not in sky_simulator_main since it is used in unit_alpaca_camera_protocol
 
 
 implementation

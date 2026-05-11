@@ -51,7 +51,7 @@ object Form1: TForm1
         Height = 25
         Top = 112
         Width = 116
-        Caption = 'About v3.0.7'
+        Caption = 'About v3.0.7b'
         TabOrder = 1
         OnClick = about1Click
       end
@@ -410,7 +410,7 @@ object Form1: TForm1
           Height = 57
           Top = 239
           Width = 300
-          Caption = 'If bayer pattern is changed, disconnect and reconnect in the aquistion program to update bayer pattern recognision.'
+          Caption = 'If bayer pattern is changed, disconnect and reconnect in the aquisition program to update bayer pattern recognision.'
           Constraints.MaxWidth = 300
           Constraints.MinWidth = 300
           ParentColor = False

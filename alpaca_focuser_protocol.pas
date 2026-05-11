@@ -101,7 +101,7 @@ var
 begin
   deltaPos:=alpaca_foc_setpoint-alpaca_foc_position;
 
-  stepsize:=min(abs(deltaPos),50); {50 steps per second}
+  stepsize:=min(abs(deltaPos),100); {50 steps per second}
   if deltaPos<0 then
     alpaca_foc_position:=alpaca_foc_position-stepsize
   else
@@ -205,6 +205,7 @@ end;
 function  T_Alpaca_Focuser.ismoving: boolean;
 begin
   result:=abs(alpaca_foc_setpoint-alpaca_foc_position)>=1;
+
 end;
 
 function  T_Alpaca_Focuser.tempcompavailable: boolean;
