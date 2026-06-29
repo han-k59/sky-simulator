@@ -50,6 +50,8 @@ var
   sensor_temperature : double=20;
   set_temperature    : double=-40;
   camera_gain        : integer=100;
+  camera_offset      : integer=100;
+
   camera_exposure: double=10;
   cooler_on  : boolean=true;
   bin_X      : integer=1;
@@ -86,8 +88,9 @@ var
 
 const
   gain_max=1000;
-  gain_min=100;
-
+  gain_min=50;
+  offset_max=2000;
+  offset_min=50;
 
 type
 
@@ -145,6 +148,10 @@ type
       function  gain: integer;  override;
       function  gainmax: integer;  override;
       function  gainmin: integer;  override;
+      function  offset: integer;  override;
+      function  offsetmax: integer;  override;
+      function  offsetmin: integer;  override;
+
 
       function  coolerpower: double;  override;
       function  heatsinktemperature: double;  override;
@@ -162,6 +169,7 @@ type
       procedure startexposure(x: double; out errortype : integer); override;
       procedure setCCDTemperature(x: double; out error:double); override;
       procedure setGain(x: integer; out error :integer); override;
+      procedure setOffset(x: integer; out error :integer); override;
       procedure setcooler(x: boolean); override;
 
 
@@ -412,7 +420,7 @@ end;
 
 function  T_Alpaca_cam.fullwellcapacity: double;
 begin
-  result:=65535;
+  result:=min(65535,(65535*100) div camera_gain);//e- saturation point camera, The maximum number of photoelectrons that can be held by a single pixel in the camera’s current modes
 end;
 
 
@@ -431,10 +439,30 @@ begin
   result:=gain_max;
 end;
 
+
 function  T_Alpaca_cam.gainmin: integer;
 begin
   result:=gain_min; {100 is factor 1}
 end;
+
+
+function  T_Alpaca_cam.offset: integer;
+begin
+  result:=camera_offset;
+end;
+
+
+function  T_Alpaca_cam.offsetmax: integer;
+begin
+  result:=offset_max;
+end;
+
+
+function  T_Alpaca_cam.offsetmin: integer;
+begin
+  result:=offset_min;
+end;
+
 
 function  T_Alpaca_cam.coolerpower: double;
 begin
@@ -529,8 +557,16 @@ end;
 procedure T_Alpaca_cam.SetGain(x: integer;out error :integer);
 begin
   camera_gain:=min(max(x,gain_min),gain_max); {minimum gain is 100%}
-  error:=x-gain; {will be unequal if clamped}
+  error:=x-camera_gain; {will be unequal if clamped}
 end;
+
+
+procedure T_Alpaca_cam.SetOffset(x: integer;out error :integer);
+begin
+  camera_Offset:=min(max(x,Offset_min),Offset_max); {minimum gain is 100%}
+  error:=x-camera_Offset; {will be unequal if clamped}
+end;
+
 
 procedure T_Alpaca_cam.setcooler(x: boolean);
 begin
@@ -648,7 +684,7 @@ begin
 
   for y:=Ystart to  Ystop-1 do
     for x:=Xstart to Xstop-1 do
-      the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + randg(4*noise {mean},noise {sd}) )) ;
+      the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + camera_offset + randg(4*noise {mean},noise {sd}) )) ;
 
   if bin_x=2 then
   begin

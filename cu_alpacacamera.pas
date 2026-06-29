@@ -92,6 +92,10 @@ type
       function  gain: integer; virtual; abstract;
       function  gainmax: integer; virtual; abstract;
       function  gainmin: integer; virtual; abstract;
+      function  offset: integer; virtual; abstract;
+      function  offsetmax: integer; virtual; abstract;
+      function  offsetmin: integer; virtual; abstract;
+
       function  coolerpower: double; virtual; abstract;
       function  heatSinkTemperature: double; virtual; abstract;
       function  exposureresolution: double; virtual; abstract; {get}
@@ -106,6 +110,7 @@ type
       procedure startexposure(duration: double; out errortype : integer); virtual; abstract;
       procedure setCcdTemperature(duration: double ;out error:double); virtual; abstract;
       procedure setGain(x: integer; out error :integer); virtual; abstract;
+      procedure setOffset(x: integer; out error :integer); virtual; abstract;
       function  imagearray(out ok: boolean) : Timg; virtual; abstract;
 
   end;
@@ -196,7 +201,7 @@ begin
     i:=readoutmode;{index to readoutmodes=normal1, normal2}
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if ((method='offsetmin') or (method='offsetmax') or (method='offset') or (method='subexposureduration')) then begin {get integers not implemented}
+  else if (method='subexposureduration') then begin {subexposureduration get integers not implemented}
     set_not_implemented;
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
@@ -340,6 +345,18 @@ begin
   end
   else if method='gainmin' then begin
     i:=gainmin;
+    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='offset' then begin
+    i:=offset;
+    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='offsetmax' then begin
+    i:=offsetmax;
+    result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+  else if method='offsetmin' then begin
+    i:=offsetmin;
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
   else if method='coolerpower' then begin
@@ -554,7 +571,7 @@ begin
   end
 
 
-  else if ((method='offset') or (method='fastreadout') or (method='subexposureduration')) then begin
+  else if ((method='fastreadout') or (method='subexposureduration')) then begin
     set_not_implemented;  {not implemented}
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
@@ -583,6 +600,7 @@ begin
       set_invalid_range(x);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+
   else if method='gain' then begin
     if GetParamInt(params,'gain',i)  then
     SetGain(i,error);
@@ -590,6 +608,16 @@ begin
       set_invalid_range(i);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
+
+  else if method='offset' then begin
+    if GetParamInt(params,'offset',i)  then
+    SetOffset(i,error);
+    if error<>0 then {out of range}
+      set_invalid_range(i);
+    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+  end
+
+
   else if method='fastreadout' then begin
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,ERR_NOT_IMPLEMENTED,MSG_NOT_IMPLEMENTED);
   end

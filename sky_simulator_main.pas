@@ -62,6 +62,7 @@ type
     azimuth_error1: TFloatSpinEdit;
     bayer_change_warning1: TLabel;
     CheckBox_focal_length_driver1: TCheckBox;
+    camera_gain1: TLabel;
     Label42: TLabel;
     Label43: TLabel;
     Label44: TLabel;
@@ -1886,8 +1887,9 @@ const
    cnt2         : integer=0;
 var
     eqs, blur_factor,noise_index,periodic_error_index,oldpos,backlash,focus_backlash                       : integer;
-    hfd,seperation,seeing_errorRAnoise, seeing_errorDECnoise,seeing_errorRA, seeing_errorDEC, allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy : double;
-    mount_slewing, focal_length_ascom_driver_implemented      : boolean;
+    hfd,seperation,seeing_errorRAnoise, seeing_errorDECnoise,seeing_errorRA, seeing_errorDEC,
+    allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy, dec_factor                                  : double;
+    mount_slewing, focal_length_ascom_driver_implemented                                                   : boolean;
     Save_Cursor:TCursor;
     mess       : string;
 
@@ -2181,35 +2183,38 @@ begin
         application.processmessages;
         seeing_errorRA:=0;
         seeing_errorDEC:=0;
+        dec_factor:=max(0.000000000001,cos(dec_telescope_2000));
 
         if artificial_selected1.checked then
         begin
-          seeing_errorRA:=strtofloat2(ra_random_noise_sigma1.text);
-          seeing_errorRA:=randg(0,seeing_errorRA)*((1/3600)*pi/180);{Random seeing error in arc sec.}
+
+          seeing_errorRA:=strtofloat2(ra_random_noise_sigma1.text);//Random seeing error in arc sec.
+          seeing_errorRA:=randg(0,seeing_errorRA)*(pi/(180*3600*dec_factor));//seeing influences ra much more at high declination factors
           seeing_errorDEC:=strtofloat2(dec_random_noise_sigma1.text);
-          seeing_errorDEC:=randg(0,seeing_errorDec)*((1/3600)*pi/180);{Random seeing error in arc sec.}
+          seeing_errorDEC:=randg(0,seeing_errorDec)*(pi/(180*3600));{Random seeing error in arc sec.}
 
 
-          seeing_errorRA:=seeing_errorRA + (strtofloat2(ra_periodic_sinusoidal_error_amplitude1.text) * get_tracking_error_sinus(strtofloat2(ra_periodic_sinusoidal_error_period1.text))/3600)*pi/180;  {introduce sinus shaped cyclic error}
+          seeing_errorRA:=seeing_errorRA +
+                             strtofloat2(ra_periodic_sinusoidal_error_amplitude1.text) * get_tracking_error_sinus(strtofloat2(ra_periodic_sinusoidal_error_period1.text))*(15*pi/(180*3600));  {input unit ra seconds. introduce sinus shaped cyclic error}
           seeing_errorDEC:=seeing_errorDEC + (strtofloat2(dec_periodic_sinusoidal_error_amplitude1.text) * get_tracking_error_sinus(strtofloat2(dec_periodic_sinusoidal_error_period1.text))/3600)*pi/180;  {introduce sinus shaped cyclic error}
 
 
           if get_tracking_error_sinus(strtofloat2(ra_square_wave_error_period1.text))>0 then
           begin //positive part
-            seeing_errorRA:=seeing_errorRA + (strtofloat2(ra_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave RA
+            seeing_errorRA:=seeing_errorRA + strtofloat2(ra_square_wave_error_amplitude1.text)*(15*pi/(180*3600)); //square wave RA, input in RA seconds
           end
           else
           begin //negative part
-            seeing_errorRA:=seeing_errorRA - (strtofloat2(ra_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave RA
+            seeing_errorRA:=seeing_errorRA - strtofloat2(ra_square_wave_error_amplitude1.text)*(15*pi/(180*3600)); //square wave RA, input in RA seconds
           end;
 
           if get_tracking_error_sinus(strtofloat2(dec_square_wave_error_period1.text))>0 then
           begin //positive part
-            seeing_errorDEC:=seeing_errorDEC + (strtofloat2(dec_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave DEC
+            seeing_errorDEC:=seeing_errorDEC + strtofloat2(dec_square_wave_error_amplitude1.text)*pi/(180*3600); //square wave DEC
           end
           else
           begin //negative part
-            seeing_errorDEC:=seeing_errorDEC - (strtofloat2(dec_square_wave_error_amplitude1.text)/3600)*pi/180; //square wave DEC
+            seeing_errorDEC:=seeing_errorDEC - strtofloat2(dec_square_wave_error_amplitude1.text)*pi/(180*3600); //square wave DEC
           end;
 
 
@@ -2228,7 +2233,7 @@ begin
 
 
         dec_telescope_2000:=dec_mount_indication_2000+seeing_errorDEC+pushbuttonDEC;
-        ra_telescope_2000:=ra_mount_indication_2000 + (seeing_errorRA+pushbuttonRA)/max(0.000000000001,cos(dec_telescope_2000));//make error independent of declication. This will not be the case in practise.
+        ra_telescope_2000:=ra_mount_indication_2000 + (seeing_errorRA+pushbuttonRA);
         ra_telescope_2000:=fnmodulo(ra_telescope_2000,2*pi);{keep in range 0..2pi}
 
 
@@ -2351,8 +2356,8 @@ begin
             else
             prepare_plotting(ra_telescope_2000,dec_telescope_2000,orient,flipH1.checked,flipV1.checked);
 
-            seeingRA1.caption:=floattostrF((seeing_errorRA)*3600*180/pi,ffFixed,3,1)+'"';
-            seeingDEC1.caption:=floattostrF((seeing_errorDEC)*3600*180/pi,ffFixed,3,1)+'"';
+            seeingRA1.caption:=floattostrF(dec_factor*seeing_errorRA*3600*180/pi,ffFixed,3,1)+'"';
+            seeingDEC1.caption:=floattostrF(seeing_errorDEC*3600*180/pi,ffFixed,3,1)+'"';
 
            //if count_img=0 then    mess:=floattostr(ra0*12/pi)+',,,'+floattostr(dec0*180/pi)+',,,-25,'+inttostr(count_img)+',,-2'
            //               else       mess:=floattostr(ra0*12/pi)+',,,'+floattostr(dec0*180/pi)+',,,-25,'+inttostr(count_img)+',,-1';
@@ -2402,6 +2407,7 @@ begin
     except
     end;
 
+    camera_gain1.caption:='Camera gain '+inttostr(camera_gain)+', Offset '+inttostr(camera_offset)+', Guide gain '+inttostr(guide_camera_gain)+', Offset '+inttostr(guide_camera_offset);
 
     application.processmessages;
     if esc_pressed then exit;

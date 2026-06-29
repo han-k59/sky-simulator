@@ -50,7 +50,8 @@ var
   num_y       :  integer=9999999;{height sub section}
   sensor_temperature : double=20;
   set_temperature    : double=-40;
-  camera_gain        : integer=100;
+  guide_camera_gain        : integer=100;
+  guide_camera_offset      : integer=100;
   camera_exposure: double=10;
   cooler_on  : boolean=true;
   bin_X      : integer=1;
@@ -86,7 +87,10 @@ var
 
 const
   gain_max=1000;
-  gain_min=100;
+  gain_min=50;
+  guide_offset_max=2000;
+  guide_offset_min=50;
+
 
 
 type
@@ -145,6 +149,10 @@ type
       function  gainmax: integer;  override;
       function  gainmin: integer;  override;
 
+      function  offset: integer;  override;
+      function  offsetmax: integer;  override;
+      function  offsetmin: integer;  override;
+
       function  coolerpower: double;  override;
       function  heatsinktemperature: double;  override;
       function  exposureresolution: double;  override;
@@ -161,6 +169,7 @@ type
       procedure startexposure(x: double; out errortype : integer); override;
       procedure setCCDTemperature(x: double; out error:double); override;
       procedure setGain(x: integer; out error :integer); override;
+      procedure setOffset(x: integer; out error :integer); override;
       procedure setcooler(x: boolean); override;
 
 
@@ -416,18 +425,18 @@ end;
 
 function  T_Alpaca_Guidecam.fullwellcapacity: double;
 begin
-  result:=65535;
+  result:=min(65535,(65535*100) div guide_camera_gain);//e- saturation point camera, The maximum number of photoelectrons that can be held by a single pixel in the camera’s current modes
 end;
 
 
 function  T_Alpaca_Guidecam.electronsperadu: double;
 begin
-  result:=100/camera_gain; {100 is normal resulting in 1e/adu}
+  result:=100/guide_camera_gain; {100 is normal resulting in 1e/adu}
 end;
 
 function  T_Alpaca_Guidecam.gain: integer;
 begin
-  result:=camera_gain;
+  result:=guide_camera_gain;
 end;
 
 function  T_Alpaca_Guidecam.gainmax: integer;
@@ -439,6 +448,22 @@ function  T_Alpaca_Guidecam.gainmin: integer;
 begin
   result:=gain_min; {100 is factor 1}
 end;
+
+function  T_Alpaca_Guidecam.offset: integer;
+begin
+  result:=guide_camera_offset;
+end;
+
+function  T_Alpaca_Guidecam.offsetmax: integer;
+begin
+  result:=guide_offset_max;
+end;
+
+function  T_Alpaca_Guidecam.offsetmin: integer;
+begin
+  result:=guide_offset_min;
+end;
+
 
 function  T_Alpaca_Guidecam.coolerpower: double;
 begin
@@ -535,9 +560,17 @@ end;
 
 procedure T_Alpaca_Guidecam.SetGain(x: integer;out error :integer);
 begin
-  camera_gain:=min(max(x,gain_min),gain_max); {minimum gain is 100%}
-  error:=x-gain; {will be unequal if clamped}
+  guide_camera_gain:=min(max(x,gain_min),gain_max); {minimum gain is 100%}
+  error:=x-guide_camera_gain; {will be unequal if clamped}
 end;
+
+
+procedure T_Alpaca_Guidecam.SetOffset(x: integer;out error :integer);
+begin
+  guide_camera_offset:=min(max(x,guide_offset_min),guide_offset_max);
+  error:=x-guide_camera_offset; {will be unequal if clamped}
+end;
+
 
 procedure T_Alpaca_Guidecam.setcooler(x: boolean);
 begin
@@ -637,7 +670,7 @@ var
   x,y, w, h,Ystart,Ystop,Xstart,Xstop : integer;
   noise,relative_gain : double;
 begin
-  relative_gain:=camera_gain/100; { gain of 1 is normal}
+  relative_gain:=guide_camera_gain/100; { gain of 1 is normal}
   noise:=(5/relative_gain {read noise} +15*sqrt(camera_exposure/5) {sky noise});{assume Sky Noise Dominated case. Gain reduces read-noise (5/gain)}
   img_width:=length(img_array[0]);
   img_height:=length(img_array);
@@ -655,7 +688,7 @@ begin
 
   for y:=Ystart to  Ystop-1 do
     for x:=Xstart to Xstop-1 do
-        the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x] + randg(4*noise {mean},noise {sd}) )) ;
+        the_img[x-Xstart,y-Ystart]:=min(65535, round(relative_gain*(camera_exposure)*img_array[y,x]+ guide_camera_offset + randg(4*noise {mean},noise {sd}) )) ;
 
   if bin_x=2 then
   begin

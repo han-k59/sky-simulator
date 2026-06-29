@@ -24,7 +24,7 @@ uses
    forms,Classes, SysUtils,strutils, math,graphics, Controls {for tcursor},lcltype {Trgbtriple}, LazSysUtils; {nowUtc}
 
 type
-  image_array = array of array of single;
+  Timage_array = array of array of single;
 
 procedure plot_deepsky;{plot the deep sky object on the image}
 procedure load_deep;{load the deepsky database once. If loaded no action}
@@ -33,7 +33,7 @@ procedure image_array_stretched_to_screen;
 procedure read_deepsky(searchmode:char; telescope_ra,telescope_dec, cos_telescope_dec {cos(telescope_dec},fov : double; out ra2,dec2,length2,width2,pa : double);{deepsky database search}
 procedure prepare_plotting(ra1,dec1,rota :double; fh,fv :boolean); {prepare image1 and set the parameters normally contained in fits header required for plotting}
 function hfd_calc(position,perfectfocusposition,a,b:double) :double; {calculate HFD from position and perfectfocusposition using hyperbola parameters}
-procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
+procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: Timage_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
 procedure sensor_to_celestial(fitsx,fitsy : double; out ra,dec :double); //(x,y) -> (RA,DEC)
 procedure az_ra2(az,alt,lat,long,t:double;out ra,de: double);{conversion az,alt to ra,dec, longitude is POSITIVE when west. At south azimuth is 180}
 procedure ra_az2(ra,dec,lat,long,t:double;out azimuth2,altitude2: double);{conversion ra & dec to altitude, azimuth, longitude is POSITIVE when west. At south azimuth is 180 }
@@ -41,7 +41,7 @@ function  utc_date_time: string;// Current date&time in the FITS-standard / ISO-
 
 
 var
-  img_array        : image_array;
+  img_array        : Timage_array;
   img_bitmap       : tbitmap; {contain simulation in greylevel[0..65535]:=red*255 +blue}
 
   deepstring       : Tstrings;
@@ -1013,7 +1013,7 @@ const font_5x9 : packed array[33..126,0..8,0..4] of byte=  {ASTAP native font fo
   (0,0,0,0,0)){~}
   );
 
-procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: image_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
+procedure annotation_to_array(thestring : ansistring;transparant:boolean;graylevel,size, x,y {screen coord}: integer; var img: Timage_array);{string to image array as annotation, result is flicker free since the annotion is plotted as the rest of the image}
 var                                                                                       {Screen coordinates are used to have the font with the correct orientation}
  w,h,i,j,k,value,flipH,flipV,len,x2,y2: integer;
  ch : pansichar;
@@ -1442,7 +1442,7 @@ begin
 end;
 
 
-procedure line_in_array(img : image_array; xStart, yStart, xEnd, yEnd : integer; color : longword);{draw a line in an array}
+procedure line_in_array(img : Timage_array; xStart, yStart, xEnd, yEnd : integer; color : longword);{draw a line in an array}
 // Bresenham's Line Algorithm.  Byte, March 1988, pp. 249-253. http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm
 var
   a, b       :  integer;  // displacements in x and y
@@ -1521,7 +1521,7 @@ end;
 end;
 
 
-procedure plot_glx2(img: image_array;x9,y9,diameter,neigung {ratio width/length},orientation:double; colour :longword); {draw oval or galaxy}
+procedure plot_glx2(img: Timage_array;x9,y9,diameter,neigung {ratio width/length},orientation:double; colour :longword); {draw oval or galaxy}
 var   i,nr,x,y,oldx,oldy,startx,starty  : integer;
       r, sin_ori,cos_ori                : double;
 begin
@@ -1715,7 +1715,7 @@ begin
 end;
 
 
-procedure colourshift(pattern,offsetX,offsetY : integer; var img: image_array);//colour shift OSC image
+procedure colourshift(pattern,offsetX,offsetY : integer; var img: Timage_array);//colour shift OSC image
 var
   w,h,x,y : integer;
 begin
@@ -1784,7 +1784,7 @@ begin
   end
 end;
 
-procedure coloured_lines(x2,y2,bayeroffset_X,bayeroffset_Y:integer; var img: image_array);//mark with colour lines for raw OSC
+procedure coloured_lines(x2,y2,bayeroffset_X,bayeroffset_Y:integer; var img: Timage_array);//mark with colour lines for raw OSC
 
 var
   x,y,textoffset : integer;
@@ -1844,7 +1844,7 @@ var
   hfd,fitsX,fitsY, x1,y1,
   dra,ddec, ra_database,dec_database, fov,ra2,dec2, mag2,Bp_Rp, peakvalue,
   delta_ra,det,SIN_dec_ref,COS_dec_ref,SIN_dec_new,COS_dec_new,SIN_delta_ra,COS_delta_ra,hh,sigma,max_magn,
-  focal_ratio,angle,distance,sqr_distance,pedestal,cosdec,  frac1,frac2,frac3,frac4,val,
+  focal_ratio,angle,distance,sqr_distance,cosdec,  frac1,frac2,frac3,frac4,val,
   distance3,distance1,distanceX, distanceY,sqr_distance_norm,xc,yc,angle_starpos : double;
   star_total_counter, stepsize,i, area1,area2,area3,area4,w,h,x,y,hotpixels,
   tilt_index,half_width,half_height                                                           : integer;
@@ -1976,14 +1976,12 @@ begin
     w:=form1.image1.picture.Bitmap.Width;
     h:=form1.image1.picture.Bitmap.Height;
 
-    if labels<>6 {no dark} then pedestal:=100 else pedestal:=50; {give it a fixed skybackground of 50}
-
     setlength(img_array,h,w);
     for y := 0 to h -1 do
     begin {clear array}
       for x := 0 to w -1 do
         begin
-          img_array[y,x]:=pedestal;
+          img_array[y,x]:=0;//offset, bias offset will be added in transmission
         end;
     end;
 
@@ -2277,7 +2275,7 @@ begin
     for x:=0 to w-1 do
     begin
       val:=round(img_array[h-1-y,x]);//grey level [0..$FFFFFF], follow fits convention. Pixel 1,1 bottom left
-      min_val:=min(min_val,val);{for removing dark current}
+      min_val:=min(min_val,val);{measure the minimum value for removing dark current}
       valG:=min(255,1+trunc(15*255*power(((val-min_val)/$FFFF),0.5))); {stretch data for display. give it a bias of 1 for case it is saved with the popup menu of the image tab}
 
 
