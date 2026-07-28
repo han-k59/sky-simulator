@@ -35,10 +35,10 @@ object Form1: TForm1
       ClientHeight = 510
       ClientWidth = 1345
       object go_default1: TButton
-        Left = 808
+        Left = 816
         Height = 25
         Hint = 'Reset all settings and leave program.'
-        Top = 168
+        Top = 200
         Width = 116
         Caption = 'Go default'
         ParentShowHint = False
@@ -46,103 +46,94 @@ object Form1: TForm1
         TabOrder = 0
         OnClick = go_default1Click
       end
-      object about1: TButton
-        Left = 808
-        Height = 25
-        Top = 112
-        Width = 116
-        Caption = 'About v3.0.7d'
-        TabOrder = 1
-        OnClick = about1Click
-      end
       object internetskyview1: TEdit
-        Left = 137
+        Left = 145
         Height = 25
         Hint = 'Internet link for downloading images from Skyview. Only enabled for the first nine mount error settings. See tab mount.'
-        Top = 8
+        Top = 40
         Width = 760
         Font.Height = -13
         ParentColor = True
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 2
+        TabOrder = 1
         Text = 'https://skyview.gsfc.nasa.gov/cgi-bin/pskcall?return=jpeg&Survey=DSS2R'
         OnExit = internetskyview1Exit
       end
       object skyviewbutton1: TButton
-        Left = 904
+        Left = 912
         Height = 25
         Hint = 'Copy the full download link to the clipboard. The link will be available after the first download.'
-        Top = 8
+        Top = 40
+        Width = 16
+        Caption = '->'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 2
+        OnClick = skyviewbutton1Click
+      end
+      object esobutton1: TButton
+        Left = 912
+        Height = 25
+        Hint = 'Copy the full download link to the clipboard. The link will be available after the first download.'
+        Top = 72
         Width = 16
         Caption = '->'
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
-        OnClick = skyviewbutton1Click
-      end
-      object esobutton1: TButton
-        Left = 904
-        Height = 25
-        Hint = 'Copy the full download link to the clipboard. The link will be available after the first download.'
-        Top = 40
-        Width = 16
-        Caption = '->'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 4
         OnClick = esobutton1Click
       end
       object internetESO1: TEdit
-        Left = 136
+        Left = 144
         Height = 25
         Hint = 'Internet link for downloading  images from ESO. Only enabled for the first nine mount error settings. See tab mount.'
-        Top = 40
+        Top = 72
         Width = 760
         Font.Height = -13
         ParentColor = True
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 5
+        TabOrder = 4
         Text = 'https://archive.eso.org/dss/dss?mime-type=download-gif&equinox=J2000&Sky-Survey=DSS'
         OnExit = internetESO1Exit
       end
       object skyview_selected1: TRadioButton
-        Left = 112
+        Left = 120
         Height = 17
-        Top = 8
+        Top = 40
+        Width = 18
+        TabOrder = 5
+        OnChange = skyview_selected1Change
+      end
+      object eso_selected1: TRadioButton
+        Left = 120
+        Height = 17
+        Top = 72
         Width = 18
         TabOrder = 6
         OnChange = skyview_selected1Change
       end
-      object eso_selected1: TRadioButton
-        Left = 112
-        Height = 17
-        Top = 40
-        Width = 18
-        TabOrder = 7
-        OnChange = skyview_selected1Change
-      end
       object Label2: TLabel
-        Left = 5
+        Left = 13
         Height = 19
-        Top = 8
+        Top = 40
         Width = 98
         Caption = 'Download from:'
         ParentColor = False
       end
       object GroupBox1: TGroupBox
-        Left = 137
+        Left = 145
         Height = 320
-        Top = 104
+        Top = 136
         Width = 656
-        Caption = 'Artificial sky using the star and deepsky database'
+        Caption = 'Artificial sky using the star and deepsky database    (recommended)'
         ClientHeight = 296
         ClientWidth = 652
         ParentFont = False
-        TabOrder = 8
+        TabOrder = 7
         object Angle2: TEdit
           Left = 104
           Height = 27
@@ -418,12 +409,12 @@ object Form1: TForm1
         end
       end
       object artificial_selected1: TRadioButton
-        Left = 112
+        Left = 120
         Height = 17
-        Top = 104
+        Top = 136
         Width = 18
         Checked = True
-        TabOrder = 9
+        TabOrder = 8
         TabStop = True
       end
       object Label15: TLabel
@@ -435,11 +426,11 @@ object Form1: TForm1
         ParentColor = False
       end
       object file_from_disk_selected1: TRadioButton
-        Left = 112
+        Left = 120
         Height = 17
-        Top = 72
+        Top = 104
         Width = 18
-        TabOrder = 10
+        TabOrder = 9
         OnChange = skyview_selected1Change
       end
       object File_from_disk2: TLabel
@@ -451,18 +442,18 @@ object Form1: TForm1
         ParentColor = False
       end
       object Label36: TLabel
-        Left = 5
+        Left = 13
         Height = 19
-        Top = 40
+        Top = 72
         Width = 98
         Caption = 'Download from:'
         ParentColor = False
       end
       object file_form_disk1: TBitBtn
-        Left = 136
+        Left = 144
         Height = 29
         Hint = 'Single image for special purposes like focus testing or OSC testing. Colour images are converted to OSC raw pattern RGGB.  '
-        Top = 72
+        Top = 104
         Width = 252
         AutoSize = True
         BidiMode = bdRightToLeft
@@ -472,8 +463,15 @@ object Form1: TForm1
         ParentBidiMode = False
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 11
+        TabOrder = 10
         OnClick = file_form_disk1Click
+      end
+      object about2: TLabel
+        Left = 64
+        Height = 19
+        Top = 8
+        Width = 598
+        Caption = 'Sky simulator for ASCOM and Alpaca. Version 3.0.8   © 2018-2026 by Han Kleijn, www.hnsky.org.'
       end
     end
     object tab_camera1: TTabSheet
@@ -1087,7 +1085,7 @@ object Form1: TForm1
         object ra_square_wave_error_amplitude1: TEdit
           Left = 192
           Height = 27
-          Hint = 'Amplitude of periodic square-wave error in α seconds'
+          Hint = 'Amplitude of periodic square-wave error in α seconds. Note that at the celestial equator one α second is 15 arcsec so set only small values.'
           Top = 24
           Width = 47
           TabOrder = 2
@@ -1104,7 +1102,7 @@ object Form1: TForm1
         object ra_periodic_sinusoidal_error_amplitude1: TEdit
           Left = 352
           Height = 27
-          Hint = 'Peak amplitude of the periodic_sinusoidal error in α seconds'
+          Hint = 'Peak amplitude of the periodic_sinusoidal error in α seconds.  Note that at the celestial equator one α second is 15 arcsec so set only small values.'
           Top = 24
           Width = 47
           TabOrder = 4

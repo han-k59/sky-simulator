@@ -152,7 +152,10 @@ procedure SplitRec(buf,sep:string; var arg: TStringList);
 
 implementation
 
-//uses sky_simulator_main;
+
+var
+  AlpacaFS: TFormatSettings;   {JSON is always locale-invariant}
+
 
 constructor T_AlpacaDevice.Create(AOwner: TComponent);
 begin
@@ -274,7 +277,7 @@ var buf: string;
 begin
 result:=GetParamString(params,key,buf);
 if result then begin
-   value:=StrToFloatDef(buf,NullCoord);
+   value:=StrToFloatDef(buf,NullCoord, AlpacaFS);
    if value=NullCoord then begin
      FErrorMessage:=MSG_INVALID_VALUE+' '+key;
      FErrorNumber:=ERR_INVALID_VALUE;
@@ -491,7 +494,7 @@ end;
 function  T_AlpacaDevice.FormatFloatResp(value:double; ClientTransactionID, ServerTransactionID: LongWord; ErrorNumber: integer; ErrorMessage:string):string;
 begin
   result:='{"Value":'
-         +FormatFloat('0.0000000000',value)+','
+         +FormatFloat('0.0000000000',value,AlpacaFS)+','
          +'"ClientTransactionID":'+inttostr(ClientTransactionID)+','
          +'"ServerTransactionID":'+inttostr(ServerTransactionID)+','
          +'"ErrorNumber":'+inttostr(ErrorNumber)+','
@@ -508,8 +511,8 @@ begin
   else begin
     buf:='[';
     for i:=0 to n-1 do begin
-        buf:=buf+'{"Maximum":'+FormatFloat('0.0000000000',value[i].maximum)+',';
-        buf:=buf+'"Minimum":'+FormatFloat('0.0000000000',value[i].minimum)+'},';
+        buf:=buf+'{"Maximum":'+FormatFloat('0.0000000000',value[i].maximum,AlpacaFS)+',';
+        buf:=buf+'"Minimum":'+FormatFloat('0.0000000000',value[i].minimum,AlpacaFS)+'},';
     end;
     SetLength(buf,Length(buf)-1);
     buf:=buf+']';
@@ -546,5 +549,11 @@ begin
  status:=400;
 end;
 
+initialization
+  AlpacaFS := DefaultFormatSettings;
+  AlpacaFS.DecimalSeparator  := '.';
+  AlpacaFS.ThousandSeparator := #0;   {no grouping in JSON}
+  AlpacaFS.DateSeparator     := '/';
+  AlpacaFS.TimeSeparator     := ':';
 end.
 

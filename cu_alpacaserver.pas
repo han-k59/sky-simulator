@@ -61,6 +61,8 @@ type
       FShowError: TStringProc;
       FPortMsg: TStringProc;
       FDiscoveryPortMsg: TStringProc;
+      FConnList: TThreadList;
+      function StopThread(T: TThread): boolean;
       procedure ShowError(var msg:string);
       procedure ShowMsg(var msg:string);
       procedure ShowSocket(var msg:string);
@@ -76,6 +78,7 @@ type
       destructor  Destroy; override;
       procedure StartServer;
       procedure StopServer;
+      function  ActiveConnections: integer;
       procedure AddDevice(devtype:TAlpacaDeviceType; device:T_AlpacaDevice);
       property IPAddr:string read FIPAddr write FIPAddr;
       property IPPort:string read FIPPort write FIPPort;
@@ -94,6 +97,7 @@ type
 
 implementation
 
+
 //////////////////////// T_AlpacaDeviceList ////////////////////////
 function T_AlpacaDeviceList.GetItem(Index: integer): T_AlpacaDeviceElement;
 begin
@@ -107,6 +111,10 @@ end;
 
 //////////////////////// T_AlpacaServer ////////////////////////
 
+
+
+
+
 constructor T_AlpacaServer.Create(AOwner: TComponent);
 begin
   inherited Create(aOwner);
@@ -116,11 +124,11 @@ begin
   FServerName := 'ASCOM Alpaca Server - Freepascal-Synapse';
   FManufacturer:='Alpaca Server project, https://github.com/pchev/alpaca_server';
   FLocation:='sky_simulator';
-  DefaultFormatSettings.DecimalSeparator := '.';
-  DefaultFormatSettings.ThousandSeparator := ',';
-  DefaultFormatSettings.DateSeparator := '/';
-  DefaultFormatSettings.TimeSeparator := ':';
+
+  FConnList := TThreadList.Create;
   TCPDaemon:=TTCPDaemon.Create;
+  TCPDaemon.ConnList := FConnList;
+
   DeviceList:=T_AlpacaDeviceList.Create;
   TCPDaemon.onShowError := @ShowError;
   TCPDaemon.onShowMsg := @ShowMsg;
@@ -136,16 +144,125 @@ begin
 
 end;
 
-destructor  T_AlpacaServer.Destroy;
-var i: integer;
+
+function T_AlpacaServer.StopThread(T: TThread): boolean;
+{Terminates T and waits for it to leave Execute. Returns True if it did.
+ CheckSynchronize is essential: the thread may be parked in Synchronize,
+ which only completes if the main thread services the queue.}
+var
+  i: integer;
 begin
-  if DeviceList<>nil then begin
-    for i:=0 to DeviceList.Count-1 do begin
-       T_AlpacaDeviceElement(DeviceList.Items[i]).device.Free;
-    end;
+  Result := True;
+  if T = nil then exit;
+  T.Terminate;
+  i := 0;
+  while (not T.Finished) and (i < 300) do   {up to ~3 seconds}
+  begin
+    CheckSynchronize(10);
+    inc(i);
+  end;
+  Result := T.Finished;
+  if Result then T.WaitFor;
+end;
+
+
+destructor T_AlpacaServer.Destroy;
+var
+  i: integer;
+  daemons_stopped: boolean;
+begin
+  // 1. stop the threads that call back into us, and WAIT for them
+  if TCPDaemon <> nil then
+  begin
+    TCPDaemon.onProcessGet := nil;
+    TCPDaemon.onProcessGetImageBytes := nil;
+    TCPDaemon.onProcessPut := nil;
+    TCPDaemon.onShowError := nil;
+    TCPDaemon.onShowMsg := nil;
+    TCPDaemon.onShowSocket := nil;
+  end;
+  if Discovery <> nil then
+  begin
+    Discovery.onShowError := nil;
+    Discovery.onShowMsg := nil;
+    Discovery.onShowSocket := nil;
+  end;
+
+  daemons_stopped := StopThread(TCPDaemon);
+  if daemons_stopped then TCPDaemon.Free;
+  TCPDaemon := nil;
+
+  if not StopThread(Discovery) then daemons_stopped := False
+  else Discovery.Free;
+  Discovery := nil;
+
+  // 2. the TCP daemon has now run TerminateChildren; let the clients drain
+  i := 0;
+  while (ActiveConnections > 0) and (i < 100) do   {up to ~1 second}
+  begin
+    CheckSynchronize(10);
+    inc(i);
+  end;
+
+  // 3. free the devices
+  if DeviceList <> nil then
+  begin
+    for i := 0 to DeviceList.Count-1 do
+      T_AlpacaDeviceElement(DeviceList.Items[i]).device.Free;
     DeviceList.Free;
+    DeviceList := nil;
+  end;
+
+  // 4. only now is nobody left holding FConnList
+  if FConnList <> nil then
+  begin
+    if daemons_stopped and (ActiveConnections = 0) then
+      FConnList.Free
+    else
+      ;   {a thread is stuck - leaking the list beats a use-after-free}
+    FConnList := nil;
+  end;
+
+  inherited Destroy;
+end;
+
+
+function T_AlpacaServer.ActiveConnections: integer;
+var L: TList;
+begin
+  Result := 0;
+  if FConnList = nil then exit;
+  L := FConnList.LockList;
+  try
+    Result := L.Count;
+  finally
+    FConnList.UnlockList;
   end;
 end;
+
+
+procedure T_AlpacaServer.StopServer;
+begin
+  try
+    if TCPDaemon <> nil then begin
+      TCPDaemon.onProcessGet := nil;
+      TCPDaemon.onProcessGetImageBytes := nil;
+      TCPDaemon.onProcessPut := nil;
+      TCPDaemon.onShowError := nil;
+      TCPDaemon.onShowMsg := nil;
+      TCPDaemon.onShowSocket := nil;
+      TCPDaemon.Terminate;
+    end;
+    if Discovery <> nil then begin
+      Discovery.onShowError := nil;
+      Discovery.onShowMsg := nil;
+      Discovery.onShowSocket := nil;
+      Discovery.Terminate;
+    end;
+  except
+  end;
+end;
+
 
 procedure T_AlpacaServer.AddDevice(devtype:TAlpacaDeviceType; device:T_AlpacaDevice);
 var elem: T_AlpacaDeviceElement;
@@ -179,14 +296,6 @@ begin
   Discovery.Start;
 end;
 
-procedure T_AlpacaServer.StopServer;
-begin
-  try
-    TCPDaemon.Terminate;
-    Discovery.Terminate;
-  except
-  end;
-end;
 
 procedure T_AlpacaServer.ShowError(var msg:string);
 var buf:string;
@@ -608,6 +717,8 @@ begin
    params.free;
   end;
 end;
+
+
 
 end.
 

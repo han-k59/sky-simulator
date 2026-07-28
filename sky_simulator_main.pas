@@ -28,6 +28,7 @@ uses
   Windows,
   URLMon,   {For downloading files}
   comobj,   {for Ascom link}
+  Windirs,
   {$else}
   LCLintf, {for GetCursorPos}
   sky_simulator_unit_download, {Not available in Linux}
@@ -63,6 +64,7 @@ type
     bayer_change_warning1: TLabel;
     CheckBox_focal_length_driver1: TCheckBox;
     camera_gain1: TLabel;
+    about2: TLabel;
     Label42: TLabel;
     Label43: TLabel;
     Label44: TLabel;
@@ -157,7 +159,6 @@ type
     arrowleft1: TLabel;
     backlash1: TEdit;
     backlash_mount1: TCheckBox;
-    about1: TButton;
     buttonEast1: TButton;
     buttonNorth1: TButton;
     buttonSouth1: TButton;
@@ -315,7 +316,6 @@ type
     procedure azimuth_updown1Changing(Sender: TObject; var AllowChange: Boolean
       );
     procedure backlash1Exit(Sender: TObject);
-    procedure about1Click(Sender: TObject);
     procedure file_form_disk1Click(Sender: TObject);
     procedure Button_camera1Click(Sender: TObject);
     procedure elevation_error1Change(Sender: TObject);
@@ -522,6 +522,7 @@ begin
   closefile(f);
 end;
 
+
 function time_inc_ms : string;
 var
   myDate: TDateTime;
@@ -538,21 +539,22 @@ end;
 
 procedure TForm1.ShowMsg(var msg:string);{Alpaca}
 var
-  len : integer;
+  len,i : integer;
   duration      : double;
   filter: string;
 begin
   if activate_log1.checked then
   begin
-    filter:=filter_alpaca_text1.text;
-    trim(filter);
+    filter:=trim(filter_alpaca_text1.text);
     if length(filter)>1 then
       if pos(filter,msg)=0 then exit;
 
     if memo1.lines.count>400 then
     begin
-      len:=length(memo1.text);
-      memo1.text:=copy(memo1.text,len div 2, 99999999999999);{quick method to half tab_log1, Memo1.Lines.delete(0) is too slow}
+      //len:=length(memo1.text);
+      //memo1.text:=copy(memo1.text,len div 2, 99999999999999);
+      i:=PosEx(LineEnding, memo1.Text, len div 2);
+      memo1.Text := Copy(memo1.Text, i+Length(LineEnding), MaxInt);{quick method to half tab_log1, Memo1.Lines.delete(0) is too slow}
     end;
 
     starttick:=gettickcount64;
@@ -642,29 +644,37 @@ begin
   end;
 end;
 
+
 procedure stop_alpaca;
 var i: integer;
 begin
   with form1 do
   begin
-    if AlpacaServer<>nil then
-    begin
-      if myMount<>nil then
-              MyMount.SetConnected(False);
-      if myCam<>nil then
-          MyCam.SetConnected(False);
-      if myFocuser<>nil then
-         MyFocuser.SetConnected(False);
-      if myRotator<>nil then
-         MyRotator.SetConnected(False);
+    if AlpacaServer = nil then exit;
 
-      AlpacaServer.StopServer;
-      for i:=0 to 10 do begin
-        sleep(200);
-        Application.ProcessMessages;
-      end;
-      AlpacaServer.Free;
+    if MyMount     <> nil then MyMount.SetConnected(False);
+    if MyCam       <> nil then MyCam.SetConnected(False);
+    if MyGuideCam  <> nil then MyGuideCam.SetConnected(False);
+    if MyFocuser   <> nil then MyFocuser.SetConnected(False);
+    if MyRotator   <> nil then MyRotator.SetConnected(False);
+
+    AlpacaServer.StopServer;
+
+    i := 0;
+    while (AlpacaServer.ActiveConnections > 0) and (i < 100) do
+    begin
+      sleep(50);
+      Application.ProcessMessages;   // essential: children may sit in Synchronize
+      inc(i);
     end;
+    if AlpacaServer.ActiveConnections > 0 then
+      memo2_message('Warning: ' + IntToStr(AlpacaServer.ActiveConnections) +
+                    ' Alpaca connection(s) did not close.');
+
+    AlpacaServer.Free;
+    AlpacaServer := nil;
+    MyMount := nil; MyCam := nil; MyGuideCam := nil;
+    MyFocuser := nil; MyRotator := nil; MyFilterwheel := nil;
   end;
 end;
 
@@ -683,14 +693,10 @@ end;
 Procedure GetDocumentsPath;
 {$IFDEF fpc}
   {$ifdef mswindows}
-  var
-     PIDL : PItemIDList;
-     Folder : array[0..MAX_PATH] of Char;
-     const CSIDL_PERSONAL = $0005;
   begin
-     SHGetSpecialFolderLocation(0, CSIDL_PERSONAL, PIDL);
-     SHGetPathFromIDList(PIDL, Folder);
-     documents_path:=Folder+'\';{FPC mswindows solution}
+    documents_path:=GetWindowsSpecialDir(CSIDL_PERSONAL); //uses Windirs
+    if documents_path='' then
+      documents_path:=IncludeTrailingPathDelimiter(GetUserDir);
   end;
   {$ELSE}{unix}
   begin
@@ -722,13 +728,46 @@ end;
 
 
 procedure update_fov(ch : string ); //complicated logic to adaot to DSS download
+var
+  psize,harc,fleng:   double;
+
 begin
   with form1 do
   begin
-    pixelsizemicrometer:=strtofloat2(pixelsizemicrometer1.caption);//always update since this procedure is called after loading settings
-    height_arcmin:=strtofloat2(height_arcmin1.caption);
-    width2:=strtoint(form1.width_pixels1.text);{width}
+    psize:=strtofloat2(pixelsizemicrometer1.caption);//always update since this procedure is called after loading settings
+    fleng:=strtofloat2(focallength1.caption)/1000;//In meter. Always update since this procedure is called after loading settings
+    harc:=strtofloat2(height_arcmin1.caption);
+
+    if ((psize=0) or (fleng=0) or (harc=0)) then
+    begin
+      pixelsizemicrometer1.color:=clred;
+      focallength1.color:=clred;
+      height_arcmin1.color:=clred;
+      exit;
+    end;
+    pixelsizemicrometer:=psize;
+    focal_length_telescope:=fleng;
+    height_arcmin:=harc;
+    pixelsizemicrometer1.color:=cldefault;
+    focallength1.color:=cldefault;
+    height_arcmin1.color:=cldefault;
+
+    try
+      width2:=strtoint(form1.width_pixels1.text);{width}
+    except
+      width_pixels1.color:=clred;
+      exit;
+    end;
+    width_pixels1.color:=cldefault;
+
+
+    try
     height2:=strtoint(height_pixels1.caption);
+    except
+      height_pixels1.color:=clred;
+      exit;
+    end;
+    height_pixels1.color:=cldefault;
 
     if eso_selected1.checked then
     begin
@@ -738,7 +777,6 @@ begin
       width2:=round(width_arcmin*60/1.7);
     end;
 
-    focal_length_telescope:=(strtofloat2(focallength1.caption)/1000);//In meter. Always update since this procedure is called after loading settings
 
     if ((ch='hp') or (ch='ps') or (ch='fl')) then //change in height in pixel, pixel size
     begin
@@ -802,7 +840,7 @@ function load_settings(lpath: string)  : boolean;
 var
   dum : string;
   i   : integer;
-  initstring :tstrings; {settings for save and loading}
+  initstring :tstringlist; {settings for save and loading}
 
   Procedure get_float(var float: double;s1 : string); {this give much smaller exe file then using strtofloat}
       var s2:string; err:integer; r:double;
@@ -833,28 +871,24 @@ var
         end;
       end;
   procedure doreset;
-      begin
-        initstring.Free;
-        form1.top:=0;{for case the form was not set at the main screen}
-        form1.left:=0;
-      end;
+  begin
+    form1.top:=0;{for case the form was not set at the main screen}
+    form1.left:=0;
+  end;
 
 begin
   result:=false;{assume failure}
 
-
   initstring := Tstringlist.Create;
-   with initstring do
+  try
+    try
+      initstring.loadfromFile(lpath); { load from file}
+    except
+      doreset;
+      exit; {no cfg file}
+    end;
+   with form1 do
    begin
-     try
-      loadfromFile(lpath); { load from file}
-     except
-       doreset;
-       exit; {no cfg file}
-     end;
-   end;
-  with form1 do
-  begin
     i:=987654321; get_int(i,'window_left2');
     if i<>987654321 then
     begin
@@ -890,7 +924,8 @@ begin
     dum:=initstring.Values['elevation_e']; if dum<>'' then form1.elevation_error1.text:=dum;
     dum:=initstring.Values['azimuth_e']; if dum<>'' then form1.azimuth_error1.text:=dum;
     dum:=initstring.Values['latitude']; if dum<>'' then form1.latitude1.text:=dum;
-    dum:=initstring.Values['longtude']; if dum<>'' then form1.longitude1.text:=dum;
+    dum:=initstring.Values['longtude']; if dum<>'' then form1.longitude1.text:=dum;//temporary remove at end 2028
+    dum:=initstring.Values['longitude']; if dum<>'' then form1.longitude1.text:=dum;
 
     dum:=initstring.Values['width_pixels']; if dum<>'' then form1.width_pixels1.text:=dum;
     dum:=initstring.Values['height_pixels']; if dum<>'' then form1.height_pixels1.text:=dum;
@@ -956,8 +991,11 @@ begin
     dum:=initstring.Values['offset7']; if dum<>'' then form1.offset7.text:=dum;
   end;
 
-  initstring.free;
   result:=true;
+
+  finally
+     initstring.Free;
+  end;
 end;
 
 
@@ -968,11 +1006,10 @@ var
   initstring :tstrings; {settings for save and loading}
   i : integer;
 begin
+  initstring := Tstringlist.Create;
+  try
   with form1 do
   begin
-
-    initstring := Tstringlist.Create;
-
     initstring.Values['window_left2']:=inttostr(form1.left);
     initstring.Values['window_top2']:=inttostr(form1.top);
     initstring.Values['window_height']:=inttostr(form1.height);
@@ -1001,7 +1038,7 @@ begin
     initstring.Values['elevation_e']:=form1.elevation_error1.text;
     initstring.Values['azimuth_e']:=form1.azimuth_error1.text;
     initstring.Values['latitude']:=form1.latitude1.text;
-    initstring.Values['longtude']:=form1.longitude1.text;
+    initstring.Values['longitude']:=form1.longitude1.text;
 
     initstring.Values['width_pixels']:=form1.width_pixels1.text;
     initstring.Values['height_pixels']:=form1.height_pixels1.text;
@@ -1061,18 +1098,16 @@ begin
     initstring.Values['offset5']:=form1.offset5.text;
     initstring.Values['offset6']:=form1.offset6.text;
     initstring.Values['offset7']:=form1.offset7.text;
+   end;
 
-
-  with initstring do
-  begin
-    try
-    savetoFile(lpath);{ save to file.}
+   try
+      initstring.SaveToFile(lpath);//save to file.
     except
-      application.messagebox(pchar('Error writing: '+lpath),pchar('Error'),MB_ICONWARNING+MB_OK);
-      exit;
+      on E: Exception do
+        application.messagebox(pchar('Error writing: '+lpath+LineEnding+E.Message), pchar('Error'),MB_ICONWARNING+MB_OK);
     end;
-  end;
-  initstring.free;
+  finally
+    initstring.Free;
   end;
 end;
 
@@ -1085,6 +1120,7 @@ end;
 
 function DownloadFile(SourceFile, DestFile: string): Boolean;{2013, download files from internet}
 begin
+  result:=false; //assume failure in case of esc pressed
   form1.cursor:=crHourGlass;
   application.processmessages; {required otherwise no wait cursor in Linux}
   if esc_pressed then exit;
@@ -1230,47 +1266,69 @@ begin
 end;
 
 
-procedure jpeg_to_picture(filen1: string);
+function jpeg_to_picture(filen1: string) : boolean;
 var
   ajpg: graphics.TjpegImage;
 begin
+  result:=false;
+  ajpg := graphics.TJPEGImage.Create;
   try
-    ajpg := graphics.TJPEGImage.Create;
-    ajpg.LoadFromFile(filen1);
-    dss_bitmap.PixelFormat:=ajpg.PixelFormat;//copy format. Required to update PixelFormat
-    dss_bitmap.assign(ajpg); {keep for later for display if in focus}
-  except
+    try
+      ajpg.LoadFromFile(filen1);
+      dss_bitmap.PixelFormat:=ajpg.PixelFormat;//copy format. Required to update PixelFormat
+      dss_bitmap.assign(ajpg); {keep for later for display if in focus}
+      result:=true;
+    except
+      on E: Exception do
+        memo2_message('Error reading GIF file '+filen1+': '+E.Message);
+    end;
+  finally
+    ajpg.free;
   end;
-  ajpg.free;
 end;
 
 
-procedure gif_to_picture(filen1: string);
-var gif: graphics.TGIFImage;
+function gif_to_picture(filen1: string) : boolean; {load GIF into dss_bitmap, false if it failed}
+var
+  gif: graphics.TGIFImage;
 begin
+  result:=false;
+  gif := graphics.TGIFImage.Create;
   try
-    gif := graphics.TGIFImage.Create;
-    gif.LoadFromFile(filen1);
-    dss_bitmap.PixelFormat:=gif.PixelFormat;//copy format. Required to update PixelFormat
-    dss_bitmap.assign(gif); {keep for later}
-  except
+    try
+      gif.LoadFromFile(filen1);
+      dss_bitmap.PixelFormat:=gif.PixelFormat;{copy format. Required to update PixelFormat}
+      dss_bitmap.Assign(gif); {keep for later}
+      result:=true;
+    except
+      on E: Exception do
+        memo2_message('Error reading GIF file '+filen1+': '+E.Message);
+    end;
+  finally
+    gif.Free;
   end;
-  gif.free
 end;
 
 
-procedure png_to_picture(filen1: string);
+function png_to_picture(filen1: string) : boolean;
 var
   apng: graphics.TPortableNetworkGraphic;
 begin
+  result:=false;
+  apng := graphics.TPortableNetworkGraphic.Create;
   try
-    apng := graphics.TPortableNetworkGraphic.Create;
+    try
     apng.LoadFromFile(filen1);
     dss_bitmap.PixelFormat:=apng.PixelFormat;//copy format. Required to update PixelFormat
     dss_bitmap.assign(apng); {keep for later for display if in focus}
-  except
+    result:=true;
+    except
+      on E: Exception do
+        memo2_message('Error reading PNG file '+filen1+': '+E.Message);
+    end;
+  finally
+    apng.free;
   end;
-  apng.free;
 end;
 
 
@@ -1282,10 +1340,11 @@ var
   myFile : File;
   charArray : array[0..255] of char;
   message   : string;
+  ok        : boolean;
 begin
 
-  height_arcmin:=strtofloat(form1.height_arcmin1.text);
-  width_arcmin:=strtofloat(form1.width_arcmin1.caption);
+  height_arcmin:=strtofloat2(form1.height_arcmin1.text);
+  width_arcmin:=strtofloat2(form1.width_arcmin1.caption);
 
   pixelY:=strtoint(form1.height_pixels1.text);{height}
   pixelX:=strtoint(form1.width_pixels1.text);{height}
@@ -1321,7 +1380,7 @@ begin
 
   if DownloadFile(internetlink, destfile) then
   begin
-    if filesize(destfile)<4096 then
+   if filesize(destfile)<4096 then
     begin  {error handling}
       dss_bitmap.Height:=pixelY; {storage for DSS output to file in 24 bit grey levels}
       dss_bitmap.width:=pixelX;
@@ -1334,33 +1393,40 @@ begin
         TextOut(10,10, 'Download error!');
         font.size:=14;
         {$I-}
-        try
+        //try
+          count:=0;
           AssignFile(myFile,destfile);
           FileMode := fmOpenRead;
           Reset(myFile, 1);   // Now we define one record as 1 byte
-          BlockRead(myFile, chararray[0], sizeof(chararray),count);
+          BlockRead(myFile, chararray[0], high(chararray),count);
           CloseFile(myFile);
+          if IOResult<>0 then count:=0;   {read IOResult to clear InOutRes}
           chararray[count]:=#0; {set size}
-          message:=trim(strpas(chararray));
+          if count<>0 then
+             message:=trim(strpas(chararray))
+          else
+            message:='Error, no DSS image downloaded!';
           for i:=0 to 4 do
             TextOut(10,100+i*25,copy(message,1+i*60,60) ); {display  text if any}
-        except
-        end;
+        //except
+        //end;
         {$I+}
       end;
     end
-
-
     else
     begin  {succes download}
       if form1.skyview_selected1.checked then
-         jpeg_to_picture(destfile){load into dss_bitmap}
+         ok:=jpeg_to_picture(destfile){load into dss_bitmap}
       else {ESO}
-        gif_to_picture(destfile);{load into dss_bitmap}
+        ok:=gif_to_picture(destfile);{load into dss_bitmap}
 
-      ra0:=ra1;//store image position same as in artificial image for looking at position
-      dec0:=dec1;
-
+      if ok then
+       begin
+         ra0:=ra1;//store image position same as in artificial image for looking at position
+         dec0:=dec1;
+       end
+       else
+         memo2_message('Error, downloaded image could not be decoded.');
     end;
 
     inc(imagecounter);
@@ -1850,33 +1916,6 @@ begin
 end;
 
 
-
-var
-  count_img: integer=-1;
-procedure test;//test the simulator
-var
-  i, j : integer;
-  thera,thedec : double;
-begin
-  application.processmessages;
-  wait(2000);
-
-  if count_img>=0 then
-  begin
-    thera:=count_img;  //hrs
-    thedec:=90;
-    equinox_communication:=1; //jnow
-    mount_goto(count_img,89.666666666666666666666666667);
-
-    memo2_message('file '+ inttostr(count_img));{message to memo2}
-    save_fits('d:\temp\'+inttostr(count_img)+'.fits');
-
-    if count_img>23 then halt;
-  end;
-  inc(count_img);
-end;
-
-
 procedure simulate_sky;
 const
    equinox_telescope  : integer = 0;
@@ -2259,8 +2298,8 @@ begin
 
           if ((polar_alignment_error) or (equatorial_mount)) then
           begin
-            latitude:=strtofloat(latitude1.text)*pi/180;;
-            longitude:=strtofloat(longitude1.text)*pi/180;
+            latitude:=strtofloat2(latitude1.text)*pi/180;;
+            longitude:=strtofloat2(longitude1.text)*pi/180;
             calc_sidereal_time(longitude);//JD is already calculated by calc_JD
             caption:='Local sidereal time '+copy(prepare_ra(sidereal_time),1,6);
 
@@ -2290,18 +2329,20 @@ begin
             begin
               if file_from_disk_selected1.checked then
               begin
-                png_to_picture(file_from_disk2.caption);
-                if ((dss_bitmap.PixelFormat=pf24bit) or (dss_bitmap.PixelFormat=pf32bit) or (dss_bitmap.PixelFormat=pfCustom)) then //colour
+                if  png_to_picture(file_from_disk2.caption) then
                 begin
-                  file_form_disk1.imageindex:=5; //Make from colour OSC raw
-                  bayeroffset_X:=0;//RGGB
-                  bayeroffset_Y:=0;
-                  sensor_type:=2;//Bayer pattern
-                end
-                else
-                begin
-                  file_form_disk1.imageindex:=6;//keep Grey scale
-                  sensor_type:=0;
+                  if ((dss_bitmap.PixelFormat=pf24bit) or (dss_bitmap.PixelFormat=pf32bit) or (dss_bitmap.PixelFormat=pfCustom)) then //colour
+                  begin
+                    file_form_disk1.imageindex:=5; //Make from colour OSC raw
+                    bayeroffset_X:=0;//RGGB
+                    bayeroffset_Y:=0;
+                    sensor_type:=2;//Bayer pattern
+                  end
+                  else
+                  begin
+                    file_form_disk1.imageindex:=6;//keep Grey scale
+                    sensor_type:=0;
+                  end;
                 end;
               end
               else
@@ -2649,10 +2690,6 @@ begin
   update_required:=true;
 end;
 
-procedure TForm1.about1Click(Sender: TObject);
-begin
-  showmessage('Sky simulator for ASCOM and Alpaca. © 2018-2026 by Han Kleijn, www.hnsky.org. ');
-end;
 
 procedure TForm1.file_form_disk1Click(Sender: TObject);
 begin
@@ -2751,9 +2788,9 @@ begin
      dec_1:=copy(gotopos,pos3+1,pos4-pos3-1);
      dec_2:=copy(gotopos,pos4+1,pos5-pos4-1);
      dec_3:=copy(gotopos,pos5+1,99);
-     theRa:=strtofloat(ra_1)+strtofloat(ra_2)/60+strtofloat(ra_3)/3600;
-     theDec:=strtofloat(dec_1);
-     theDec:=theDec+sign(theDec)*(abs(strtofloat(dec_2))/60+abs(strtofloat(dec_3)/3600));//apply sign of degrees
+     theRa:=strtofloat2(ra_1)+strtofloat2(ra_2)/60+strtofloat2(ra_3)/3600;
+     theDec:=strtofloat2(dec_1);
+     theDec:=theDec+sign(theDec)*(abs(strtofloat2(dec_2))/60+abs(strtofloat2(dec_3)/3600));//apply sign of degrees
    end
    else
    if pos3<>pos4  then {4 string position}
@@ -2762,17 +2799,17 @@ begin
      ra_2:=copy(gotopos,pos1+1, pos2-pos1-1);
      dec_1:=copy(gotopos,pos2+1,pos3-pos2-1);
      dec_2:=copy(gotopos,pos3+1,99);
-     theRa:=strtofloat(ra_1)+strtofloat(ra_2)/60;
-     theDec:=strtofloat(dec_1);
-     theDec:=theDec+sign(theDec)*strtofloat(dec_2)/60;//apply sign of degrees
+     theRa:=strtofloat2(ra_1)+strtofloat2(ra_2)/60;
+     theDec:=strtofloat2(dec_1);
+     theDec:=theDec+sign(theDec)*strtofloat2(dec_2)/60;//apply sign of degrees
 
    end
    else
    begin {2 string position}
      ra_1:=copy(gotopos,1, pos1);
      dec_1:=copy(gotopos,pos1+1,99);
-     theRa:=strtofloat(ra_1);
-     theDec:=strtofloat(dec_1);
+     theRa:=strtofloat2(ra_1);
+     theDec:=strtofloat2(dec_1);
    end;
 end;
 

@@ -197,7 +197,7 @@ begin
     result:=FormatStringListResp(lst,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
     lst.Free;
   end
-  else if ((method='readoutmode') ) then begin
+  else if method='readoutmode' then begin
     i:=readoutmode;{index to readoutmodes=normal1, normal2}
     result:=FormatIntResp(i,ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
@@ -487,6 +487,7 @@ begin
   FErrorNumber:=0;
   FErrorMessage:='';
   bvalue:=false; value:='';
+  ok:=true; i:=0;
   if method='action' then begin
     if GetParamString(params,'Action',p1) and GetParamString(params,'Parameters',p2) then
       value:=Action(p1,p2);
@@ -553,46 +554,65 @@ begin
   end
   else if method='binx' then begin
     if GetParamInt(params,'binx',i) then
+    begin
       setbinX(i,ok);
       if ok=false then set_invalid_range(i);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+      result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    end
+    else
+    begin
+       status:=400;
+       result:='Missing parameter binx!';
+    end;
   end
   else if method='biny' then begin
     if GetParamInt(params,'biny',i) then
+    begin
       setbinY(i,ok);
-    if ok=false then set_invalid_range(i);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+      if ok=false then set_invalid_range(i);
+      result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    end
+    else
+    begin
+       status:=400;
+       result:='Missing parameter biny!';
+    end;
   end
   else if method='readoutmode' then begin
     if GetParamInt(params,'readoutmode',i) then
+    begin
       setreadoutmode(i,ok);
       if ok=false then set_invalid_range(i);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+      result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    end
+    else
+    begin
+      status:=400;
+      result:='Missing parameter readoutmode!';
+    end
   end
-
-
   else if ((method='fastreadout') or (method='subexposureduration')) then begin
     set_not_implemented;  {not implemented}
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-  else if method='readoutmode' then begin
-    if GetParamInt(params,'readoutmode',i) then
-      setreadoutmode(i,ok);
-      if ok=false then set_invalid_range(i);
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
-  end
-
   else if method='startexposure' then begin
-    if GetParamFloat(params,'Duration',x)  then startexposure(x,{out} i);
-    if i=1 then set_invalid_range(x) else
-    if i=2 then
+    if GetParamFloat(params,'Duration',x)  then //Duration found
     begin
-      FErrorNumber:=1025;
-      FErrorMessage:=('Error, subframe is outside main frame! Check frame settings');
+      startexposure(x,{out} i);
+      if i=1 then set_invalid_range(x) else
+      if i=2 then
+      begin
+        FErrorNumber:=1025;
+        FErrorMessage:=('Error, subframe is outside main frame! Check frame settings');
+      end;
+      result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
+    end
+    else
+    begin
+      status:=400;
+      result:='Missing parameter duration';
     end;
-    result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end
-
   else if method='setccdtemperature' then begin
     if GetParamFloat(params,'SetCCDTemperature',x)  then
       SetCCDTemperature(x,error_float);

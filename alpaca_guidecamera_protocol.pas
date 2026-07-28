@@ -74,7 +74,7 @@ var
   pixel_size_guide_alpaca:double=5;//pixel size in micrometer
 
   the_img    : Timg;
-  camera_state : integer=3;
+  camera_state : integer=0;
     {Returns one of the following status information:
 
         0 CameraIdle At idle state, available to start exposure
@@ -216,8 +216,10 @@ begin
   begin
     camera_state:=0;
     exposure_remaining:=0;
-  end;
-  Percent_Completed:=round(100*(last_exposureduration-exposure_remaining)/last_exposureduration);
+    Percent_Completed:=100;
+  end
+  else
+    Percent_Completed:=round(100*(last_exposureduration-exposure_remaining)/last_exposureduration);
 
   {0 CameraIdle At idle state, available to start exposure
    1 CameraWaiting Exposure started but waiting (for shutter, trigger, filter wheel, etc.)
@@ -298,18 +300,18 @@ begin
   result:='Guide Camera Sky Simulator for ALPACA';
 end;
 
-function  T_Alpaca_GuideCam.cameraXsize: integer;
+function  T_Alpaca_GuideCam.cameraXsize: integer;//unbinned pixels
 begin
   img_width:=length(img_array[0]);
   if num_X>=9999 then num_X:=img_width; {initialise}
-  result:=img_width div bin_x; //binning is done after simulation to allow independent binning for camera and guide camera
+  result:=img_width;
 end;
 
-function  T_Alpaca_GuideCam.cameraYsize: integer;
+function  T_Alpaca_GuideCam.cameraYsize: integer;//unbinned pixels
 begin
   img_height:=length(img_array);
   if num_Y>=9999 then num_Y:=img_height; {initialise}
-  result:=img_height div bin_y; //binning is done after simulation to allow independent binning for camera and guide camera
+  result:=img_height;
 end;
 
 function  T_Alpaca_Guidecam.maxbinx: integer;
@@ -385,7 +387,7 @@ end;
 
 function  T_Alpaca_Guidecam.cangetcoolerpower: boolean;
 begin
-  result:=false;
+  result:=true;
 end;
 
 function  T_Alpaca_Guidecam.cansetccdtemperature: boolean;
@@ -467,7 +469,7 @@ end;
 
 function  T_Alpaca_Guidecam.coolerpower: double;
 begin
-  result:=max(100,min(0,sqr((20 - set_temperature)/5)  ));
+  result:=min(100,max(0,sqr((20 - set_temperature)/5)  ));
 end;
 
 function  T_Alpaca_Guidecam.heatsinktemperature: double;
@@ -510,14 +512,18 @@ procedure T_Alpaca_Guidecam.abortexposure(out ok:boolean);
 begin
   {abortexposure;}
   ok:=true; {}
-  Percent_Completed:=0;{%}
+  exposure_remaining:=0;
+  camera_state:=0;
+  Percent_Completed:=0;
+  last_exposureduration:=-1;   // invalidate the image, per spec: no image after abort
 end;
 
-procedure T_Alpaca_Guidecam.stopexposure(out ok:boolean);
+procedure T_Alpaca_Guidecam.stopexposure(out ok:boolean); //Per the spec, Stop ends the exposure early and leaves a usable image, unlike Abort.
 begin
-  {abortexposure;}
-  ok:=true; {}
-  Percent_Completed:=0;{%}
+  ok:=true;
+  exposure_remaining:=0;
+  camera_state:=0;
+  Percent_Completed:=100;      {image is valid - do NOT touch last_exposureduration}
 end;
 
 procedure T_Alpaca_Guidecam.startexposure(x: double; out errortype : integer);
@@ -628,12 +634,14 @@ end;
 procedure T_Alpaca_Guidecam.setbinX(x: integer; out ok :boolean);
 begin
   bin_X:=max(1,min(bin_maximum,x));{clamp range}
+  bin_Y:=bin_X;               // CanAsymmetricBin = False
   ok:=(bin_X=x);
 end;
 
 procedure T_Alpaca_Guidecam.setbinY(x: integer; out ok :boolean);
 begin
   bin_Y:=max(1,min(bin_maximum,x));{clamp range}
+  bin_X:=bin_Y;               // CanAsymmetricBin = False
   ok:=(bin_Y=x);
 end;
 

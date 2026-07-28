@@ -1957,7 +1957,7 @@ begin
      fov:=min(fov,9.53*pi/180);{warning FOV should be less the database tiles dimensions, so <=9.53 degrees. Otherwise a tile beyond next tile could be selected}
 
     star_total_counter:=0;{total counter}
-    focal_ratio:=max(2,strtofloat(copy(form1.focal_ratio1.text,3,2)));
+    focal_ratio:=max(2,strtofloat2(copy(form1.focal_ratio1.text,3,2)));
     max_magn:=(14 + ln(sqr(7/focal_ratio))/ln(2.5))*10;
 
 
@@ -2298,12 +2298,8 @@ begin
   end;
   {copy bitmap to image1}
   form1.Image1.picture.Graphic := Bitmap; {show image}
-
-
+  form1.Image1.Picture.Bitmap.Transparent := false;
   Bitmap.Free;
-
-  form1.Image1.Picture.Bitmap.Transparent := True;
-  form1.Image1.Picture.Bitmap.TransparentColor := clblack;
 
   form1.Image1.refresh;
 end;

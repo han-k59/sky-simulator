@@ -204,7 +204,7 @@ var  exposure_remaining: double=0;
 procedure camera_simulation(fast:boolean);{called by the timer every second}
 begin
   if fast=false then
-     exposure_remaining:=exposure_remaining-1
+     exposure_remaining:=exposure_remaining-1 // decrease remaining time with one second
   else
     exposure_remaining:=0;
 
@@ -297,18 +297,18 @@ begin
   result:='Camera Sky Simulator for ALPACA';
 end;
 
-function  T_Alpaca_cam.cameraXsize: integer;
+function  T_Alpaca_cam.cameraXsize: integer;//unbinned pixels.
 begin
   img_width:=length(img_array[0]);
   if num_X>=9999 then num_X:=img_width; {initialise}
-  result:=img_width div bin_x; //binning is done after simulation to allow independent binning for camera and guide camera
+  result:=img_width;
 end;
 
-function  T_Alpaca_cam.cameraYsize: integer;
+function  T_Alpaca_cam.cameraYsize: integer;//unbinned pixels.
 begin
   img_height:=length(img_array);
   if num_Y>=9999 then num_Y:=img_height; {initialise}
-  result:=img_height div bin_y; //binning is done after simulation to allow independent binning for camera and guide camera
+  result:=img_height;
 end;
 
 function  T_Alpaca_cam.maxbinx: integer;
@@ -466,7 +466,7 @@ end;
 
 function  T_Alpaca_cam.coolerpower: double;
 begin
-  result:=max(100,min(0,sqr((20 - set_temperature)/5)  ));
+  result:=min(100,max(0,sqr((20 - set_temperature)/5)  ));
 end;
 
 function  T_Alpaca_cam.heatsinktemperature: double;
@@ -508,13 +508,18 @@ end;
 procedure T_Alpaca_cam.abortexposure(out ok:boolean);
 begin
   ok:=true; {}
-  Percent_Completed:=0;{%}
+  exposure_remaining:=0;
+  camera_state:=0;
+  Percent_Completed:=0;
+  last_exposureduration:=-1;   // invalidate the image, per spec: no image after abort
 end;
 
-procedure T_Alpaca_cam.stopexposure(out ok:boolean);
+procedure T_Alpaca_cam.stopexposure(out ok:boolean); //Per the spec, Stop ends the exposure early and leaves a usable image, unlike Abort.
 begin
-  ok:=true; {}
-  Percent_Completed:=0;{%}
+  ok:=true;
+  exposure_remaining:=0;
+  camera_state:=0;
+  Percent_Completed:=100;      {image is valid - do NOT touch last_exposureduration}
 end;
 
 procedure T_Alpaca_cam.startexposure(x: double; out errortype : integer);
@@ -624,12 +629,14 @@ end;
 procedure T_Alpaca_cam.setbinX(x: integer; out ok :boolean);
 begin
   bin_X:=max(1,min(bin_maximum,x));{clamp range}
+  bin_Y:=bin_X;            // CanAsymmetricBin = False
   ok:=(bin_X=x);
 end;
 
 procedure T_Alpaca_cam.setbinY(x: integer; out ok :boolean);
 begin
   bin_Y:=max(1,min(bin_maximum,x));{clamp range}
+  bin_X:=bin_Y;               // CanAsymmetricBin = False
   ok:=(bin_Y=x);
 end;
 

@@ -665,7 +665,7 @@ end;
 
 function  T_Alpaca_Mount.SiderealTime: double;
 begin
-  calc_sidereal_time(longitude);
+  calc_sidereal_time(longitude); //assumes JD is updated
   result:=sidereal_time*12/pi
 end;
 
@@ -695,7 +695,7 @@ end;
 
 function  T_Alpaca_Mount.sitelatitude: double;
 begin
-  result:=strtofloat(form1.latitude1.text);
+  result:=strtofloat2(form1.latitude1.text);
 end;
 
 procedure T_Alpaca_Mount.setsitelatitude(value: double);
@@ -705,7 +705,7 @@ end;
 
 function  T_Alpaca_Mount.sitelongitude: double;
 begin
-  result:=strtofloat(form1.longitude1.text);
+  result:=strtofloat2(form1.longitude1.text);
 end;
 
 procedure T_Alpaca_Mount.setsitelongitude(value: double);

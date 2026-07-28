@@ -45,6 +45,7 @@ type
   TTCPThrd = class(TThread)
   private
     FSock: TTCPBlockSocket;
+    FConnList: TThreadList;
     CSock: TSocket;
     FHttpRequest: string;
     FBody: string;
@@ -58,7 +59,7 @@ type
   public
     abort, stoping: boolean;
     remoteip, remoteport: string;
-    constructor Create(hsock: tSocket);
+    constructor Create(hsock: tSocket; AConnList: TThreadList);
     destructor Destroy; override;
     procedure Execute; override;
     procedure SendData(str: string);
@@ -85,11 +86,13 @@ type
     FProcessGet: TGetCmd;
     FProcessGetImageBytes: TGetImageBytes;
     FProcessPut: TPutCmd;
+    FConnList: TThreadList;
     procedure ShowError;
     function GetIPport: string;
+    procedure TerminateChildren;
   public
     stoping: boolean;
-    TCPThrd: TTCPThrd;
+    property ConnList: TThreadList read FConnList write FConnList;
     constructor Create;
     procedure Execute; override;
     procedure ShowSocket;
@@ -142,10 +145,11 @@ implementation
 {$endif}
 {$endif}
 
+
 constructor TTCPDaemon.Create;
 begin
   inherited Create(True);
-  FreeOnTerminate := True;
+  FreeOnTerminate := False;   {the server owns this thread and frees it}
 end;
 
 procedure TTCPDaemon.ShowError;
@@ -177,9 +181,30 @@ begin
 end;
 
 
+procedure TTCPDaemon.TerminateChildren;
+var
+  L: TList;
+  i: integer;
+begin
+  if FConnList = nil then exit;
+  L := FConnList.LockList;
+  try
+    for i := 0 to L.Count-1 do
+    begin
+      TTCPThrd(L[i]).Terminate;
+      if TTCPThrd(L[i]).sock <> nil then
+        TTCPThrd(L[i]).sock.AbortSocket;   // wakes a thread blocked in RecvBufferStr
+    end;
+  finally
+    FConnList.UnlockList;
+  end;
+end;
+
+
 procedure TTCPDaemon.Execute;
 var
   ClientSock: TSocket;
+  thrd: TTCPThrd;
 begin
   //writetrace('start tcp deamon');
   stoping := False;
@@ -217,12 +242,11 @@ begin
           ClientSock := accept;
           if lastError = 0 then
           begin {ready one HTTP header plus optional body}
-            TCPThrd := TTCPThrd.Create(ClientSock);
-            TCPThrd.onProcessGet := FProcessGet;
-            TCPThrd.onProcessGetImageBytes := FProcessGetImageBytes;
-            TCPThrd.onProcessPut := FProcessPut;
-            TCPThrd.Start;
-
+            thrd := TTCPThrd.Create(ClientSock, FConnList);
+            thrd.onProcessGet := FProcessGet;
+            thrd.onProcessGetImageBytes := FProcessGetImageBytes;
+            thrd.onProcessPut := FProcessPut;
+            thrd.Start;
           end
           else if lasterror <> 0 then
             Synchronize(@ShowError);
@@ -231,123 +255,176 @@ begin
     end;
   finally
     //  Suspended:=true;
+    TerminateChildren;
     Sock.CloseSocket;
     Sock.Free;
     //  terminate;
   end;
 end;
 
-constructor TTCPThrd.Create(Hsock: TSocket);
+
+constructor TTCPThrd.Create(Hsock: TSocket; AConnList: TThreadList);
 begin
   inherited Create(True);
   FreeOnTerminate := True;
   Csock := Hsock;
   abort := False;
-  FImageBytes:=TMemoryStream.Create;
+  FConnList := AConnList;
+  FImageBytes := TMemoryStream.Create;
+  if FConnList <> nil then FConnList.Add(Self);
 end;
 
 destructor TTCPThrd.Destroy;
 begin
-  if FSock<>nil then begin
+  if FConnList <> nil then FConnList.Remove(Self);   // <-- add, must be first
+  if FSock <> nil then begin
     FSock.AbortSocket;
-    Fsock.Free;
+    FSock.Free;
   end;
-  if FImageBytes<>nil then
-    FImageBytes.Free;
+  if FImageBytes <> nil then FImageBytes.Free;
   inherited Destroy;
 end;
 
-procedure TTCPThrd.Execute; {reads one HTTP header plus optional body}
+procedure TTCPThrd.Execute; {reads one HTTP request per iteration, keep-alive} //version 2026.-7.26
+const
+  MaxHeaderSize = 8192;   {was 1024 - too small for real client headers}
+  MaxBodySize   = 65536;  {refuse an absurd Content-Length}
+  HeaderTimeout = 100;    {ms - short, so Terminated is noticed quickly}
+  BodyTimeout   = 500;    {ms - ASCOM 7 sends the body in a second packet}
 var
-  body,method,buf,upbuf: string;
-  cl,i,j,k: integer;
+  buf, upbuf, reqline, method, body: string;
+  cl, p, i, j: integer;
   imagebytes: boolean;
+
+  function HttpError(code: integer; const codetext: string): string;
+  begin
+    Result := 'HTTP/1.1 '+IntToStr(code)+' '+codetext+CRLF
+            + 'Content-Length: 0'+CRLF
+            + 'Connection: close'+CRLF
+            + CRLF;
+  end;
+
 begin
   try
-    Fsock := TTCPBlockSocket.Create;
+    Fsock := TTCPBlockSocket.Create;   {released in Destroy}
     FConnectTime := now;
     stoping := False;
-    try
-      Fsock.socket := CSock;
-      Fsock.GetSins;
-      Fsock.MaxLineLength := 1024;
-      FSock.SetLinger(true,1000);
-      remoteip := Fsock.GetRemoteSinIP;
-      remoteport := IntToStr(Fsock.GetRemoteSinPort);
-      with Fsock do
+    Fsock.socket := CSock;
+    Fsock.GetSins;
+    Fsock.MaxLineLength := MaxHeaderSize;
+    Fsock.SetLinger(true,1000);
+    remoteip   := Fsock.GetRemoteSinIP;
+    remoteport := IntToStr(Fsock.GetRemoteSinPort);
+
+    repeat
+      if stoping or Terminated then break;
+
+      buf := Fsock.RecvTerminated(HeaderTimeout, CRLF+CRLF);
+      if Fsock.LastError = WSAETIMEDOUT then continue;  {nothing yet, loop}
+      if Fsock.LastError <> 0 then break;               {client closed or error}
+      if buf = '' then break;
+      if Length(buf) >= MaxHeaderSize then              {no terminator in range}
       begin
-        if stoping or terminated then
-          exit;
-        repeat
-          buf:=RecvTerminated(100,#13+#10+#13+#10);// receive the full header
-          if LastError=WSAETIMEDOUT then continue;// Timeout, try to read next
-          if lastError<>0 then break;             // Other error, maybe client disconnect
-
-          //GET /api/v1/camera/0/driverversion?ClientID=3200023&ClientTransactionID=373 HTTP/1.1\r\n
-          //Host: 127.0.0.1:11111\r\n
-          //Keep-Alive: 300\r\n
-          //Connection: keep-alive\r\n
-          //\r\n
-
-          method:=uppercase(copy(buf,1,3));{either GET or PUT}
-          k:=posex(' ',buf,6);// find end of Request-URI
-          FHttpRequest:=copy(buf,5,k-5);//extract Request-URI, something like '/api/v1/camera/0/ccdtemperature?ClientID=3200089&ClientTransactionID=120'
-          k:=k+length(' HTTP/'+#13+#10); //pointer to the fields (second line and further}
-
-          cl:=-1; {assume no body behind header}
-          upbuf:=UpperCase(copy(buf,k,500));   //field headers should be treated as case insensitive. Assume total field size 500 max
-          i:=Pos('CONTENT-LENGTH:',Upbuf);
-          if i>0 then {there is a body behind the header}
-          begin
-             i:=i+length('CONTENT-LENGTH:');
-             j:=PosEx(#13,UpBuf,i);
-             if j=0 then j:=999; {content lenght was the last line}
-             cl:=StrToIntDef(trim(copy(Upbuf,i,j-i)),0); {length of the body behind header}
-          end;
-          imagebytes:=pos('APPLICATION/IMAGEBYTES',Upbuf,7)>0; {found ACCEPT: APPLICATION/IMAGEBYTES. Only requested when an image is made}
-
-         //     PUT /api/v1/camera/0/connected HTTP/1.1\r\n                   header
-         //     Host: 127.0.0.1:11111\r\n                                     header
-         //     Keep-Alive: 300\r\n                                           header
-         //     Connection: keep-alive\r\n                                    header
-         //     Content-Type: application/x-www-form-urlencoded\r\n           header
-         //     Content-Length: 55\r\n                                        header
-         //     \r\n                                                          end header marker
-         //     Connected=True&ClientID=3200023&ClientTransactionID=370       body
-
-          if cl>0 then {there is a body behind the header}
-            body:=RecvBufferStr(cl,500) {receive the body, something like: Connected=True&ClientID=3200023&ClientTransactionID=370}
-            //This has to be 500 ms instead of the original 100 ms because ASCOM 7 send the body in next package. See https://github.com/ASCOMInitiative/ASCOMPlatform/issues/79
-          else
-            body:='';
-
-          if method='GET' then begin
-             if imagebytes then begin
-               // imagearray imagebytes request
-               Synchronize(@ProcessGetImageBytes);
-               SendString(FHttpResult);
-               SendStreamRaw(FImageBytes);
-               FImageBytes.Clear;
-             end
-             else begin
-               // all other request
-               Synchronize(@ProcessGet);
-               SendString(FHttpResult);
-             end;
-          end
-          else if method='PUT' then begin
-             FBody:=body;
-             Synchronize(@ProcessPut);
-             SendString(FHttpResult);
-          end;
-
-        until false;{repeat}
+        Fsock.SendString(HttpError(431,'Request Header Fields Too Large'));
+        break;
       end;
-    finally
-    end;
+
+      { ---- request line: METHOD SP URI SP HTTP/1.1 ---- }
+      p := Pos(CRLF, buf);
+      if p > 0 then reqline := Copy(buf,1,p-1) else reqline := buf;
+
+      i := Pos(' ', reqline);
+      j := PosEx(' ', reqline, i+1);
+      if (i <= 1) or (j <= i+1) then
+      begin
+        Fsock.SendString(HttpError(400,'Bad Request'));
+        break;
+      end;
+      method       := UpperCase(Copy(reqline,1,i-1));
+      FHttpRequest := Copy(reqline,i+1,j-i-1);
+
+      { ---- header fields: scan the whole header, not a 500 byte window ---- }
+      upbuf := UpperCase(buf);
+      cl := 0;
+      i := Pos('CONTENT-LENGTH:', upbuf);
+      if i > 0 then
+      begin
+        i := i + Length('CONTENT-LENGTH:');
+        j := PosEx(#13, upbuf, i);
+        if j = 0 then j := Length(upbuf)+1;
+        cl := StrToIntDef(Trim(Copy(upbuf,i,j-i)), 0);
+      end;
+      if cl > MaxBodySize then
+      begin
+        Fsock.SendString(HttpError(413,'Payload Too Large'));
+        break;
+      end;
+      imagebytes := Pos('APPLICATION/IMAGEBYTES', upbuf) > 0;
+
+      { ---- body ---- }
+      if cl > 0 then
+      begin
+        body := Fsock.RecvBufferStr(cl, BodyTimeout);
+        if Fsock.LastError <> 0 then break;
+      end
+      else
+        body := '';
+
+      { ---- dispatch ---- }
+      if method = 'GET' then
+      begin
+        //GET /api/v1/camera/0/driverversion?ClientID=3200023&ClientTransactionID=373 HTTP/1.1\r\n
+        //Host: 127.0.0.1:11111\r\n
+        //Keep-Alive: 300\r\n
+        //Connection: keep-alive\r\n
+        //\r\n
+
+        if imagebytes then
+        begin
+          Synchronize(@ProcessGetImageBytes);
+          Fsock.SendString(FHttpResult);
+          if Fsock.LastError = 0 then Fsock.SendStreamRaw(FImageBytes);
+          FImageBytes.Clear;
+        end
+        else
+        begin
+          Synchronize(@ProcessGet);
+          Fsock.SendString(FHttpResult);
+        end;
+      end
+      else if method = 'PUT' then
+      begin
+        //     PUT /api/v1/camera/0/connected HTTP/1.1\r\n                   header
+        //     Host: 127.0.0.1:11111\r\n                                     header
+        //     Keep-Alive: 300\r\n                                           header
+        //     Connection: keep-alive\r\n                                    header
+        //     Content-Type: application/x-www-form-urlencoded\r\n           header
+        //     Content-Length: 55\r\n                                        header
+        //     \r\n                                                          end header marker
+        //     Connected=True&ClientID=3200023&ClientTransactionID=370       body
+
+        FBody := body;
+        Synchronize(@ProcessPut);
+        Fsock.SendString(FHttpResult);
+      end
+      else if method = 'OPTIONS' then
+        Fsock.SendString('HTTP/1.1 200 OK'+CRLF
+                        +'Allow: GET, PUT, OPTIONS'+CRLF
+                        +'Content-Length: 0'+CRLF+CRLF)
+      else
+      begin
+        Fsock.SendString(HttpError(405,'Method Not Allowed'));
+        break;
+      end;
+
+      if Fsock.LastError <> 0 then break;   {send failed - drop the connection}
+
+    until False;
   except
+    {a thread must not let an exception escape Execute}
   end;
 end;
+
 
 procedure TTCPThrd.Senddata(str: string);
 begin
@@ -405,7 +482,7 @@ constructor TDiscoveryDaemon.Create;
 begin
   inherited Create(True);
   ReplySock:=TUDPBlockSocket.Create;
-  FreeOnTerminate := True;
+  FreeOnTerminate := False;   {the server owns this thread and frees it}
   FDiscoveryStr:='alpacadiscovery1';
 end;
 
