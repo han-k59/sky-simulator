@@ -5,6 +5,9 @@ by the focuser position.
 
 Setup instructions are available here: https://sky-simulator.sourceforge.io/
 
+Executables and source code are  available at 
+      https://sourceforge.net/p/sky-simulator/
+
 In the image acquisition programs CCDCiel/NINA/APT/SGP you should select the following ASCOM or Alpaca simulators
 
 Camera:
@@ -31,11 +34,20 @@ For feedback and comments use the forum at SourceForge (https://sourceforge.net/
 For a small field-of-view setting a seperate larger star database down to magnitude 16 packed in a zip file is provided (G16).
 Also the G17 star database down to magitude 17 of the HNSKY program could be used.
 
+When using Indi, see instruction in folder Linux
+
 # Han
 
 
 History of the Sky Simulator for ASCOM and Alpaca
 
+2026-11-12,  Version 4.0.0, Fixed a minor problem with setccdtemperature
+2026-08-07,  Version 4.0.0rc1, First version with an Indi server.
+2026-07-28,  Version 3.0.8, Improved code, improved http connection. No functionality change.
+2026-06-22,  Version 3.0.7d, RA mount error setting is now expressed in ra seconds
+2026-05-24,  Version 3.0.7c, Added reading and setting camera offset to the communication.
+2026-05-01,  Version 3.0.7b, fixed a problem with polar error updating during simulation.
+2026-04-07,  Version 3.0.7a, image ready is now dependent on focuser not moving. Doubled speed focuser moving.
 2026-01-29,  Version 3.0.7, adapted to the latest Ascom/Alpaca standard. Provided an ASCOM chooser for all devices for creating a bridge ASCOM to ALPACA
 2026-01-27,  Version 3.0.6a, added new Ascom 7 method connect/disconnect for Alpaca
 2026-01-15,  Version 3.0.6, expanded the mount error options.
