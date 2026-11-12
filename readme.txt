@@ -5,7 +5,7 @@ by the focuser position.
 
 Setup instructions are available here: https://sky-simulator.sourceforge.io/
 
-Executables and source code are  available at: https://sourceforge.net/p/sky-simulator/
+Executables and source code are available at: https://sourceforge.net/p/sky-simulator/
 
 In the image acquisition programs CCDCiel/NINA/APT/SGP you should select the following ASCOM or Alpaca simulators
 
