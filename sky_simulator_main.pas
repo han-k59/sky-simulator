@@ -44,11 +44,12 @@ uses
   ExtCtrls, ComCtrls, Buttons,
   math,{for sincos}
   lcltype, {Trgbtriple}
-  Variants, clipbrd, Spin, sky_annotation, sky_simulator_unit_save_image,
+  Variants, clipbrd, Spin, sky_annotation, sky_simulator_unit_save_image, Types,
   cu_alpacaserver, cu_alpacadevice, alpaca_mount_protocol,
   alpaca_camera_protocol, alpaca_guidecamera_protocol, alpaca_focuser_protocol,
-  alpaca_filterwheel_protocol, alpaca_rotator_protocol, Types;
-
+  alpaca_filterwheel_protocol, alpaca_rotator_protocol,
+  indi_server, indi_mount, indi_camera, indi_guide_camera,  indi_focuser, indi_rotator, indi_filterwheel,
+  blcksock;//for Synapse TUDPBlockSocket, a UDP socket class
 
 type
 
@@ -56,15 +57,26 @@ type
   TForm1 = class(TForm)
     abort_slew2: TMenuItem;
     activate_filelog1: TCheckBox;
+    clear_log_button2: TButton;
+    filter_indi_text1: TEdit;
+    indi_log1: TCheckBox;
     alpaca_adress1: TEdit;
     alpaca_groupBox1: TGroupBox;
+    alpaca_groupBox2: TGroupBox;
     alpaca_port1: TEdit;
     alpaca_port_number1: TLabel;
+    alpaca_port_number2: TLabel;
     azimuth_error1: TFloatSpinEdit;
     bayer_change_warning1: TLabel;
+    camera_alpaca1: TRadioButton;
+    camera_indi1: TRadioButton;
     CheckBox_focal_length_driver1: TCheckBox;
     camera_gain1: TLabel;
     about2: TLabel;
+    filter_indi1: TRadioButton;
+    focuser_indi1: TRadioButton;
+    Indi_Info: TLabel;
+    indi_port1: TEdit;
     Label42: TLabel;
     Label43: TLabel;
     Label44: TLabel;
@@ -77,6 +89,9 @@ type
     Label52: TLabel;
     dec_random_noise_sigma1: TEdit;
     ascom_type1: TComboBox;
+    Label53: TLabel;
+    Memo3: TMemo;
+    mount_indi1: TRadioButton;
     ra_periodic_sinusoidal_error_amplitude1: TEdit;
     ra_random_noise_sigma1: TEdit;
     dec_periodic_sinusoidal_error_amplitude1: TEdit;
@@ -91,9 +106,12 @@ type
     Label41: TLabel;
     parked1: TMenuItem;
     dec_square_wave_error_period1: TEdit;
+    filter_alpaca1: TRadioButton;
+    rotator_indi1: TRadioButton;
     Separator8: TMenuItem;
     ra_square_wave_error_amplitude1: TEdit;
     ra_periodic_sinusoidal_error_period1: TEdit;
+    TabSheet1: TTabSheet;
     tracking1: TMenuItem;
     pixelsizemicrometer1: TEdit;
     j2000_to_Jnow1: TMenuItem;
@@ -313,19 +331,24 @@ type
     procedure Angle2Change(Sender: TObject);
     procedure azimuth_error1Change(Sender: TObject);
     procedure azimuth_error1Exit(Sender: TObject);
-    procedure azimuth_updown1Changing(Sender: TObject; var AllowChange: Boolean
-      );
+    procedure azimuth_updown1Changing(Sender: TObject; var AllowChange: Boolean );
     procedure backlash1Exit(Sender: TObject);
+    procedure camera_indi1Change(Sender: TObject);
+    procedure clear_log_button2Click(Sender: TObject);
     procedure file_form_disk1Click(Sender: TObject);
     procedure Button_camera1Click(Sender: TObject);
     procedure elevation_error1Change(Sender: TObject);
     procedure equinox_communication1Change(Sender: TObject);
+    procedure filter_alpaca1Change(Sender: TObject);
     procedure fliptext1Change(Sender: TObject);
     procedure focallength1Change(Sender: TObject);
     procedure focallength1Exit(Sender: TObject);
+    procedure indi_log1Change(Sender: TObject);
     procedure j2000_to_Jnow1Click(Sender: TObject);
     procedure jnow_to_j2000_1Click(Sender: TObject);
     procedure parked1Click(Sender: TObject);
+    procedure TabSheet1ContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure tracking1Click(Sender: TObject);
     procedure pixelsizemicrometer1Exit(Sender: TObject);
     procedure polar_alignment_mode1Change(Sender: TObject);
@@ -417,8 +440,13 @@ type
     MyFocuser    : T_Alpaca_Focuser;
     MyRotator    : T_Alpaca_Rotator;
     MyFilterwheel : T_Alpaca_Filterwheel;
+    IndiServer   : T_IndiServer;
+    IndiIPPort   : string;
+
+    procedure IndiPortMsg(var msg:string);{for INDI}
+    procedure ShowIndiMsg(var msg: string);   {INDI, writes to memo3}
     procedure ShowError(var msg:string);{for Alpaca}
-    procedure ShowMsg(var msg:string);{for Alpaca}
+    procedure ShowAlpacaMsg(var msg:string);{for Alpaca}
     procedure PortMsg(var msg:string);{for Alpaca}
     procedure DiscoveryPortMsg(var msg:string);{for Alpaca}
   public
@@ -462,6 +490,7 @@ var
   rotator_reverse : boolean;
   panel_sky1RA: double=0;
   panel_sky1DEC: double=0;
+  wheelpos     : integer=0;
 
   esc_pressed: boolean=false ;
   save_thesettings   : boolean=true;
@@ -537,7 +566,36 @@ begin
   result:=inttostr(myhour)+':'+inttostr(mymin)+':'+inttostr(mysec)+'.'+milisecstr;
 end;
 
-procedure TForm1.ShowMsg(var msg:string);{Alpaca}
+
+
+procedure TForm1.ShowIndiMsg(var msg: string);{INDI}
+var
+ i : integer;
+ filter: string;
+begin
+ if not indi_log1.checked then exit;
+
+ filter:=trim(filter_indi_text1.text);
+ if length(filter)>1 then
+    if pos(filter,msg)=0 then exit;
+
+ if memo3.lines.count>4000 then
+ begin
+   {quick way to halve the memo, Memo3.Lines.Delete(0) is far too slow}
+   i:=PosEx(LineEnding, memo3.Text, Length(memo3.Text) div 2);
+   memo3.Text:=Copy(memo3.Text, i+Length(LineEnding), MaxInt);
+ end;
+
+ memo3.Lines.Add(time_inc_ms+'  '+msg);
+
+ if activate_filelog1.checked then
+   log_to_file(documents_path+'indi_log.txt',msg);
+end;
+
+
+
+
+procedure TForm1.ShowAlpacaMsg(var msg:string);{Alpaca}
 var
   len,i : integer;
   duration      : double;
@@ -549,9 +607,9 @@ begin
     if length(filter)>1 then
       if pos(filter,msg)=0 then exit;
 
-    if memo1.lines.count>400 then
+    if memo1.lines.count>4000 then
     begin
-      //len:=length(memo1.text);
+      len:=length(memo1.text);
       //memo1.text:=copy(memo1.text,len div 2, 99999999999999);
       i:=PosEx(LineEnding, memo1.Text, len div 2);
       memo1.Text := Copy(memo1.Text, i+Length(LineEnding), MaxInt);{quick method to half tab_log1, Memo1.Lines.delete(0) is too slow}
@@ -578,6 +636,71 @@ begin
 end;
 
 
+procedure TForm1.IndiPortMsg(var msg: string);
+begin
+  Indi_Info.Caption:='INDI server running on port '+msg;
+end;
+
+procedure start_indi;
+begin
+  {The registry is a global that outlives the server, and RegisterIndiDevice
+   only ever adds.  Without this, a device selected earlier in the session
+   is still registered after a switch and reappears as a device nothing
+   simulates.}
+  ClearIndiDevices;
+  with form1 do
+  begin
+    if IndiServer<>nil then exit;
+    //advertise only when selected
+    if form1.mount_indi1.checked   then RegisterIndiDevice(T_Indi_Mount);
+    if form1.camera_indi1.checked  then
+    begin
+      RegisterIndiDevice(T_Indi_Camera);
+      RegisterIndiDevice(T_Indi_GuideCamera);
+    end;
+    if form1.focuser_indi1.checked then RegisterIndiDevice(T_Indi_Focuser);
+    if form1.rotator_indi1.checked then RegisterIndiDevice(T_Indi_Rotator);
+    if form1.filter_indi1.checked  then RegisterIndiDevice(T_Indi_FilterWheel);
+
+    IndiIPPort:=indi_port1.text;
+    IndiServer:=T_IndiServer.Create(nil);
+    IndiServer.onPortMsg  :=@IndiPortMsg;
+    IndiServer.IPAddr     :=alpaca_adress1.text;
+    IndiServer.IPPort     :=IndiIPPort;
+    IndiServer.onShowMsg  :=@form1.ShowIndiMsg;   {INDI traffic -> memo3}
+    IndiServer.onShowError:=@form1.ShowError;     {unchanged}
+    indi_log_traffic:=form1.indi_log1.checked;    {see indi_server.pas}
+
+    IndiServer.StartServer;
+  end;
+end;
+
+procedure stop_indi;
+var i: integer;
+begin
+  with form1 do
+  begin
+    if IndiServer=nil then exit;
+    IndiServer.StopServer;
+    i:=0;
+    while (IndiServer.ActiveConnections>0) and (i<100) do
+    begin
+      sleep(50);
+      Application.ProcessMessages;   {children may be inside Synchronize}
+      inc(i);
+    end;
+    {A client thread that outlives the stop still holds the listening port,
+         so the next StartServer fails to bind 7624 - and without this message
+    that shows up as an unexplained pause followed by a bind error.}
+    if IndiServer.ActiveConnections>0 then
+    memo2_message('Warning: '+IntToStr(IndiServer.ActiveConnections)+
+                  ' INDI connection(s) did not close.');
+    IndiServer.Free;
+    IndiServer:=nil;
+  end;
+end;
+
+
 procedure TForm1.DiscoveryPortMsg(var msg:string);{Alpaca}
 begin
   Discovery_Info.Caption:='Discovery running on port '+msg;
@@ -599,7 +722,7 @@ begin
     AlpacaServer:=T_AlpacaServer.Create(nil);
     AlpacaServer.ServerName:='Alpaca server';
     AlpacaServer.onShowError:=@ShowError;
-    AlpacaServer.onShowMsg:=@ShowMsg;
+    AlpacaServer.onShowMsg:=@ShowAlpacaMsg;
     AlpacaServer.onPortMsg:=@PortMsg;
     AlpacaServer.onDiscoveryPortMsg:=@DiscoveryPortMsg;
 
@@ -607,11 +730,6 @@ begin
     begin
        MyMount:=T_Alpaca_Mount.Create(nil);
        AlpacaServer.AddDevice(telescope,MyMount);
-     //  {$ifdef mswindows}
-     //  tab_mount1.imageindex:=2 //blue
-     // {$else}
-     //  tab_mount1.imageindex:=4 //play gray icon
-     // {$endif}
     end;
     if cam then
     begin
@@ -657,6 +775,7 @@ begin
     if MyGuideCam  <> nil then MyGuideCam.SetConnected(False);
     if MyFocuser   <> nil then MyFocuser.SetConnected(False);
     if MyRotator   <> nil then MyRotator.SetConnected(False);
+    if MyFilterwheel <> nil then MyFilterwheel.SetConnected(False);
 
     AlpacaServer.StopServer;
 
@@ -822,6 +941,13 @@ begin
   update_required:=true;
 end;
 
+procedure TForm1.indi_log1Change(Sender: TObject);
+begin
+  {indi_log_traffic gates the per element trace inside the client threads.
+   Without it every element would cost a Synchronize even with logging off.}
+  indi_log_traffic:=indi_log1.checked;
+end;
+
 procedure TForm1.height_arcmin1Exit(Sender: TObject);
 begin
   update_fov('ha');
@@ -912,9 +1038,36 @@ begin
     form1.flipv1.checked:=get_boolean('flipV',false);
     form1.flipH1.checked:=get_boolean('flipH',false);
 
+    if get_boolean('camera_alpaca',true) then
+      form1.camera_alpaca1.checked:=true
+    else
+      form1.camera_indi1.checked:=true;
+
     form1.mount_alpaca1.checked:=get_boolean('mount_alpaca',true);
-    form1.focuser_alpaca1.checked:=get_boolean('focuser_alpaca',true);
-    form1.rotator_alpaca1.checked:=get_boolean('rotator_alpaca',true);
+    form1.mount_indi1.checked:=get_boolean('mount_indi',false);
+    form1.mount_ascom1.checked:=((form1.mount_indi1.checked=false) and (form1.mount_alpaca1.checked=false));
+
+    if get_boolean('focuser_indi',false) then
+      form1.focuser_indi1.checked:=true
+    else
+    if get_boolean('focuser_alpaca',true) then
+      form1.focuser_alpaca1.checked:=true
+    else
+      form1.focuser_ascom1.checked:=true;
+
+    if get_boolean('rotator_indi',false) then
+      form1.rotator_indi1.checked:=true
+    else
+    if get_boolean('rotator_alpaca',true) then
+      form1.rotator_alpaca1.checked:=true
+    else
+      form1.rotator_ascom1.checked:=true;
+
+    if get_boolean('filter_alpaca',true) then
+      form1.filter_alpaca1.checked:=true
+    else
+      form1.filter_indi1.checked:=true;
+
     form1.DecPulseReverses1.checked:=get_boolean('decreverses',true);
     form1.NSswapped1.checked:=get_boolean('NSswapped',false);
 
@@ -952,6 +1105,7 @@ begin
     dum:=initstring.Values['eso_url']; if dum<>'' then form1.internetESO1.text:=dum;
     dum:=initstring.Values['input_image']; if dum<>'' then form1.file_from_disk2.caption:=dum;
 
+    dum:=initstring.Values['indi_port']; if dum<>'' then indi_port1.text:=dum;
 
     dum:=initstring.Values['ra_square_wave_error_period']; if dum<>'' then form1.ra_square_wave_error_period1.text:=dum;
     dum:=initstring.Values['ra_square_wave_error_amplitude']; if dum<>'' then form1.ra_square_wave_error_amplitude1.text:=dum;
@@ -1023,9 +1177,14 @@ begin
     initstring.Values['flipV']:=BoolStr[flipv1.checked];
     initstring.Values['flipH']:=BoolStr[fliph1.checked];
 
+    initstring.Values['camera_alpaca']:=BoolStr[form1.camera_alpaca1.checked];
     initstring.Values['mount_alpaca']:=BoolStr[form1.mount_alpaca1.checked];
+    initstring.Values['mount_indi']:=BoolStr[form1.mount_indi1.checked];
     initstring.Values['focuser_alpaca']:=BoolStr[form1.focuser_alpaca1.checked];
+    initstring.Values['focuser_indi']  :=BoolStr[form1.focuser_indi1.checked];
     initstring.Values['rotator_alpaca']:=BoolStr[form1.rotator_alpaca1.checked];
+    initstring.Values['rotator_indi']  :=BoolStr[form1.rotator_indi1.checked];
+    initstring.Values['filter_alpaca'] :=BoolStr[form1.filter_alpaca1.checked];
 
     initstring.Values['fastsim']:=BoolStr[form1.fast_simulation1.checked];
     initstring.Values['decreverses']:=BoolStr[form1.DecPulseReverses1.checked];
@@ -1063,6 +1222,8 @@ begin
     initstring.Values['skyview_url']:=form1.internetSkyview1.text;
     initstring.Values['eso_url']:=form1.internetESO1.text;
     initstring.Values['input_image']:=File_from_disk2.caption;
+
+    initstring.Values['indi_port']:=form1.indi_port1.Text;
 
     initstring.Values['ra_square_wave_error_period']:=form1.ra_square_wave_error_period1.text;
     initstring.Values['ra_square_wave_error_amplitude']:=form1.ra_square_wave_error_amplitude1.text;
@@ -1854,6 +2015,9 @@ procedure telescope_abortslew;
 var
   mount : T_Alpaca_Mount;
 begin
+  if form1.mount_indi1.checked then
+    indi_abort
+  else
    if form1.mount_alpaca1.checked then
   begin
      mount := T_Alpaca_Mount.Create(nil);
@@ -1895,9 +2059,19 @@ begin
     application.messagebox(pchar('Start the simulation first.'),pchar('Abort!'),MB_OK);
      exit;
   end;
+  if form1.mount_indi1.checked then
+  begin
+    if indi_parked<>0 then
+    begin
+      Showmessage('Can not slew. INDI mount is parked !');
+      exit;
+    end;
+    indi_slew(fnmodulo(Ra,24), Dec, ok);
+  end
+  else
   if form1.mount_alpaca1.checked then
   begin
-    if is_parked<>0 then
+    if alpaca_parked<>0 then
     begin
       Showmessage('Can not slew. Alpaca Mount is parked !');
       exit;
@@ -1927,7 +2101,7 @@ const
 var
     eqs, blur_factor,noise_index,periodic_error_index,oldpos,backlash,focus_backlash                       : integer;
     hfd,seperation,seeing_errorRAnoise, seeing_errorDECnoise,seeing_errorRA, seeing_errorDEC,
-    allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy, dec_factor                                  : double;
+    allowederror,ra3,dec3,dra,dDec,sep,cycletime,orient,dummy, dec_factor, ra_corr, dec_corr                 : double;
     mount_slewing, focal_length_ascom_driver_implemented                                                   : boolean;
     Save_Cursor:TCursor;
     mess       : string;
@@ -1948,21 +2122,58 @@ begin
 
     if artificial_selected1.checked then
     begin
-      if mount_alpaca1.checked then  //internal mount. More stable
+      if mount_alpaca1.checked or mount_indi1.checked then //internal mount. More stable
         allowederror:=(0.03/(60*60))*pi/180 {allowed mount error 0.03 arc sec}
       else
-        allowederror:=(0.1/(60*60))*pi/180 {GS server with HEQ5, allowed mount error 0.1 arc sec}
+        allowederror:=(0.1/(60*60))*pi/180;
     end
     else
     allowederror:=(1/(60))*pi/180; {allowed mount error one arc minute}
 
     try
-    if ((ascom_mount_connected) or (mount_alpaca1.checked)) then {if ascom_mount.connected then} {allow import}
+    if ((ascom_mount_connected) or (mount_alpaca1.checked) or  (mount_indi1.checked)) then {if ascom_mount.connected then} {allow import}
     begin
 
       polar_alignment_error:=polar_alignment_error1.checked;
       telescope_cursor1.visible:=true;
 
+      if mount_indi1.checked then //indi
+      begin
+        indi_equatorial_mount:=(mount_type1.itemindex=1);
+        indi_DecPulseReverses:=DecPulseReverses1.checked;
+        if NSswapped1.checked then indi_NSswapped:=-1 else indi_NSswapped:=1;
+
+        ra_rate1.caption:='α_rate: '+
+          floattostrF(3600*indi_axisrates[0],fffixed,0,6)+'"/sec';
+
+        ra_mount_indication :=indi_ra*pi/12;    {always JNow}
+        dec_mount_indication:=indi_dec*pi/180;
+
+        equinox_communication1.enabled:=false;
+        equinox_communication1.Text:='Jnow';
+        precession5(jd,2451545 {go back to J2000}, ra_mount_indication,dec_mount_indication, ra_mount_indication_2000,dec_mount_indication_2000); {precession correction}
+
+        mount_slewing:=indi_slewing;
+        if indi_parked=0 then
+        begin
+           if indi_tracking=false then
+           begin
+             park_label1.visible:=true;
+             park_label1.caption:='Tracking off';
+           end
+           else
+           begin
+             park_label1.visible:=false
+           end;
+        end
+        else
+        begin
+          park_label1.visible:=true;
+          if indi_parked=1 then park_label1.caption:='Slewing to park position';
+          if indi_parked=2 then park_label1.caption:='Mount parked';
+        end;
+      end //indi
+      else
       if mount_alpaca1.checked then
       begin
         if equinox_communication1.text='J2000' then
@@ -1986,7 +2197,7 @@ begin
         else
           equinox_telescope:=0; //communication in jnow
 
-        if is_parked=0 then
+        if alpaca_parked=0 then
         begin
            if alpaca_tracking=false then
            begin
@@ -2001,8 +2212,8 @@ begin
         else
         begin
           park_label1.visible:=true;
-          if is_parked=1 then park_label1.caption:='Slewing to park position';
-          if is_parked=2 then park_label1.caption:='Mount parked';
+          if alpaca_parked=1 then park_label1.caption:='Slewing to park position';
+          if alpaca_parked=2 then park_label1.caption:='Mount parked';
         end;
 
 
@@ -2114,20 +2325,30 @@ begin
       telescope_cursor1.top:=round( ((form1.panel_sky1.height-5)/180)*(90-dec_mount_indication_2000*180/pi))- telescope_cursor1.height div 2;;
 
       try
-      if ((ascom_rotator_connected) or (rotator_alpaca1.Checked)) then  {allow import rotator}
+
+
+
+      if ((ascom_rotator_connected) or (rotator_alpaca1.Checked) or (rotator_indi1.Checked)) then  {allow import rotator}
       begin
         oldrotator_position:=rotator_position;
-        if rotator_alpaca1.Checked=false then {ascom}
-        begin
-          rotator_position:=ascom_rotator.position;
-          rotator_reverse:=ascom_rotator.reverse;
-          rotator_setpoint1.caption:='';
-        end
-        else {alpaca}
-        begin
+        if rotator_alpaca1.Checked then
+        begin {alpaca}
           rotator_position:=alpaca_rot_position_synced;
           rotator_setpoint1.caption:=inttostr(alpaca_rot_position_target_synced);
           rotator_reverse:=alpaca_rot_reverse;
+        end
+        else
+        if rotator_indi1.Checked then
+        begin {indi. Own independent state}
+          rotator_position:=indi_rot_position_synced;
+          rotator_setpoint1.caption:=inttostr(indi_rot_position_target_synced);
+          rotator_reverse:=indi_rot_reverse;
+        end
+        else
+        begin {ascom}
+          rotator_position:=ascom_rotator.position;
+          rotator_reverse:=ascom_rotator.reverse;
+          rotator_setpoint1.caption:='';
         end;
 
         if rotator_position=oldrotator_position then {stable?}
@@ -2154,29 +2375,40 @@ begin
       end;
 
       //filterwheel
-      filter_1.font.Bold:=alpaca_wheel_position=0;
-      filter_2.font.Bold:=alpaca_wheel_position=1;
-      filter_3.font.Bold:=alpaca_wheel_position=2;
-      filter_4.font.Bold:=alpaca_wheel_position=3;
-      filter_5.font.Bold:=alpaca_wheel_position=4;
-      filter_6.font.Bold:=alpaca_wheel_position=5;
-      filter_7.font.Bold:=alpaca_wheel_position=6;
+      {the two protocols keep their own position variable, both 0 based}
+      if filter_alpaca1.checked then wheelpos:=alpaca_wheel_position
+                                else wheelpos:=indi_wheel_position;
+      filter_1.font.Bold:=wheelpos=0;
+      filter_2.font.Bold:=wheelpos=1;
+      filter_3.font.Bold:=wheelpos=2;
+      filter_4.font.Bold:=wheelpos=3;
+      filter_5.font.Bold:=wheelpos=4;
+      filter_6.font.Bold:=wheelpos=5;
+      filter_7.font.Bold:=wheelpos=6;
 
       except
       end;
 
       {FOCUSER PROCESSING}
       try
-      if ((ascom_focuser_connected) or (focuser_alpaca1.Checked)) then {allow import focuser}
+      if ((ascom_focuser_connected) or (focuser_alpaca1.Checked) or (focuser_indi1.Checked)) then {allow import focuser}
       begin
         backlash:=strtoint(backlash1.text) div 2;
-
         oldpos:= focuser_position;
 
-        if focuser_alpaca1.Checked=false then {ascom}
-          focuser_position:=ascom_focuser.position
-        else {alpaca}
+        if focuser_alpaca1.Checked then
+        begin {alpaca}
           focuser_position:=alpaca_foc_position;
+        end
+        else
+        if focuser_indi1.Checked then
+        begin {indi. Own independent state}
+          focuser_position:=indi_foc_position;
+        end
+        else
+        begin {ascom}
+          focuser_position:=ascom_focuser.position;
+        end;
 
         if focuser_position>oldpos then begin focus_backlash:=-min(focuser_position-real_focuser_position,backlash); arrowleft1.caption:='🢁'+inttostr(focus_backlash); end
         else
@@ -2303,7 +2535,19 @@ begin
             calc_sidereal_time(longitude);//JD is already calculated by calc_JD
             caption:='Local sidereal time '+copy(prepare_ra(sidereal_time),1,6);
 
-            meridian:=sidereal_time*12/pi;//for equatorial mount alpaca. [hours]
+            if mount_indi1.checked then
+              indi_meridian:=sidereal_time*12/pi
+            else
+            if mount_alpaca1.checked then
+              meridian:=sidereal_time*12/pi;//for equatorial mount alpaca. [hours]
+
+            if mount_indi1.checked {indo} then
+            begin
+              if indi_sideofpier=99 then indi_crosses_meridian(indi_meridian); //initialise side of pier after program startup. Else it is done when slewing
+              if  equatorial_mount=false then indi_sideofpier:=-1;
+              side_of_pier:=indi_sideofpier; // is set while slewing in alpaca_mount_protocol.pas
+            end
+            else
             if mount_alpaca1.checked {alpaca} then
             begin
               if sideofpier_alpaca=99 then crosses_meridian(meridian); //initialise side of pier after program startup. Else it is done when slewing
@@ -2321,6 +2565,28 @@ begin
               pointing1.caption:='-';  //0 = pierEast, 1 = pierWest, -1= pierUnknown
           end;
 
+          {Sync offset of whichever internal mount is driving.  The two
+           protocols keep their own offset - alpaca_ra_corr/alpaca_dec_corr belong to
+           alpaca_mount_protocol, indi_ra_corr/indi_dec_corr to indi_mount -
+           and picking the wrong one makes the image stop matching the
+           position the client reads back after its first plate solve sync.
+           Zero for ASCOM: an external driver applies its own sync itself.}
+          if mount_indi1.checked then
+          begin
+            ra_corr :=indi_ra_corr;
+            dec_corr:=indi_dec_corr;
+          end
+          else
+          if mount_alpaca1.checked then
+          begin
+            ra_corr :=alpaca_ra_corr;
+            dec_corr:=alpaca_dec_corr;
+          end
+          else
+          begin
+            ra_corr :=0;
+            dec_corr:=0;
+          end;
 
 
           if artificial_selected1.checked=false then {dss image or single file input}
@@ -2353,8 +2619,8 @@ begin
                 application.title:='. . . .';{show busy}
                 application.processmessages;
                 if esc_pressed then exit;
-                if mount_alpaca1.checked {alpaca} then
-                  getDSSimage(ra_telescope_2000-ra_corr*pi/180,dec_telescope_2000-dec_corr*pi/180){Download DSS image. Equinox 2000. Alpaca mount should have zero error but could be left over}
+                if (mount_alpaca1.checked or mount_indi1.checked) then
+                  getDSSimage(ra_telescope_2000-ra_corr*pi/180,dec_telescope_2000-dec_corr*pi/180){Download DSS image. Equinox 2000. An internal mount should have zero error but a sync could be left over}
                 else
                   getDSSimage(ra_telescope_2000,dec_telescope_2000);{Download DSS image. Equinox 2000}
 
@@ -2388,10 +2654,10 @@ begin
             if ((equatorial_mount) and (side_of_pier=1)) then //  0 = pierEast/pointing West, 1 = pierWest/pointing East, -1= pierUnknown
                 orient:=fnmodulo(orient+pi,2*pi); //rotation by meridian flip,
 
-            if mount_alpaca1.checked {alpaca} then
+            if (mount_alpaca1.checked or mount_indi1.checked) then
             begin
               prepare_plotting(ra_telescope_2000-ra_corr*pi/180,dec_telescope_2000-dec_corr*pi/180, orient,flipH1.checked,flipV1.checked); {if the mount is synced it should not create a new image. Calculate absolute encoder position. This will allow the CCDCiel polar align routine to work proper and allow sync for first measurment}
-              ang_sep(ra_telescope_2000,dec_telescope_2000,ra_telescope_2000-ra_corr*pi/180,dec_telescope_2000-ra_corr*pi/180, sep);{calculate offset}
+              ang_sep(ra_telescope_2000,dec_telescope_2000,ra_telescope_2000-ra_corr*pi/180,dec_telescope_2000-dec_corr*pi/180, sep);{calculate offset}
               if sep>5*pi/180 then memo2_message('Telescope is '+inttostr(round(sep*180/pi))+'° out of sync! Astrometric solving is required.');
             end
             else
@@ -2454,7 +2720,7 @@ begin
     if esc_pressed then exit;
 
     {PROCESSING OF THE PREPARED IMAGE}
-    if ((ascom_mount_connected) or (mount_alpaca1.checked)) then
+    if ((ascom_mount_connected) or (mount_alpaca1.checked) or (mount_indi1.checked)) then
     if mount_slewing=false then
     begin
       try {update image for focus simulator}
@@ -2540,70 +2806,231 @@ begin
 
 end;
 
+procedure update_camera_index;
+begin
+  if ((form1.camera_indi1.checked) and (form1.IndiServer<>nil)) then //indi
+    {$ifdef mswindows}
+    form1.tab_camera1.imageindex:=7 //purple
+    {$else}
+     form1.tab_camera1.imageindex:=4 //play gray icon
+    {$endif}
+  else //alpaca
+  if ((form1.camera_alpaca1.checked) and (form1.AlpacaServer<>nil)) then
+    {$ifdef mswindows}
+     form1.tab_camera1.imageindex:=2 //blue
+    {$else}
+     form1.tab_camera1.imageindex:=4 //play gray icon
+    {$endif}
+  else
+  form1.tab_camera1.imageindex:=3; //gray icon
+end;
 
+
+procedure update_mount_image_index;
+begin
+
+  if ((form1.mount_ascom1.checked) and (ascom_mount_connected)) then
+  {$ifdef mswindows}
+  form1.tab_mount1.imageindex:=1 //Green
+  {$else}
+   form1.tab_mount1.imageindex:=4 //play gray icon
+  {$endif}
+  else
+  if ((form1.mount_indi1.checked) and (form1.IndiServer<>nil)) then
+    {$ifdef mswindows}
+    form1.tab_mount1.imageindex:=7 //purple
+    {$else}
+     form1.tab_mount1.imageindex:=4 //play gray icon
+    {$endif}
+  else //alpaca
+  if ((form1.mount_alpaca1.checked) and (form1.AlpacaServer<>nil)) then
+    {$ifdef mswindows}
+     form1.tab_mount1.imageindex:=2 //blue
+    {$else}
+     form1.tab_mount1.imageindex:=4 //play gray icon
+    {$endif}
+  else
+  form1.tab_mount1.imageindex:=3; //gray icon
+end;
+
+procedure update_focuser_image_index;
+begin
+  if ((form1.focuser_ascom1.checked) and (ascom_focuser_connected)) then
+  {$ifdef mswindows}
+  form1.tab_focuser1.imageindex:=1 //Green
+  {$else}
+   form1.tab_focuser1.imageindex:=4 //play gray icon
+  {$endif}
+  else
+  if ((form1.focuser_indi1.checked) and (form1.IndiServer<>nil)) then
+    {$ifdef mswindows}
+    form1.tab_focuser1.imageindex:=7 //purple
+    {$else}
+     form1.tab_focuser1.imageindex:=4 //play gray icon
+    {$endif}
+  else //alpaca
+  if ((form1.focuser_alpaca1.checked) and (form1.AlpacaServer<>nil)) then
+    {$ifdef mswindows}
+     form1.tab_focuser1.imageindex:=2 //blue
+    {$else}
+     form1.tab_focuser1.imageindex:=4 //play gray icon
+    {$endif}
+  else
+  form1.tab_focuser1.imageindex:=3; //gray icon
+end;
+
+
+procedure update_rotator_image_index;
+begin
+  if ((form1.rotator_ascom1.checked) and (ascom_rotator_connected)) then
+  {$ifdef mswindows}
+  form1.tab_rotator1.imageindex:=1 //Green
+  {$else}
+   form1.tab_rotator1.imageindex:=4 //play gray icon
+  {$endif}
+  else
+  if ((form1.rotator_indi1.checked) and (form1.IndiServer<>nil)) then
+    {$ifdef mswindows}
+    form1.tab_rotator1.imageindex:=7 //purple
+    {$else}
+     form1.tab_rotator1.imageindex:=4 //play gray icon
+    {$endif}
+  else //alpaca
+  if ((form1.rotator_alpaca1.checked) and (form1.AlpacaServer<>nil)) then
+    {$ifdef mswindows}
+     form1.tab_rotator1.imageindex:=2 //blue
+    {$else}
+     form1.tab_rotator1.imageindex:=4 //play gray icon
+    {$endif}
+  else
+  form1.tab_rotator1.imageindex:=3; //gray icon
+end;
+
+
+procedure update_filter_image_index;
+begin
+  //no filterwheel_ascom1
+  if ((form1.filter_indi1.checked) and (form1.IndiServer<>nil)) then
+    {$ifdef mswindows}
+    form1.tab_filterwheel1.imageindex:=7 //purple
+    {$else}
+     form1.tab_filterwheel1.imageindex:=4 //play gray icon
+    {$endif}
+  else //alpaca
+  if ((form1.filter_alpaca1.checked) and (form1.AlpacaServer<>nil)) then
+    {$ifdef mswindows}
+     form1.tab_filterwheel1.imageindex:=2 //blue
+    {$else}
+     form1.tab_filterwheel1.imageindex:=4 //play gray icon
+    {$endif}
+  else
+  form1.tab_filterwheel1.imageindex:=3; //gray icon
+end;
+
+
+procedure check_other_alpaca_servers;
+{Alpaca discovery uses one fixed UDP port, 32227, for the whole machine.  If
+ a second Alpaca server is running - ASCOM 7 starts one automatically to
+ expose COM drivers, on port 32323 - then both answer, and which one a client
+ hears is a race the client cannot control.  NINA may find us while CCDciel
+ finds ASCOM, on the same PC, in the same minute.  Nothing can be fixed here,
+ so at least say so instead of letting the user hunt for a bug.}
+var
+  sock: TUDPBlockSocket;
+  buf, others: string;
+  t: TDateTime;
+begin
+  others:='';
+  sock:=TUDPBlockSocket.Create;
+  try
+    sock.CreateSocket;
+    sock.EnableBroadcast(true);
+    sock.Connect('127.0.0.1','32227');
+    sock.SendString('alpacadiscovery1');
+    t:=now;
+    repeat
+      buf:=sock.RecvPacket(200);
+      if (sock.LastError=0) and (buf<>'') then
+        if pos('"AlpacaPort":'+form1.AlpacaIPPort,buf)=0 then     {not ours}
+          others:=others+' '+buf;
+    until (now-t)>(500/86400000);
+  finally
+    sock.CloseSocket;
+    sock.Free;
+  end;
+
+  if others<>'' then
+  begin
+    memo2_message('Warning: another Alpaca server is running on this computer'+others);
+    memo2_message('Discovery may find that server instead of Sky Simulator.');
+    memo2_message('In your client, enter the address manually: '+
+                  form1.alpaca_adress1.text+' port '+form1.AlpacaIPPort+'.');
+
+    ShowMessage('Warning: another Alpaca server is running on this computer'+others+
+                 ' Discovery may find that server instead of Sky Simulator.'+
+                 ' In your client, enter the address & port manually: '+
+                  form1.alpaca_adress1.text+' port '+form1.AlpacaIPPort+'.');
+
+  end;
+end;
+
+
+procedure enable_radiobuttons(enab: boolean);
+begin
+  with form1 do
+  begin
+    camera_alpaca1.enabled:=enab;
+    camera_indi1.enabled:=enab;
+    mount_ascom1.enabled:=enab;
+    mount_alpaca1.enabled:=enab;
+    mount_indi1.enabled:=enab;
+    focuser_ascom1.enabled:=enab;
+    focuser_alpaca1.enabled:=enab;
+    focuser_indi1.enabled:=enab;
+    rotator_ascom1.enabled:=enab;
+    rotator_alpaca1.enabled:=enab;
+    rotator_indi1.enabled:=enab;
+    filter_alpaca1.enabled:=enab;
+    filter_indi1.enabled:=enab;
+  end;
+end;
 
 procedure TForm1.start_button1Click(Sender: TObject);
 begin
+  enable_radiobuttons(false);
   if form1.start_button1.font.style=[fsbold] then begin esc_pressed:=true;exit;end;
   form1.start_button1.font.style:=[fsbold];
 
   if pos('-',form1.latitude1.text)<>0 then
-       dec_encoder:=-abs(dec_encoder);//set internal mount postion at celestial pole
+       alpaca_dec_encoder:=-abs(alpaca_dec_encoder);//set internal mount postion at celestial pole
 
-  if ((mount_alpaca1.checked=false) and (ascom_mount_connected=false)) then form1.connect_mount1Click(nil);
-  if ((focuser_alpaca1.checked=false) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);
-  if ((rotator_alpaca1.checked=false) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);
+  if ((mount_ascom1.checked) and (ascom_mount_connected=false)) then form1.connect_mount1Click(nil);//connect ascom mount
+  if ((focuser_ascom1.checked) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);//connect ascom focuser
+  if ((rotator_ascom1.checked) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);//connect ascom rotater
 
+  start_alpaca(camera_alpaca1.checked,
+                 focuser_alpaca1.checked,
+                 mount_alpaca1.checked,
+                 rotator_alpaca1.checked,
+                 filter_alpaca1.checked);
 
-  start_alpaca(true {camera},form1.focuser_alpaca1.checked,form1.mount_alpaca1.checked,rotator_alpaca1.checked,true {wheel});
-
-  if  mount_alpaca1.checked=false then
-  begin
-    if ascom_mount_connected then tab_mount1.imageindex:=1 {green} else tab_mount1.imageindex:=4;// grey
-  end
-  else
-  {$ifdef mswindows}
-   tab_mount1.imageindex:=2; //blue
-  {$else}
-   tab_mount1.imageindex:=4; //play gray icon
-  {$endif}
-
-  if focuser_alpaca1.checked=false then
-  begin
-    if ascom_focuser_connected then tab_focuser1.imageindex:=1 {green} else tab_focuser1.imageindex:=4;// grey
-  end
-  else
-  {$ifdef mswindows}
-   tab_focuser1.imageindex:=2; //blue
-  {$else}
-   tab_focuser1.imageindex:=4; //play gray icon
-  {$endif}
-
-  if  rotator_alpaca1.checked=false then
-  begin
-    if ascom_rotator_connected then tab_rotator1.imageindex:=1 {green} else tab_rotator1.imageindex:=4;// grey
-  end
-  else
-  {$ifdef mswindows}
-  tab_rotator1.imageindex:=2; //blue
-  {$else}
-  tab_rotator1.imageindex:=4; //play gray icon
-  {$endif}
-
-  {$ifdef mswindows}
-  tab_camera1.imageindex:=2; //blue
-  tab_filterwheel1.imageindex:=2; //blue
-  {$else}
-  tab_camera1.imageindex:=4; //play gray icon
-  tab_filterwheel1.imageindex:=4; //play gray icon
-  {$endif}
+  if mount_indi1.checked or camera_indi1.checked or
+       focuser_indi1.checked or rotator_indi1.checked or
+       filter_indi1.checked then
+    start_indi;
 
   form1.start_button1.caption:='Simulation running. (Hit ESC to stop)';
+  update_camera_index;
+  update_mount_image_index;
+  update_focuser_image_index;
+  update_rotator_image_index;
+  update_filter_image_index;
 
-  simulate_sky;//run simulation
+  check_other_alpaca_servers;//any competing server online?
+
+  simulate_sky;//run simulation. This will keep on running till esc is pressed
   form1.start_button1.font.style:=[];
   form1.start_button1.caption:='Start simulation';
-  tab_camera1.imageindex:=3;//gray;
 end;
 
 
@@ -2634,6 +3061,7 @@ procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   form1.statusbar1.simpletext:='STOPPING SERVER ................';
 
+  stop_indi;
   stop_alpaca;
   wait(1000);
   if save_thesettings then {set in go_default1}
@@ -2690,6 +3118,16 @@ begin
   update_required:=true;
 end;
 
+procedure TForm1.camera_indi1Change(Sender: TObject);
+begin
+  update_camera_index;//update coloured tab icon
+end;
+
+procedure TForm1.clear_log_button2Click(Sender: TObject);
+begin
+  memo3.clear;
+end;
+
 
 procedure TForm1.file_form_disk1Click(Sender: TObject);
 begin
@@ -2740,6 +3178,12 @@ end;
 procedure TForm1.equinox_communication1Change(Sender: TObject);
 begin
    update_required:=true;
+end;
+
+procedure TForm1.filter_alpaca1Change(Sender: TObject);
+begin
+  update_required:=true;
+  update_filter_image_index;//update coloured tab icons
 end;
 
 
@@ -2824,6 +3268,7 @@ begin
    application.messagebox(pchar(prepare_ra(theRA)+',  '+prepare_dec(theDec)),pchar('JNOW'),MB_OK); {show error from driver error, for example below horizon}
 end;
 
+
 procedure TForm1.jnow_to_j2000_1Click(Sender: TObject);
 var
   thera, thedec : double;
@@ -2835,19 +3280,23 @@ begin
    application.messagebox(pchar(prepare_ra(theRA)+',  '+prepare_dec(theDec)),pchar('J2000'),MB_OK); {show error from driver error, for example below horizon}
 end;
 
+
 procedure TForm1.parked1Click(Sender: TObject);
 var
   mount : T_Alpaca_Mount;
 begin
+  if form1.mount_indi1.checked then
+  begin
+    if indi_parked=2 then indi_unpark else indi_park;
+    // check marks are set in popupmenu_map1Popup
+  end
+  else
   if form1.mount_alpaca1.checked then
   begin
     mount := T_Alpaca_Mount.Create(nil);
     try
-      if is_parked=2 then
-      mount.unpark
-      else
-      Mount.park;
-
+      if alpaca_parked=2 then mount.unpark else  Mount.park;
+      // check marks are set in popupmenu_map1Popup
     finally
       mount.Free;
     end;
@@ -2866,27 +3315,44 @@ begin
   end;
 end;
 
+procedure TForm1.TabSheet1ContextPopup(Sender: TObject; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+
+end;
+
+
 procedure TForm1.tracking1Click(Sender: TObject);
 var
   mount : T_Alpaca_Mount;
 begin
-   if form1.mount_alpaca1.checked then
-   begin
-     if is_parked<>0 then
+  if form1.mount_indi1.checked then
+  begin
+    if indi_parked<>0 then
      begin
-       Showmessage('Can not set tracking. Alpaca Mount is parked !');
+       Showmessage('Can not set tracking. INDI mount is parked !');
        exit;
      end;
-     mount := T_Alpaca_Mount.Create(nil);
-     try
-       Mount.settracking(true);
-     finally
-       mount.Free;
-     end;
-   end
-   else
-  //   slew_ascom_telescope(fnmodulo(Ra,24), Dec);
-
+     indi_set_tracking(not indi_tracking);
+     // check marks are set in popupmenu_map1Popup
+end
+  else
+  if form1.mount_alpaca1.checked then
+  begin
+    if alpaca_parked<>0 then
+    begin
+      Showmessage('Can not set tracking. Alpaca Mount is parked !');
+      exit;
+    end;
+    mount := T_Alpaca_Mount.Create(nil);
+    try
+      Mount.settracking(alpaca_tracking=false);
+      // check marks are set in popupmenu_map1Popup
+    finally
+      mount.Free;
+    end;
+  end
+  else
   begin
     if ascom_mount_connected then
     try {parked ?}
@@ -2907,7 +3373,37 @@ begin
         Showmessage('Error tracking!');
       end;
   end;
+end;
 
+procedure TForm1.popupmenu_map1Popup(Sender: TObject);
+begin
+  if form1.mount_indi1.checked then
+  begin
+    tracking1.checked:=indi_tracking;
+    parked1.checked:=(indi_parked=2);
+  end
+  else
+ if form1.mount_alpaca1.checked then
+ begin
+   tracking1.checked:=alpaca_tracking;
+   parked1.checked:=(alpaca_parked=2);
+ end
+ else
+ begin
+    if ascom_mount_connected then
+    begin
+      try
+      tracking1.checked:=ascom_mount.Tracking;
+      parked1.checked:=ascom_mount.atpark;
+      except
+      end;
+    end
+    else
+    begin
+      tracking1.checked:=false;
+      parked1.checked:=false;
+    end;
+  end;
 end;
 
 
@@ -2935,30 +3431,6 @@ begin
   enable_controls(polar_alignment_error, mount_type1.itemindex=1);{polar alignment error or equatorial mount}
 end;
 
-procedure TForm1.popupmenu_map1Popup(Sender: TObject);
-begin
- if form1.mount_alpaca1.checked then
- begin
-   tracking1.checked:=alpaca_tracking;
-   parked1.checked:=(is_parked=2);
- end
- else
- begin
-    if ascom_mount_connected then
-    begin
-      try
-      tracking1.checked:=ascom_mount.Tracking;
-      parked1.checked:=ascom_mount.atpark;
-      except
-      end;
-    end
-    else
-    begin
-      tracking1.checked:=false;
-      parked1.checked:=false;
-    end;
-  end;
-end;
 
 procedure TForm1.buttonEast1Click(Sender: TObject);
 begin
@@ -3066,13 +3538,14 @@ begin
   update_required:=true;
 end;
 
-
 procedure TForm1.focuser_alpaca1Change(Sender: TObject);
 begin
-   connect_focuser1.visible:=focuser_alpaca1.checked=false;
-   if ((focuser_alpaca1.checked=false) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);
+   connect_focuser1.visible:=focuser_ascom1.checked;
+   if ((focuser_ascom1.checked) and (ascom_focuser_connected=false)) then form1.connect_focuser1Click(nil);
    update_required:=true;
+   update_focuser_image_index;//update coloured tab icon
 end;
+
 
 procedure TForm1.focus_at1Exit(Sender: TObject);
 begin
@@ -3503,26 +3976,23 @@ end;
 
 procedure TForm1.mount_alpaca1Change(Sender: TObject);
 var
-  alpacaMode :boolean;
+  alpacaMode,indiMode :boolean;
 begin
   alpacaMode:=mount_alpaca1.checked;
+  indiMode:=mount_indi1.checked;
 
-  focallength1.enabled:=alpacaMode;//else take focal length form mount driver
+  focallength1.enabled:=((indiMode) or (alpacamode));//else take focal length form mount driver
 
-  if alpacaMode=false then
-  begin
-    if ascom_mount_connected=false then form1.connect_mount1Click(nil);
-  end;
-
-  connect_mount1.visible:=alpacaMode=false;
-  mount_type1.visible:=alpacaMode;
-  DecPulseReverses1.visible:=alpacaMode;
-  NSswapped1.visible:=alpacaMode;
-  equinox_communication1.enabled:=alpacaMode;
-  focallength1.enabled:=((alpacaMode) or (CheckBox_focal_length_driver1.checked=false));
-  CheckBox_focal_length_driver1.enabled:=(alpacaMode=false);
+  connect_mount1.visible:=((alpacaMode=false) and (indimode=false));
+  mount_type1.visible:=((alpacaMode) or (indimode));
+  DecPulseReverses1.visible:=((alpacaMode) or (indiMode));
+  NSswapped1.visible:=((alpacaMode) or (indiMode));
+  equinox_communication1.enabled:=((alpacaMode) or (indiMode));
+  focallength1.enabled:=((alpacaMode) or (indiMode) or (CheckBox_focal_length_driver1.checked=false));
+  CheckBox_focal_length_driver1.enabled:=((alpacaMode=false) and (indiMode=false)); //at camera tab
 
   update_required:=true;
+  update_mount_image_index;///update coloured tab icon
 end;
 
 
@@ -3530,6 +4000,7 @@ procedure TForm1.mount_type1Change(Sender: TObject);
 begin
   if mount_type1.itemindex=0 then
   sideofpier_alpaca:=-1;
+  indi_sideofpier:=-1;
   pointing1.caption:='-';
   enable_controls(polar_alignment_error, mount_type1.itemindex=1);{polar alingment error or equatorial mount}
   update_required:=true;
@@ -3553,16 +4024,18 @@ end;
 
 procedure TForm1.PopupMenu_image1Popup(Sender: TObject);
 begin
-  mount_goto1.enabled:=mount_alpaca1.checked;//only in alpca mode
+  mount_goto1.enabled:=((mount_alpaca1.checked) or (mount_indi1.checked));//only in alpca mode and indi mode
 end;
 
 
 procedure TForm1.rotator_alpaca1Change(Sender: TObject);
 begin
-  connect_rotator1.visible:=rotator_alpaca1.checked=false;
-  if ((rotator_alpaca1.checked=false) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);
+  connect_rotator1.visible:=rotator_ascom1.checked;
+  if ((rotator_ascom1.checked) and (ascom_rotator_connected=false)) then form1.connect_rotator1Click(nil);//connect ascom rotator
   update_required:=true;
+  update_rotator_image_index;//update coloured tab icon
 end;
+
 
 procedure TForm1.savesettings1Click(Sender: TObject);
 begin
@@ -3691,8 +4164,6 @@ begin
       wait(1000);
       connect_mount1.caption:=ascom_mount_driver;
       connect_mount1.font.style:=[fsbold,fsunderline];
-//      tab_mount1.imageindex:=1;//green
-
 
       ascom_mount_connected:=true;
       memo2_message('Mount connected.');
@@ -3771,11 +4242,33 @@ end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
-  mount_simulation;{move mount if required}
-  focuser_simulation;{move focuser if required}
-  rotator_simulation;{move rotator if required}
-  camera_simulation(form1.fast_simulation1.checked);
-  guide_camera_simulation(form1.fast_simulation1.checked);
+  if mount_indi1.checked then
+    indi_mount_simulation      {move the INDI mount if required}
+  else
+     mount_simulation;          {move the Alpaca mount if required}
+
+  if focuser_indi1.checked then
+    indi_focuser_simulation    {move the INDI focuser if required}
+  else
+    focuser_simulation;        {move the Alpaca focuser if required}
+
+  if rotator_indi1.checked then
+    indi_rotator_simulation    {move the INDI rotator if required}
+  else
+    rotator_simulation;        {move the Alpaca rotator if required}
+
+    {the filter wheel has no simulation step, the move is instant}
+
+  if form1.camera_alpaca1.checked=false then
+  begin
+    indi_camera_simulation(form1.fast_simulation1.checked);       {INDI camera}
+    indi_guide_camera_simulation(form1.fast_simulation1.checked); {INDI guider}
+  end
+  else
+  begin
+    camera_simulation(form1.fast_simulation1.checked);            {Alpaca camera}
+    guide_camera_simulation(form1.fast_simulation1.checked);      {Alpaca guider}
+  end;
 end;
 
 
@@ -3787,7 +4280,13 @@ end;
 
 procedure TForm1.stopbutton1Click(Sender: TObject);
 begin
-   esc_pressed:=true;
+  enable_radiobuttons(true);
+  esc_pressed:=true;
+  if (AlpacaServer=nil) and (IndiServer=nil) then exit;  {not started yet}
+
+   if AlpacaServer<>nil then stop_alpaca;
+   if IndiServer<>nil then stop_indi;
+
    form1.caption:='Simulation stopped.';
    memo2_message('Stop pressed.');
 end;

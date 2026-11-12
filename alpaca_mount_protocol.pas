@@ -46,10 +46,10 @@ function alpaca_dec : double;{DEC position mount}
 procedure mount_simulation;{called by the timer every second}
 function crosses_meridian(meridian :double) : boolean;
 var
-  ra_encoder: double=256.741389196031;//14*360/24{3.5*15};{RA encoder position, degrees}
-  ra_corr: double=0;{mount sync correction}
-  dec_encoder: double=89.7900991439244;{DEC encoder position}
-  dec_corr: double=0;{mount sync correction}
+  alpaca_ra_encoder: double=256.741389196031;//14*360/24{3.5*15};{RA encoder position, degrees}
+  alpaca_dec_encoder: double=89.7900991439244;{DEC encoder position}
+  alpaca_ra_corr: double=0;{mount sync correction}
+  alpaca_dec_corr: double=0;{mount sync correction}
 
   alpaca_ra_target: double=3.5;{hours}
   alpaca_dec_target: double=50;{degree}
@@ -86,7 +86,7 @@ var
 
   alpaca_altitude:double=0;
   alpaca_azimuth: double=0;
-  is_parked     : integer=0; //2 is parked, 1 is going to park position, 0 not parked. This is a simulation variable
+  alpaca_parked     : integer=0; //2 is parked, 1 is going to park position, 0 not parked. This is a simulation variable
   focal_length_telescope: double=0.560;//meters
 
 type
@@ -223,15 +223,15 @@ end;
 
 procedure get_mount_position(out ra,de : double);
 begin
-  de:=inc_angle(dec_encoder,dec_corr);{calculate reported DEC position}
+  de:=inc_angle(alpaca_dec_encoder,alpaca_dec_corr);{calculate reported DEC position}
 
   if de>+90 then {crossing celestial pole, add 180 degrees to ra}
-    ra:=inc_angle(ra_encoder,ra_corr+180)
+    ra:=inc_angle(alpaca_ra_encoder,alpaca_ra_corr+180)
   else
   if de<-90 then {crossing celestial pole, add 180 degrees to ra}
-    ra:=inc_angle(ra_encoder,ra_corr+180)
+    ra:=inc_angle(alpaca_ra_encoder,alpaca_ra_corr+180)
   else
-    ra:=inc_angle(ra_encoder,ra_corr);
+    ra:=inc_angle(alpaca_ra_encoder,alpaca_ra_corr);
 
 
   if ra<0 then ra:=ra+360; {make range 0..360}
@@ -288,9 +288,9 @@ var
   deltaRa,deltaDec,stepRa,stepDec,ra_target, dec_target            : double;
   reverseDecPulse, pulseEast2, pulseWest2,pulseNorth2, pulseSouth2 : integer;
 begin
-  if ((is_parked=1) and (alpaca_mount_slewing=false)) then //slewing to park position finished
+  if ((alpaca_parked=1) and (alpaca_mount_slewing=false)) then //slewing to park position finished
   begin
-    is_parked:=2;//next phase
+    alpaca_parked:=2;//next phase
     alpaca_tracking:=false;
     exit;
   end;
@@ -309,7 +309,7 @@ begin
 
     end
     else
-    begin //no meridian crossing
+    begin //no meridian crossing       ccdciel
       ra_target:=alpaca_ra_target;
       dec_target:=alpaca_dec_target;
     end;
@@ -319,19 +319,19 @@ begin
     stepRA:=min(abs(deltaRA),20); {degrees, slew speed twenty degree per second}
 
     if deltaRA<0 then
-      ra_encoder:=inc_angle(ra_encoder,-stepRa)    //decrement
+      alpaca_ra_encoder:=inc_angle(alpaca_ra_encoder,-stepRa)    //decrement
     else
-      ra_encoder:=inc_angle(ra_encoder,+stepRa);   //increment
+      alpaca_ra_encoder:=inc_angle(alpaca_ra_encoder,+stepRa);   //increment
 
     deltaDec:=dec_target-alpaca_Dec;{calculate dec distance}
     stepDec:=min(abs(deltaDec),20); {slew speed twenty degree per second}
     if deltaDec<0 then
-      dec_encoder:=inc_angle(dec_encoder,-stepDec)
+      alpaca_dec_encoder:=inc_angle(alpaca_dec_encoder,-stepDec)
     else
-      dec_encoder:=inc_angle(dec_encoder,+stepDec);
+      alpaca_dec_encoder:=inc_angle(alpaca_dec_encoder,+stepDec);
 
    if ra_target=alpaca_ra_target then //do not stop at first stop north
-      alpaca_mount_slewing:=((stepRa>0.000003) or (stepDec>0.000003)) {reached target?}
+   alpaca_mount_slewing:=((stepRa>0.000003) or (stepDec>0.000003)) {reached target?}
     else
       alpaca_mount_slewing:=true;
   end
@@ -339,7 +339,7 @@ begin
   begin
     if alpaca_tracking=false then
     begin
-      ra_encoder:=inc_angle(ra_encoder,15/3600); //if no tracking increase RA with 15 arc seconds per second or one RA second
+      alpaca_ra_encoder:=inc_angle(alpaca_ra_encoder,15/3600); //if no tracking increase RA with 15 arc seconds per second or one RA second
     end
     else
     begin //Normal tracking. Processed every second
@@ -367,11 +367,11 @@ begin
 
       //memo2_message('Pulse East:'+inttostr(pulseEast)+',  Pulse West:'+inttostr(pulseWest)+'            '+'Pulse East2:'+inttostr(pulseEast2)+',  Pulse West2:'+inttostr(pulseWest2));
 
-      ra_encoder:=inc_angle(ra_encoder, (pulseEast2-pulseWest2){ms}*guiderateRa/1000); //pulse duration is in milliseconds
-      dec_encoder:=inc_angle(dec_encoder,NSswapped*reverseDecPulse*(pulseNorth2-pulseSouth2) {ms}*guiderateDec/1000);
+      alpaca_ra_encoder:=inc_angle(alpaca_ra_encoder, (pulseEast2-pulseWest2){ms}*guiderateRa/1000); //pulse duration is in milliseconds
+      alpaca_dec_encoder:=inc_angle(alpaca_dec_encoder,NSswapped*reverseDecPulse*(pulseNorth2-pulseSouth2) {ms}*guiderateDec/1000);
 
-      ra_encoder:=ra_encoder+theaxisrates[0]-15.04107/3600;//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
-      dec_encoder:=dec_encoder+ NSswapped*reverseDecPulse*theaxisrates[1];
+      alpaca_ra_encoder:=alpaca_ra_encoder+theaxisrates[0]-15.04107/3600;//[deg/sec] normal zero but axis rate can be adjusted by moveaxis
+      alpaca_dec_encoder:=alpaca_dec_encoder+ NSswapped*reverseDecPulse*theaxisrates[1];
 
       //if alpaca_mount_slewing then memo2_message('reverse dec pulse '+inttostr(reverseDecPulse)+'  Side of pier '+ inttostr(Sideofpier_alpaca)+ ' slewing' )
       //else memo2_message('reverse dec pulse '+inttostr(reverseDecPulse)+'  Side of pier '+ inttostr(Sideofpier_alpaca)+ ' not slewing !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' )
@@ -416,11 +416,12 @@ begin
   result:=FConnected;
 end;
 
-procedure  T_Alpaca_Mount.SetConnected(value:boolean);
+
+procedure T_Alpaca_Mount.SetConnected(value:boolean);
 begin
-  // code to make connection
   FConnected:=value;
 end;
+
 
 function  T_Alpaca_Mount.Description:string;
 begin
@@ -486,7 +487,7 @@ end;
 
 function  T_Alpaca_Mount.atpark: boolean;
 begin
-  result:=is_parked=2;
+  result:=alpaca_parked=2;
 end;
 
 function  T_Alpaca_Mount.azimuth: double;
@@ -884,7 +885,7 @@ var
 begin
   if latitude>0 then  dect:=89 else dect:=-89;//park position just above the pole
   slewtocoordinates(sidereal_time*12/pi,dect,theresult);//stop tracking will be done in simulation
-  is_parked:=1;//going to park position
+  alpaca_parked:=1;//going to park position
 end;
 
 
@@ -902,7 +903,7 @@ end;
 
 procedure T_Alpaca_Mount.slewtocoordinates(ra,dec: double; out ok : boolean);
 begin
-  if is_parked<>0 then exit;
+  if alpaca_parked<>0 then exit;
 
   precession_to_jnow(ra, dec,ra,dec);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
   alpaca_ra_target:=min(24,max(0,ra));
@@ -943,8 +944,8 @@ begin
   memo2_message('Mount sync at [Jnow] '+prepare_ra(ra*pi/12)+'  '+prepare_dec(dec*pi/180));
   if ((ra>=0) and (ra<24) and (dec>=-90) and (dec<=90)) then
   begin
-    ra_corr:=ra_corr+15*(ra-alpaca_ra);{Unit is degrees. Sync mount by setting and offset ra_corr}
-    dec_corr:=dec_corr+(dec-alpaca_dec);{degrees}
+    alpaca_ra_corr:=alpaca_ra_corr+15*(ra-alpaca_ra);{Unit is degrees. Sync mount by setting and offset alpaca_ra_corr}
+    alpaca_dec_corr:=alpaca_dec_corr+(dec-alpaca_dec);{degrees}
     ok:=true;
   end
   else
@@ -955,14 +956,14 @@ end;
 procedure T_Alpaca_Mount.synctotarget;
 begin
   precession_to_jnow(alpaca_ra_target2 {temp value},alpaca_ra_target2 {temp value},alpaca_ra_target,alpaca_dec_target);//Convert to Jnow according mount communication equinox. Ra in unit hours, dec in degrees
-  ra_corr:=ra_corr+15*(alpaca_ra_target-alpaca_ra);{Unit is degrees. Sync mount by setting and offset ra_corr}
-  dec_corr:=dec_corr+(alpaca_dec_target-alpaca_dec);{degrees}
+  alpaca_ra_corr:=alpaca_ra_corr+15*(alpaca_ra_target-alpaca_ra);{Unit is degrees. Sync mount by setting and offset alpaca_ra_corr}
+  alpaca_dec_corr:=alpaca_dec_corr+(alpaca_dec_target-alpaca_dec);{degrees}
 end;
 
 
 procedure T_Alpaca_Mount.unpark;
 begin
-  is_parked:=0;
+  alpaca_parked:=0;
   alpaca_tracking:=true;
 end;
 

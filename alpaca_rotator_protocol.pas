@@ -150,7 +150,6 @@ end;
 
 procedure  T_Alpaca_rotator.SetConnected(value:boolean);
 begin
-  // code to make connection
   FConnected:=value;
 end;
 

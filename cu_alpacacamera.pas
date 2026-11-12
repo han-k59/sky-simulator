@@ -616,7 +616,7 @@ begin
   else if method='setccdtemperature' then begin
     if GetParamFloat(params,'SetCCDTemperature',x)  then
       SetCCDTemperature(x,error_float);
-    if x-error_float<>0 then {out of range}
+    if error_float<>0 then {out of range}
       set_invalid_range(x);
     result:=FormatEmptyResp(ClientTransactionID,ServerTransactionID,FErrorNumber,FErrorMessage);
   end

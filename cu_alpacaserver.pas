@@ -111,10 +111,6 @@ end;
 
 //////////////////////// T_AlpacaServer ////////////////////////
 
-
-
-
-
 constructor T_AlpacaServer.Create(AOwner: TComponent);
 begin
   inherited Create(aOwner);

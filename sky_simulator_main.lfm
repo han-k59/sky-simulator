@@ -1,10 +1,10 @@
 object Form1: TForm1
-  Left = 466
-  Height = 605
-  Top = 250
+  Left = 137
+  Height = 664
+  Top = 126
   Width = 1353
   Caption = 'Sky Simulator for ASCOM and ALPACA. Camera simulator with "Deep Sky Survey" images or artificial images based on mount and focuser position.'
-  ClientHeight = 605
+  ClientHeight = 664
   ClientWidth = 1353
   KeyPreview = True
   LCLVersion = '4.2.0.0'
@@ -16,13 +16,13 @@ object Form1: TForm1
   object StatusBar1: TStatusBar
     Left = 0
     Height = 23
-    Top = 582
+    Top = 641
     Width = 1353
     Panels = <>
   end
   object PageControl1: TPageControl
     Left = 0
-    Height = 542
+    Height = 601
     Top = 0
     Width = 1353
     ActivePage = tab_image_source1
@@ -32,7 +32,7 @@ object Form1: TForm1
     TabOrder = 1
     object tab_image_source1: TTabSheet
       Caption = 'Image source'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       object go_default1: TButton
         Left = 816
@@ -470,13 +470,15 @@ object Form1: TForm1
         Left = 64
         Height = 19
         Top = 8
-        Width = 598
-        Caption = 'Sky simulator for ASCOM and Alpaca. Version 3.0.8   © 2018-2026 by Han Kleijn, www.hnsky.org.'
+        Width = 679
+        Caption = 'Sky simulator for ASCOM, Alpaca and Indi. Version 4.0.0   © 2018-2026 by Han Kleijn, www.hnsky.org.'
+        Font.Style = [fsBold]
+        ParentFont = False
       end
     end
     object tab_camera1: TTabSheet
       Caption = 'Camera'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       ImageIndex = 3
       object Label1: TLabel
@@ -616,7 +618,7 @@ object Form1: TForm1
         TabOrder = 3
       end
       object message1: TLabel
-        Left = 0
+        Left = 184
         Height = 115
         Top = 0
         Width = 1000
@@ -769,11 +771,30 @@ object Form1: TForm1
         Caption = '-'
         ParentColor = False
       end
+      object camera_indi1: TRadioButton
+        Left = 16
+        Height = 23
+        Top = 40
+        Width = 97
+        Caption = 'Indi interface'
+        TabOrder = 8
+        OnChange = camera_indi1Change
+      end
+      object camera_alpaca1: TRadioButton
+        Left = 16
+        Height = 23
+        Top = 16
+        Width = 114
+        Caption = 'Alpaca interface'
+        Checked = True
+        TabOrder = 9
+        TabStop = True
+      end
     end
     object tab_mount1: TTabSheet
       Hint = 'The sky'
       Caption = 'Mount'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       ImageIndex = 3
       ParentShowHint = False
@@ -782,7 +803,7 @@ object Form1: TForm1
       object connect_mount1: TBitBtn
         Left = 16
         Height = 29
-        Top = 456
+        Top = 480
         Width = 167
         AutoSize = True
         Caption = 'Connect Ascom mount'
@@ -829,9 +850,7 @@ object Form1: TForm1
         Top = 32
         Width = 691
         Caption = 'Alpaca interface to internal simulated mount.  Select in your imaging program "mount_sky_simulator (Alpaca)".'
-        Checked = True
         TabOrder = 2
-        TabStop = True
         OnChange = mount_alpaca1Change
       end
       object looking_at1: TLabel
@@ -885,7 +904,7 @@ object Form1: TForm1
         Left = 216
         Height = 23
         Hint = 'Mount North/South (δ) pulse guiding is swapped after meridian flip. Normal situtation. Same applies for camera'
-        Top = 56
+        Top = 80
         Width = 220
         Caption = 'δ pulse guiding reverses after flip'
         Checked = True
@@ -899,7 +918,7 @@ object Form1: TForm1
         Left = 216
         Height = 23
         Hint = 'North South  (δ) pulse guiding swapped'
-        Top = 80
+        Top = 104
         Width = 184
         Caption = 'δ  pulse guiding swapped ↕'
         ParentShowHint = False
@@ -911,7 +930,7 @@ object Form1: TForm1
         Left = 16
         Height = 27
         Hint = 'Labels in the artificial image'
-        Top = 72
+        Top = 96
         Width = 184
         ItemHeight = 19
         ItemIndex = 1
@@ -931,7 +950,7 @@ object Form1: TForm1
       object groupbox_mount_errors1: TGroupBox
         Left = 16
         Height = 240
-        Top = 216
+        Top = 240
         Width = 496
         Caption = 'Additional mount errors (for artificial image only)'
         ClientHeight = 216
@@ -1323,7 +1342,7 @@ object Form1: TForm1
       object groupbox_polar_alignment_error1: TGroupBox
         Left = 16
         Height = 110
-        Top = 104
+        Top = 128
         Width = 496
         Caption = 'Polar alignment error'
         ClientHeight = 86
@@ -1543,16 +1562,28 @@ object Form1: TForm1
         Caption = 'Ra rate:'
         ParentColor = False
       end
+      object mount_indi1: TRadioButton
+        Left = 16
+        Height = 23
+        Hint = 'In INDI mount accessible via the INDI server'
+        Top = 56
+        Width = 275
+        Caption = 'Indi interface to internal simulated mount.'
+        Checked = True
+        TabOrder = 10
+        TabStop = True
+        OnChange = mount_alpaca1Change
+      end
     end
     object tab_focuser1: TTabSheet
       Caption = 'Focuser'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       ImageIndex = 3
       object connect_focuser1: TBitBtn
         Left = 16
         Height = 30
-        Top = 216
+        Top = 288
         Width = 184
         Caption = 'Connect focuser'
         ParentFont = False
@@ -1562,7 +1593,7 @@ object Form1: TForm1
       object Label14: TLabel
         Left = 16
         Height = 19
-        Top = 112
+        Top = 184
         Width = 114
         Caption = 'Position indication:'
         ParentColor = False
@@ -1570,24 +1601,24 @@ object Form1: TForm1
       object Label13: TLabel
         Left = 16
         Height = 19
-        Top = 144
+        Top = 216
         Width = 81
         Caption = 'Real position:'
         ParentColor = False
       end
       object focusfactor1: TLabel
-        Left = 136
+        Left = 184
         Height = 19
-        Top = 182
+        Top = 254
         Width = 24
         Caption = '----'
         ParentColor = False
       end
       object focuser_position1: TLabel
-        Left = 136
+        Left = 184
         Height = 19
         Hint = 'The position indicated'
-        Top = 112
+        Top = 184
         Width = 49
         Caption = 'position'
         ParentColor = False
@@ -1595,10 +1626,10 @@ object Form1: TForm1
         ShowHint = True
       end
       object real_position1: TLabel
-        Left = 136
+        Left = 184
         Height = 19
         Hint = 'The actual position'
-        Top = 144
+        Top = 216
         Width = 49
         Caption = 'position'
         ParentColor = False
@@ -1606,10 +1637,10 @@ object Form1: TForm1
         ShowHint = True
       end
       object arrowleft1: TLabel
-        Left = 240
+        Left = 288
         Height = 19
         Hint = 'Difference between indication and real focuser position as caused by backlash.'
-        Top = 112
+        Top = 184
         Width = 12
         Caption = '🢁'
         ParentColor = False
@@ -1618,10 +1649,10 @@ object Form1: TForm1
         ShowHint = True
       end
       object focus_at1: TEdit
-        Left = 136
+        Left = 184
         Height = 27
         Hint = 'Best focus position for image.'
-        Top = 72
+        Top = 144
         Width = 72
         ParentColor = True
         ParentShowHint = False
@@ -1633,16 +1664,16 @@ object Form1: TForm1
       object Label6: TLabel
         Left = 16
         Height = 19
-        Top = 72
+        Top = 144
         Width = 54
         Caption = 'Focus at:'
         ParentColor = False
       end
       object focus_range1: TEdit
-        Left = 360
+        Left = 408
         Height = 27
         Hint = 'Focus range. If the focuser is this value from the focus, then the  HFD will be 10.'
-        Top = 72
+        Top = 144
         Width = 80
         ParentColor = True
         ParentShowHint = False
@@ -1652,26 +1683,26 @@ object Form1: TForm1
         OnExit = focus_range1Exit
       end
       object focuser_position2: TLabel
-        Left = 296
+        Left = 344
         Height = 19
-        Top = 72
+        Top = 144
         Width = 49
         Caption = 'range ±'
         ParentColor = False
       end
       object focuser_position3: TLabel
-        Left = 448
+        Left = 496
         Height = 19
-        Top = 72
+        Top = 144
         Width = 75
         Caption = '≜ HFD ± 10'
         ParentColor = False
       end
       object backlash1: TEdit
-        Left = 360
+        Left = 408
         Height = 27
         Hint = 'Backlash of the focuser. Set to zero to switch off.'
-        Top = 112
+        Top = 184
         Width = 80
         ParentColor = True
         ParentShowHint = False
@@ -1681,9 +1712,9 @@ object Form1: TForm1
         OnExit = backlash1Exit
       end
       object focuser_position6: TLabel
-        Left = 296
+        Left = 344
         Height = 19
-        Top = 112
+        Top = 184
         Width = 55
         Caption = 'Backlash:'
         ParentColor = False
@@ -1702,23 +1733,32 @@ object Form1: TForm1
         Top = 32
         Width = 823
         Caption = 'Alpaca interface. The focuser will be simulated inside this program.  Select in your imaging program "focuser_sky_simulator (Alpaca)".'
-        Checked = True
         TabOrder = 5
-        TabStop = True
         OnChange = focuser_alpaca1Change
       end
       object Label20: TLabel
         Left = 16
         Height = 19
-        Top = 182
+        Top = 254
         Width = 77
         Caption = 'Focus factor:'
         ParentColor = False
       end
+      object focuser_indi1: TRadioButton
+        Left = 16
+        Height = 23
+        Top = 56
+        Width = 754
+        Caption = 'Indi interface. The focuser will be simulated inside this program.  Select in your imaging program "focuser_sky_simulator".'
+        Checked = True
+        TabOrder = 6
+        TabStop = True
+        OnChange = focuser_alpaca1Change
+      end
     end
     object tab_rotator1: TTabSheet
       Caption = 'Rotator'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       ImageIndex = 3
       object rotator_ascom1: TRadioButton
@@ -1735,16 +1775,14 @@ object Form1: TForm1
         Top = 32
         Width = 421
         Caption = 'Alpaca interface. The focuser will be simulated inside this program.'
-        Checked = True
         TabOrder = 1
-        TabStop = True
         OnChange = rotator_alpaca1Change
       end
       object rotator_position1: TLabel
         Left = 144
         Height = 19
         Hint = 'Rotator position'
-        Top = 72
+        Top = 120
         Width = 18
         Caption = '---'
         ParentColor = False
@@ -1755,7 +1793,7 @@ object Form1: TForm1
         Left = 144
         Height = 19
         Hint = 'Rotator setpoint'
-        Top = 96
+        Top = 144
         Width = 18
         Caption = '---'
         ParentColor = False
@@ -1766,7 +1804,7 @@ object Form1: TForm1
         Left = 240
         Height = 23
         Hint = 'Rotator reverse action'
-        Top = 72
+        Top = 120
         Width = 65
         Caption = 'Reverse'
         TabOrder = 2
@@ -1774,7 +1812,7 @@ object Form1: TForm1
       object Label21: TLabel
         Left = 16
         Height = 19
-        Top = 72
+        Top = 120
         Width = 106
         Caption = 'Rotator position: '
         ParentColor = False
@@ -1782,7 +1820,7 @@ object Form1: TForm1
       object Label22: TLabel
         Left = 16
         Height = 19
-        Top = 96
+        Top = 144
         Width = 100
         Caption = 'Rotator setpoint'
         ParentColor = False
@@ -1790,23 +1828,34 @@ object Form1: TForm1
       object connect_rotator1: TBitBtn
         Left = 16
         Height = 30
-        Top = 136
+        Top = 184
         Width = 184
         Caption = 'Connect rotator'
         ParentFont = False
         TabOrder = 3
         OnClick = connect_rotator1Click
       end
+      object rotator_indi1: TRadioButton
+        Left = 16
+        Height = 23
+        Top = 56
+        Width = 404
+        Caption = 'Indi interface. The focuser will be simulated inside this program.'
+        Checked = True
+        TabOrder = 4
+        TabStop = True
+        OnChange = rotator_alpaca1Change
+      end
     end
     object tab_filterwheel1: TTabSheet
       Caption = 'Filter wheel'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       ImageIndex = 3
       object Label37: TLabel
         Left = 224
         Height = 19
-        Top = 64
+        Top = 104
         Width = 203
         Caption = 'Focus offset (rarely implemented)'
         ParentColor = False
@@ -1814,7 +1863,7 @@ object Form1: TForm1
       object Label38: TLabel
         Left = 96
         Height = 19
-        Top = 64
+        Top = 104
         Width = 68
         Caption = 'Filter name'
         ParentColor = False
@@ -1823,7 +1872,7 @@ object Form1: TForm1
         Left = 224
         Height = 27
         Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 88
+        Top = 136
         Width = 70
         ParentShowHint = False
         ShowHint = True
@@ -1834,219 +1883,238 @@ object Form1: TForm1
         Left = 224
         Height = 27
         Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 120
-        Width = 70
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        Text = '0'
-      end
-      object offset3: TEdit
-        Left = 224
-        Height = 27
-        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 152
+        Top = 168
         Width = 70
         ParentShowHint = False
         ShowHint = True
         TabOrder = 2
         Text = '0'
       end
-      object offset4: TEdit
+      object offset3: TEdit
         Left = 224
         Height = 27
         Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 184
+        Top = 200
         Width = 70
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
         Text = '0'
       end
-      object offset5: TEdit
+      object offset4: TEdit
         Left = 224
         Height = 27
         Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 216
+        Top = 232
         Width = 70
         ParentShowHint = False
         ShowHint = True
         TabOrder = 4
         Text = '0'
       end
-      object offset6: TEdit
+      object offset5: TEdit
         Left = 224
         Height = 27
         Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 248
+        Top = 264
         Width = 70
         ParentShowHint = False
         ShowHint = True
         TabOrder = 5
         Text = '0'
       end
-      object offset7: TEdit
+      object offset6: TEdit
         Left = 224
         Height = 27
         Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
-        Top = 280
+        Top = 296
         Width = 70
         ParentShowHint = False
         ShowHint = True
         TabOrder = 6
         Text = '0'
       end
+      object offset7: TEdit
+        Left = 224
+        Height = 27
+        Hint = 'Enter here the filter offset. Note this feature is rarely implemented.'
+        Top = 328
+        Width = 70
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 7
+        Text = '0'
+      end
       object filter_1: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 88
+        Top = 136
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 7
+        TabOrder = 8
         Text = 'Luminance'
       end
       object filter_2: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 120
+        Top = 168
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 8
+        TabOrder = 9
         Text = 'Red'
       end
       object filter_3: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 152
+        Top = 200
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 9
+        TabOrder = 10
         Text = 'Green'
       end
       object filter_4: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 184
+        Top = 232
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 10
+        TabOrder = 11
         Text = 'Blue'
       end
       object filter_5: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 216
+        Top = 264
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 11
+        TabOrder = 12
         Text = 'H-alpha'
       end
       object filter_6: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 248
+        Top = 296
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 12
+        TabOrder = 13
         Text = 'SII'
       end
       object filter_7: TEdit
         Left = 96
         Height = 27
         Hint = 'Enter here the filter name'
-        Top = 280
+        Top = 328
         Width = 112
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 13
+        TabOrder = 14
         Text = 'O3'
       end
       object UpDown_1: TUpDown
         Left = 294
         Height = 27
-        Top = 88
+        Top = 136
         Width = 17
         Associate = offset1
         Min = 0
         Position = 0
-        TabOrder = 14
+        TabOrder = 15
       end
       object UpDown_2: TUpDown
         Left = 294
         Height = 27
-        Top = 120
+        Top = 168
         Width = 17
         Associate = offset2
         Min = 0
         Position = 0
-        TabOrder = 15
+        TabOrder = 16
       end
       object UpDown_3: TUpDown
         Left = 294
         Height = 27
-        Top = 152
+        Top = 200
         Width = 17
         Associate = offset3
         Min = 0
         Position = 0
-        TabOrder = 16
+        TabOrder = 17
       end
       object UpDown_4: TUpDown
         Left = 294
         Height = 27
-        Top = 184
+        Top = 232
         Width = 17
         Associate = offset4
         Min = 0
         Position = 0
-        TabOrder = 17
+        TabOrder = 18
       end
       object UpDown_5: TUpDown
         Left = 294
         Height = 27
-        Top = 216
+        Top = 264
         Width = 17
         Associate = offset5
         Min = 0
         Position = 0
-        TabOrder = 18
+        TabOrder = 19
       end
       object UpDown_6: TUpDown
         Left = 294
         Height = 27
-        Top = 248
+        Top = 296
         Width = 17
         Associate = offset6
         Min = 0
         Position = 0
-        TabOrder = 19
+        TabOrder = 20
       end
       object UpDown_7: TUpDown
         Left = 294
         Height = 27
-        Top = 280
+        Top = 328
         Width = 17
         Associate = offset7
         Min = 0
         Position = 0
-        TabOrder = 20
+        TabOrder = 21
+      end
+      object filter_alpaca1: TRadioButton
+        Left = 24
+        Height = 23
+        Top = 8
+        Width = 443
+        Caption = 'Alpaca interface. The filter wheel will be simulated inside this program.'
+        TabOrder = 1
+        OnChange = filter_alpaca1Change
+      end
+      object filter_indi1: TRadioButton
+        Left = 24
+        Height = 23
+        Top = 32
+        Width = 426
+        Caption = 'Indi interface. The filter wheel will be simulated inside this program.'
+        Checked = True
+        TabOrder = 22
+        TabStop = True
       end
     end
     object tab_Image1: TTabSheet
       Caption = 'Image'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       object Image1: TImage
         Left = -4
@@ -2075,7 +2143,7 @@ object Form1: TForm1
     end
     object tab_alpaca1: TTabSheet
       Caption = 'Alpaca'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       object alpaca_groupBox1: TGroupBox
         Left = 48
@@ -2135,8 +2203,8 @@ object Form1: TForm1
       end
       object Memo1: TMemo
         Left = -4
-        Height = 423
-        Top = 88
+        Height = 474
+        Top = 96
         Width = 1353
         Anchors = [akTop, akLeft, akRight, akBottom]
         Lines.Strings = (
@@ -2174,7 +2242,7 @@ object Form1: TForm1
         Left = 720
         Height = 23
         Hint = 'Write alpaca_log.txt to your document folder.'
-        Top = 61
+        Top = 60
         Width = 158
         Caption = 'Write file alpaca_log.txt'
         ParentShowHint = False
@@ -2214,13 +2282,135 @@ object Form1: TForm1
         ParentColor = False
       end
     end
+    object TabSheet1: TTabSheet
+      Caption = 'Indi'
+      ClientHeight = 569
+      ClientWidth = 1345
+      OnContextPopup = TabSheet1ContextPopup
+      object alpaca_groupBox2: TGroupBox
+        Left = 16
+        Height = 51
+        Top = 8
+        Width = 415
+        AutoSize = True
+        Caption = 'Alpaca server details'
+        ClientHeight = 27
+        ClientWidth = 411
+        TabOrder = 0
+        object alpaca_port_number2: TLabel
+          Left = 0
+          Height = 19
+          Hint = '7624 is the standard port number for a INDI server'
+          Top = 0
+          Width = 80
+          Alignment = taRightJustify
+          Caption = 'Port number:'
+          ParentColor = False
+          ParentShowHint = False
+          ShowHint = True
+        end
+        object indi_port1: TEdit
+          Left = 112
+          Height = 27
+          Hint = 'Indi server port. Select a free port, e.g. 7625. Standard Indi server operates at 7624.'
+          Top = 0
+          Width = 80
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          Text = '7625'
+        end
+        object Indi_Info: TLabel
+          Left = 280
+          Height = 19
+          Top = 0
+          Width = 121
+          BorderSpacing.Right = 10
+          Caption = 'Indi server status ??'
+        end
+      end
+      object Memo3: TMemo
+        Left = -8
+        Height = 505
+        Top = 64
+        Width = 1353
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        Lines.Strings = (
+          'Indi log'
+          'Instructions for Indi devices:'
+          ''
+          'Simulator:'
+          '1) Set in tab image, set source to internal.'
+          '2) In tab camera specify image dimensions, pixel size and focal length.'
+          '3) In tab mount specify device=Indi.'
+          '4) In tab focuser, rotator, filter wheel specify device=Indi.'
+          '5) In tab Indi set at a free port e.g. 7625. Indi standard server operates at 7624.'
+          '6) Press save settings.'
+          '7) Press the button Start simulation.'
+          ''
+          'CCDCiel:'
+          'Select every device in the Device setup, tab indi, server: local host. Port 7625. Press get and select the device after it is found.'
+          ''
+          'Ekos:'
+          'Specify in remote edit field one or more simulator devices like:'
+          'Sky Simulator Mount@127.0.0.1:7625,Sky Simulator Camera@127.0.0.1:7625,Sky Simulator Guide Camera@127.0.0.1:7625,Sky Simulator Focuser@127.0.0.1:7625,Sky Simulator Filter Wheel@127.0.0.1:7625,Sky Simulator Rotator@127.0.0.1:7625'
+        )
+        PopupMenu = PopupMenu_memo1
+        ScrollBars = ssAutoBoth
+        TabOrder = 1
+      end
+      object indi_log1: TCheckBox
+        Left = 616
+        Height = 23
+        Hint = 'Write indi_log.txt to your document folder.'
+        Top = 24
+        Width = 117
+        Caption = 'Activate Indi log'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 2
+        OnChange = indi_log1Change
+      end
+      object clear_log_button2: TButton
+        Left = 984
+        Height = 29
+        Hint = 'Clears log and log file.'
+        Top = 24
+        Width = 80
+        AutoSize = True
+        Caption = 'Clear log'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 3
+        OnClick = clear_log_button2Click
+      end
+      object Label53: TLabel
+        Left = 776
+        Height = 19
+        Top = 24
+        Width = 80
+        Caption = 'Filter on text:'
+        ParentColor = False
+      end
+      object filter_indi_text1: TEdit
+        Left = 872
+        Height = 27
+        Hint = 'Filter the message below with this text. Case sensitive'
+        Top = 24
+        Width = 80
+        ParentColor = True
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 4
+      end
+    end
     object tab_log1: TTabSheet
       Caption = 'Log'
-      ClientHeight = 510
+      ClientHeight = 569
       ClientWidth = 1345
       object Memo2: TMemo
         Left = 0
-        Height = 510
+        Height = 569
         Top = 0
         Width = 1345
         Align = alClient
@@ -2233,7 +2423,7 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Height = 40
-    Top = 542
+    Top = 601
     Width = 1353
     Align = alBottom
     ClientHeight = 40
@@ -2334,17 +2524,17 @@ object Form1: TForm1
     Left = 992
     Top = 256
     Bitmap = {
-      4C7A070000001000000010000000760000000000000078DAEDD6410AC0200C44
-      D1DC5C8FE6CD52372E6A29B50ED4623EE1ADE25430523473330021E56C0082E2
-      0F08C4554A0110942FAE9492ABD4BDEF7A6AFEE91B23F9D93D46CEE96DBE5FFB
-      E5FE2BCE5F99FFDFEF7EABFA0AF093CB82CDFB5DF581EDFBCC3FF8FC75F51D31
-      853C79F27A5E71004D941C0D
+      4C7A0800000010000000100000007B0000000000000078DAEDD6D10A80200C85
+      E1410F3EDF2CDF6C79D34546A40E32DCCFF8AEE64970128A9808809052120041
+      F10704E2CA390308CA2697AA9A9777EFA79E37FFF68D96FCE81E2DE7D49BAFD7
+      7EB9FF8CF3F7CCFFEF77FFACF20AB08BDB82C5FB55D581E5FBCC3FF8FCFDCA3B
+      620879F2E4FD798F7D5300411D4DB35C2B
     }
   end
   object PopupMenu_image1: TPopupMenu
     OnPopup = PopupMenu_image1Popup
-    Left = 992
-    Top = 144
+    Left = 1072
+    Top = 264
     object slew_to_mouse_pos_image1: TMenuItem
       Caption = 'Slew to mouse position'
       OnClick = slew_to_mouse_pos_image1Click
@@ -2405,8 +2595,8 @@ object Form1: TForm1
   end
   object popupmenu_map1: TPopupMenu
     OnPopup = popupmenu_map1Popup
-    Left = 992
-    Top = 80
+    Left = 1072
+    Top = 320
     object menu_slew_to1: TMenuItem
       Caption = 'Slew to this position'
       OnClick = menu_slew_to1Click

@@ -118,8 +118,8 @@ end;
 
 procedure  T_Alpaca_filterwheel.SetConnected(value:boolean);
 begin
-  // code to make connection
-  FConnected:=value;
+
+  FConnected:=value
 end;
 
 function  T_Alpaca_filterwheel.Description:string;
